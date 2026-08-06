@@ -12,6 +12,9 @@
 import SwiftData
 import Foundation
 
+// Not: Saat alanları uygulamada `ClockTime` (saat+dakika, Codable) olarak saklanır;
+// dokümandaki DateComponents ile aynı bilgi modelidir.
+
 @Model
 final class AlarmGroup {
     @Attribute(.unique) var id: UUID

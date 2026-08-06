@@ -24,7 +24,7 @@ targets:
       PRODUCT_BUNDLE_IDENTIFIER: com.gktuoktay.AlarmApp
       INFOPLIST_GENERATION_MODE: GeneratedFile
       GENERATE_INFOPLIST_FILE: YES
-      MARKETING_VERSION: "0.0.1"
+      MARKETING_VERSION: "0.0.2"
       CURRENT_PROJECT_VERSION: "1"
   AlarmApp-Watch:
     type: application
@@ -37,6 +37,6 @@ targets:
       PRODUCT_BUNDLE_IDENTIFIER: com.gktuoktay.AlarmApp.watchkitapp
       INFOPLIST_GENERATION_MODE: GeneratedFile
       GENERATE_INFOPLIST_FILE: YES
-      MARKETING_VERSION: "0.0.1"
+      MARKETING_VERSION: "0.0.2"
       CURRENT_PROJECT_VERSION: "1"
       WKCompanionAppBundleIdentifier: com.gktuoktay.AlarmApp

@@ -1,7 +1,5 @@
 # memory.md — AlarmApp proje hafızası
 
-Kalıcı, kısa, ajanlar arası hatırlatmalar. Her oturumda ilgiliyse oku; önemli karar veya durumu buraya ekle. Uzun dokümanları kopyalama — `docs/` yolunu yaz.
-
 Son güncelleme: 2026-08-06
 
 ---
@@ -9,37 +7,32 @@ Son güncelleme: 2026-08-06
 ## Repo
 
 - GitHub: https://github.com/GktuOktay/AlarmApp
-- Yerel: `Desktop/Projects/Hobies/AlarmApp`
-- Sürüm: **0.0.1**
-- Lisans: **MIT** (`LICENSE`, © Göktuğ Oktay)
-- Commit: Türkçe metin; `git commit-tree`; IDE ortak yazar satırı yasak
-- Bu makinede tam Xcode yok (yalnızca Command Line Tools) → `swift test` / `xcodebuild` burada çalışmıyor; CI/macOS+Xcode veya kullanıcı makinesi gerekir
+- Sürüm: **0.0.2**
+- Lisans: MIT
+- Commit: Türkçe; `git commit-tree`; IDE co-author yasak
+- Ortam: Xcode yükleniyor / bu agent ortamında CLI Tools vardı — testler kullanıcı Xcode’u ile veya CI’da
 
-## Ürün (özet)
+## Mimari sabit
 
-- Konumlandırma: Alarmları grupla; uyanınca bilek anlasın, kalanı kapatsın.
-- v1 uyanma: manuel (Watch “Uyandım” / telefon kontrolleri)
-- v2: HealthKit + CoreMotion + onay (fail-safe)
-- Çekirdek: alarm grubu
+- **Local-first / sunucusuz:** tüm özellikler cihazda; bulut zorunluluğu yok
 
-## Açık kapılar
+## Ürün kararları (KİLİTLİ)
 
-- [ ] Ürün kararları K1–K4 onayı (`docs/superpowers/specs/2026-08-06-urun-kararlari.md`) — MVP domain öncesi
-- [x] Git remote + ilk içerik
-- [x] OSS: LICENSE, README, CONTRIBUTING, CoC, SECURITY
-- [x] `AlarmAppCore` kaynak iskeleti
-- [ ] Kullanıcıda: Xcode seç + `brew install xcodegen` + `scripts/generate-xcode.sh` → `.xcodeproj`
-- [ ] MVP domain (F1/F3) — kararlar kilitlenince
-
-## Önerilen ürün kararları (kilit bekliyor)
-
-- K1: Bitiş dahil → 13 alarm örneği
+- K1: Bitiş dahil → 06:00–07:00 / 5dk = 13
 - K2: Takvim haftası Pzt–Paz
 - K3: Cascade sil
 - K4: Critical Alert garantisiz
 
-## Bilinçli yapılmayanlar
+## Açık kapılar
 
-- Domain use case’leri (CreateAlarmGroup vb.) henüz yok
-- WatchConnectivity / HealthKit henüz yok
-- Web apple-design skill yok
+- [x] F1 generator + modeller + CreateAlarmGroup + overlap + SwiftData repo (kod)
+- [ ] `swift test` yeşil (Xcode toolchain)
+- [ ] XcodeGen ile `.xcodeproj`
+- [ ] Bildirim zamanlama (UNUserNotificationCenter)
+- [ ] S1/S2/S3 UI
+
+## Kod notları
+
+- Saatler `ClockTime` (Codable); dokümandaki `DateComponents` alanları bununla temsil
+- Instance ufku varsayılan 14 gün
+- `SkipWeek` haftanın Pzt startOfDay + 7 gün
