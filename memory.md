@@ -9,39 +9,37 @@ Son güncelleme: 2026-08-06
 ## Repo
 
 - GitHub: https://github.com/GktuOktay/AlarmApp
-- Yerel klasör: `Desktop/Projects/Hobies/AlarmApp`
-- Sürüm: `0.0.0` (`VERSION` + kullanıcıya dönük `CHANGELOG.md`)
-- Remote: `origin/main` bağlı; ilk import push edildi (`1be515f`)
-- Commit kuralı: `git commit` yerine gerekirse `git commit-tree` — **Co-authored-by: Cursor yasak**
+- Yerel: `Desktop/Projects/Hobies/AlarmApp`
+- Sürüm: **0.0.1**
+- Lisans: **MIT** (`LICENSE`, © Göktuğ Oktay)
+- Commit: Türkçe metin; `git commit-tree`; IDE ortak yazar satırı yasak
+- Bu makinede tam Xcode yok (yalnızca Command Line Tools) → `swift test` / `xcodebuild` burada çalışmıyor; CI/macOS+Xcode veya kullanıcı makinesi gerekir
 
 ## Ürün (özet)
 
 - Konumlandırma: Alarmları grupla; uyanınca bilek anlasın, kalanı kapatsın.
-- v1 uyanma: sistem sensörle “uyandın” demez — Watch “Uyandım” veya telefonda Bugün kapat / Bu hafta pas geç.
-- v2: HealthKit + CoreMotion tahmini + zorunlu kullanıcı onayı (fail-safe).
-- Çekirdek özellik: alarm grubu (başlangıç–bitiş–aralık–günler → tekil alarm örnekleri).
+- v1 uyanma: manuel (Watch “Uyandım” / telefon kontrolleri)
+- v2: HealthKit + CoreMotion + onay (fail-safe)
+- Çekirdek: alarm grubu
 
 ## Açık kapılar
 
-- [ ] `docs/superpowers/specs/2026-08-06-urun-kararlari.md` K1–K4 kullanıcı onayı
-- [x] Git remote ilk içerik push (main)
-- [ ] Faz 1 / Sprint 0 Xcode iskeleti henüz yok
+- [ ] Ürün kararları K1–K4 onayı (`docs/superpowers/specs/2026-08-06-urun-kararlari.md`) — MVP domain öncesi
+- [x] Git remote + ilk içerik
+- [x] OSS: LICENSE, README, CONTRIBUTING, CoC, SECURITY
+- [x] `AlarmAppCore` kaynak iskeleti
+- [ ] Kullanıcıda: Xcode seç + `brew install xcodegen` + `scripts/generate-xcode.sh` → `.xcodeproj`
+- [ ] MVP domain (F1/F3) — kararlar kilitlenince
 
-## Önerilen ürün kararları (henüz kilitlenmedi)
+## Önerilen ürün kararları (kilit bekliyor)
 
-- K1: Bitiş saati dahil → örn. 06:00–07:00 / 5 dk = 13 alarm
-- K2: “Bu hafta” = takvim haftası Pzt–Paz
-- K3: Grup silinince istisnalar cascade silinsin
-- K4: Critical Alert garantisiz konumlandırma
-
-## Agent toolkit (kurulu)
-
-- `AGENTS.md`, `.cursor/rules/*`, `.cursor/skills/*`, `docs/09-referans-kaynaklar.md`
-- Model kuralı: yalnızca **Auto**; premium modeller yasak (`alarmapp-token-usage`)
-- Commit: Cursor izi yok (`alarmapp-commits`)
+- K1: Bitiş dahil → 13 alarm örneği
+- K2: Takvim haftası Pzt–Paz
+- K3: Cascade sil
+- K4: Critical Alert garantisiz
 
 ## Bilinçli yapılmayanlar
 
-- Web `apple-design` skill karıştırılmadı
-- Referans uygulamalar klonlanmadı (yalnızca `docs/09` linkleri)
-- Uygulama kodu / Xcode workspace henüz yok
+- Domain use case’leri (CreateAlarmGroup vb.) henüz yok
+- WatchConnectivity / HealthKit henüz yok
+- Web apple-design skill yok

@@ -33,16 +33,18 @@ Do **not** scaffold app code until the agent toolkit is in place and the user ha
 
 ## Versioning
 
-- Current version: see root `VERSION` (starts at **0.0.0** in development).
+- Current version: see root `VERSION`.
 - `CHANGELOG.md` is for **end users**, Turkish, plain sentences — no agent/tooling jargon.
 - Technical session state goes in `memory.md`, not the changelog.
-- Do not invent git tags/remotes — the human owns the GitHub/repo setup (https://github.com/GktuOktay/AlarmApp).
+- **Commit messages:** Turkish, consistent sentences; no IDE co-author trailers (`alarmapp-commits`).
+- Remote: https://github.com/GktuOktay/AlarmApp
 
 ## Hard constraints (summary)
 
 - **Model:** Auto only — no premium models (`alarmapp-token-usage`)
-- **Commits:** no Cursor / AI attribution traces (`alarmapp-commits`)
+- **Commits:** Turkish text; no IDE / AI attribution traces (`alarmapp-commits`)
 - Local-first; no default cloud or analytics SDK
 - Fail-safe: never silently cancel alarms
 - v1 wake = explicit user action (Watch “Uyandım” or phone controls); auto-detect is v2 only
 - No web design skills or vendored third-party app clones
+- License: MIT (`LICENSE`)

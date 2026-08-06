@@ -1,20 +1,26 @@
-# macOS
-.DS_Store
-
-# Xcode (future)
+# Xcode
 DerivedData/
 *.xcuserstate
 xcuserdata/
+*.xccheckout
+*.moved-aside
+*.hmap
 *.ipa
-*.dSYM
 *.dSYM.zip
+*.dSYM
+timeline.xctimeline
+playground.xcworkspace
 
-# SPM (future)
+# SPM
 .build/
 Packages/
 Package.resolved
+*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
 
-# Fastlane (future)
+# macOS
+.DS_Store
+
+# Fastlane
 fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png

@@ -1,0 +1,42 @@
+name: AlarmApp
+options:
+  bundleIdPrefix: com.gktuoktay
+  deploymentTarget:
+    iOS: "17.0"
+    watchOS: "10.0"
+  createIntermediateGroups: true
+settings:
+  BASE_SDK: iphoneos
+  SWIFT_VERSION: "5.9"
+packages:
+  AlarmAppCore:
+    path: AlarmAppCore
+targets:
+  AlarmApp-iOS:
+    type: application
+    platform: iOS
+    sources:
+      - AlarmApp-iOS
+    dependencies:
+      - package: AlarmAppCore
+      - target: AlarmApp-Watch
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.gktuoktay.AlarmApp
+      INFOPLIST_GENERATION_MODE: GeneratedFile
+      GENERATE_INFOPLIST_FILE: YES
+      MARKETING_VERSION: "0.0.1"
+      CURRENT_PROJECT_VERSION: "1"
+  AlarmApp-Watch:
+    type: application
+    platform: watchOS
+    sources:
+      - AlarmApp-Watch
+    dependencies:
+      - package: AlarmAppCore
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.gktuoktay.AlarmApp.watchkitapp
+      INFOPLIST_GENERATION_MODE: GeneratedFile
+      GENERATE_INFOPLIST_FILE: YES
+      MARKETING_VERSION: "0.0.1"
+      CURRENT_PROJECT_VERSION: "1"
+      WKCompanionAppBundleIdentifier: com.gktuoktay.AlarmApp
