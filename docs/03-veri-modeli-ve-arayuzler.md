@@ -108,16 +108,17 @@ struct InstanceSummary: Codable, Identifiable {
 
 ```swift
 protocol AlarmRepository {
-    func createGroup(_ group: AlarmGroup) async throws
+    func createGroup(from prepared: PreparedAlarmGroup) async throws -> CreateAlarmGroupResult
     func cancelToday(groupId: UUID) async throws
     func skipWeek(groupId: UUID, weekStart: Date) async throws
-    func scheduleException(_ exception: AlarmException) async throws
+    func scheduleException(_ draft: AlarmExceptionDraft) async throws
     func handleWakeEvent(groupId: UUID, source: WakeSource, timestamp: Date) async throws
     func todayContext() async throws -> TodayContext
+    func fetchActiveGroups() async throws -> [AlarmGroupSummary]
 }
 
 protocol NotificationScheduling {
-    func schedule(instance: AlarmInstance) async throws
+    func schedule(instanceId: UUID, fireDate: Date) async throws
     func cancelPending(instanceIds: [UUID]) async
 }
 
@@ -126,6 +127,8 @@ protocol WatchConnectivityService {
     var incomingMessages: AsyncStream<WatchMessage> { get }
 }
 ```
+
+> Swift 6: Actor sınırından `@Model` geçirilmez; API `Sendable` değer tipleri kullanır. Persistans `@ModelActor` içinde kalır.
 
 Bu protokoller `AlarmAppCore` paketinde tanımlanır; iOS ve watchOS target'ları kendi somut implementasyonlarını (ör. iOS'ta tam `SwiftDataAlarmRepository`, Watch'ta hafif `WatchCacheAlarmRepository`) enjekte eder. Bu, önceki mimarideki MethodChannel sözleşmesinin yerini alıyor — **JSON serileştirme yok, doğrudan tip-güvenli Swift çağrısı var.**
 

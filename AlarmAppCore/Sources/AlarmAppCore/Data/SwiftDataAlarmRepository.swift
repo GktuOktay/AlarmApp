@@ -7,7 +7,7 @@ public enum SwiftDataAlarmRepositoryError: Error, Sendable {
 
 @ModelActor
 public actor SwiftDataAlarmRepository: AlarmRepository {
-    public func createGroup(from prepared: PreparedAlarmGroup) throws -> CreateAlarmGroupResult {
+    public func createGroup(from prepared: PreparedAlarmGroup) async throws -> CreateAlarmGroupResult {
         let group = AlarmGroup(
             id: prepared.id,
             name: prepared.name,
@@ -44,18 +44,12 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
         )
     }
 
-    public func createGroup(_ group: AlarmGroup) async throws {
-        modelContext.insert(group)
-        try modelContext.save()
-    }
-
     public func cancelToday(groupId: UUID) async throws {
         let cal = Calendar.current
         let start = cal.startOfDay(for: Date())
         guard let end = cal.date(byAdding: .day, value: 1, to: start) else { return }
 
-        let descriptor = FetchDescriptor<AlarmInstance>()
-        let all = try modelContext.fetch(descriptor)
+        let all = try modelContext.fetch(FetchDescriptor<AlarmInstance>())
         let matching = all.filter { instance in
             instance.group?.id == groupId
                 && instance.status == .pending
@@ -76,13 +70,13 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
     }
 
     public func skipWeek(groupId: UUID, weekStart: Date) async throws {
-        _ = try requireGroup(id: groupId)
+        let group = try requireGroup(id: groupId)
         let cal = Calendar.current
         let start = cal.startOfDay(for: weekStart)
         guard let end = cal.date(byAdding: .day, value: 7, to: start) else { return }
 
         let exception = AlarmException(
-            group: try fetchGroup(id: groupId),
+            group: group,
             type: .weeklyOverride,
             startDate: start,
             endDate: cal.date(byAdding: .second, value: -1, to: end),
@@ -90,8 +84,7 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
         )
         modelContext.insert(exception)
 
-        let descriptor = FetchDescriptor<AlarmInstance>()
-        let all = try modelContext.fetch(descriptor)
+        let all = try modelContext.fetch(FetchDescriptor<AlarmInstance>())
         let now = Date()
         for instance in all where instance.group?.id == groupId
             && instance.status == .pending
@@ -105,7 +98,22 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
         try modelContext.save()
     }
 
-    public func scheduleException(_ exception: AlarmException) async throws {
+    public func scheduleException(_ draft: AlarmExceptionDraft) async throws {
+        let group: AlarmGroup?
+        if let groupId = draft.groupId {
+            group = try requireGroup(id: groupId)
+        } else {
+            group = nil
+        }
+        let exception = AlarmException(
+            id: draft.id,
+            group: group,
+            type: draft.type,
+            startDate: draft.startDate,
+            endDate: draft.endDate,
+            action: draft.action,
+            replacementGroupId: draft.replacementGroupId
+        )
         modelContext.insert(exception)
         try modelContext.save()
     }
@@ -115,15 +123,13 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
         let dayStart = cal.startOfDay(for: timestamp)
         guard let dayEnd = cal.date(byAdding: .day, value: 1, to: dayStart) else { return }
 
-        let descriptor = FetchDescriptor<AlarmInstance>()
-        let all = try modelContext.fetch(descriptor)
+        let all = try modelContext.fetch(FetchDescriptor<AlarmInstance>())
         let pending = all.filter {
             $0.group?.id == groupId
                 && $0.status == .pending
                 && $0.scheduledDate >= dayStart
                 && $0.scheduledDate < dayEnd
         }
-        // Unknown group → no-op (fail soft, no crash).
         let groupExists = try fetchGroup(id: groupId) != nil
         guard !pending.isEmpty || groupExists else { return }
 
@@ -133,13 +139,14 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
             instance.updatedAt = timestamp
         }
 
-        let log = WakeEventLog(
-            groupId: groupId,
-            detectedAt: timestamp,
-            source: source,
-            confirmed: true
+        modelContext.insert(
+            WakeEventLog(
+                groupId: groupId,
+                detectedAt: timestamp,
+                source: source,
+                confirmed: true
+            )
         )
-        modelContext.insert(log)
         try modelContext.save()
     }
 
@@ -170,14 +177,24 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
         return TodayContext(date: today, activeGroups: summaries)
     }
 
-    public func fetchActiveGroups() async throws -> [AlarmGroup] {
+    public func fetchActiveGroups() async throws -> [AlarmGroupSummary] {
         let groups = try modelContext.fetch(FetchDescriptor<AlarmGroup>())
-        return groups.filter(\.isActive)
+        return groups.filter(\.isActive).map {
+            AlarmGroupSummary(
+                id: $0.id,
+                name: $0.name,
+                timeStart: $0.timeStart,
+                timeEnd: $0.timeEnd,
+                intervalMinutes: $0.intervalMinutes,
+                daysOfWeek: $0.daysOfWeek,
+                soundId: $0.soundId,
+                isActive: $0.isActive
+            )
+        }
     }
 
     private func fetchGroup(id: UUID) throws -> AlarmGroup? {
-        let groups = try modelContext.fetch(FetchDescriptor<AlarmGroup>())
-        return groups.first { $0.id == id }
+        try modelContext.fetch(FetchDescriptor<AlarmGroup>()).first { $0.id == id }
     }
 
     private func requireGroup(id: UUID) throws -> AlarmGroup {
