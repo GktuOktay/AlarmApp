@@ -62,7 +62,8 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
                 && instance.scheduledDate >= start
                 && instance.scheduledDate < end
         }
-        guard !matching.isEmpty || (try fetchGroup(id: groupId) != nil) else {
+        let groupExists = try fetchGroup(id: groupId) != nil
+        guard !matching.isEmpty || groupExists else {
             throw SwiftDataAlarmRepositoryError.groupNotFound
         }
         let now = Date()
@@ -123,7 +124,8 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
                 && $0.scheduledDate < dayEnd
         }
         // Unknown group → no-op (fail soft, no crash).
-        guard !pending.isEmpty || (try fetchGroup(id: groupId) != nil) else { return }
+        let groupExists = try fetchGroup(id: groupId) != nil
+        guard !pending.isEmpty || groupExists else { return }
 
         for instance in pending {
             instance.status = .cancelled
