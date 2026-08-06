@@ -6,7 +6,6 @@ options:
     watchOS: "10.0"
   createIntermediateGroups: true
 settings:
-  BASE_SDK: iphoneos
   SWIFT_VERSION: "5.9"
 packages:
   AlarmAppCore:
@@ -16,27 +15,41 @@ targets:
     type: application
     platform: iOS
     sources:
-      - AlarmApp-iOS
+      - path: AlarmApp-iOS
+        excludes:
+          - Info.plist
     dependencies:
       - package: AlarmAppCore
       - target: AlarmApp-Watch
+        embed: true
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.gktuoktay.AlarmApp
-      INFOPLIST_GENERATION_MODE: GeneratedFile
       GENERATE_INFOPLIST_FILE: YES
       MARKETING_VERSION: "0.0.2"
       CURRENT_PROJECT_VERSION: "1"
+      TARGETED_DEVICE_FAMILY: "1,2"
   AlarmApp-Watch:
     type: application
     platform: watchOS
     sources:
-      - AlarmApp-Watch
+      - path: AlarmApp-Watch
+        excludes:
+          - Info.plist
+    info:
+      path: AlarmApp-Watch/Info.plist
+      properties:
+        CFBundleDisplayName: AlarmApp
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        WKCompanionAppBundleIdentifier: com.gktuoktay.AlarmApp
+        WKRunsIndependentlyOfCompanionApp: true
     dependencies:
       - package: AlarmAppCore
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.gktuoktay.AlarmApp.watchkitapp
-      INFOPLIST_GENERATION_MODE: GeneratedFile
-      GENERATE_INFOPLIST_FILE: YES
+      GENERATE_INFOPLIST_FILE: NO
       MARKETING_VERSION: "0.0.2"
       CURRENT_PROJECT_VERSION: "1"
-      WKCompanionAppBundleIdentifier: com.gktuoktay.AlarmApp
+      INFOPLIST_KEY_WKCompanionAppBundleIdentifier: com.gktuoktay.AlarmApp
+      TARGETED_DEVICE_FAMILY: "4"
+      SKIP_INSTALL: YES
