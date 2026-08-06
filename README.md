@@ -10,17 +10,17 @@ iPhone ve Apple Watch için yerel (local-first) bir alarm uygulaması. Sabah ara
 - iOS 17+ / watchOS 10+
 - Apple Developer hesabı (cihaz ve TestFlight için)
 
-Kurulum:
-
 ```bash
 git clone https://github.com/GktuOktay/AlarmApp.git
 cd AlarmApp
 chmod +x scripts/generate-xcode.sh
-./scripts/generate-xcode.sh   # XcodeGen + tam Xcode gerekir
+./scripts/generate-xcode.sh   # XcodeGen + Xcode gerekir
 open AlarmApp.xcodeproj
 ```
 
-Çekirdek paket testleri (Xcode toolchain ile):
+Scheme: **AlarmApp-iOS** (Watch companion birlikte). Simülatör: iOS 26.5 / watchOS 26.5.
+
+Çekirdek paket testleri:
 
 ```bash
 cd AlarmAppCore && swift test

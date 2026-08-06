@@ -7,10 +7,11 @@ Son güncelleme: 2026-08-06
 ## Repo
 
 - GitHub: https://github.com/GktuOktay/AlarmApp
-- Sürüm: **0.0.2**
-- Lisans: MIT
-- Commit: Türkçe; `git commit-tree`; IDE co-author yasak
-- Ortam: Xcode yükleniyor / bu agent ortamında CLI Tools vardı — testler kullanıcı Xcode’u ile veya CI’da
+- Sürüm: **0.0.2** (Xcode projesi üretildi; bir sonraki bump UI/bildirim ile)
+- `xcode-select` → Xcode.app ✓
+- Runtime: iOS 26.5 + watchOS 26.5 ✓
+- `AlarmApp.xcodeproj` XcodeGen ile üretildi; iOS + Watch **build OK**; `swift test` 9/9 ✓
+- Aç: `open AlarmApp.xcodeproj` → scheme AlarmApp-iOS
 
 ## Mimari sabit
 

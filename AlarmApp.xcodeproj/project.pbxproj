@@ -1,0 +1,459 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		23C8329E8672FA36E5908CE3 /* AlarmAppCore in Frameworks */ = {isa = PBXBuildFile; productRef = A976D6BEA0F5D3ABA581CD8B /* AlarmAppCore */; };
+		501FB7D25EB4D624FB7A9FBC /* AlarmApp_iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96DAB8321DC53ADE58270F8B /* AlarmApp_iOSApp.swift */; };
+		7B1BA660344C97632C8E03DB /* AlarmAppCore in Frameworks */ = {isa = PBXBuildFile; productRef = F8E2BA89152CDD4B32104E72 /* AlarmAppCore */; };
+		8725EE0335C474016765318B /* AlarmApp-Watch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 056C882BA3A6385F21BBDA7A /* AlarmApp-Watch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		A3BC47127A3C704417A7BD76 /* AlarmApp_WatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B42AADB285C1CD34F36D18F3 /* AlarmApp_WatchApp.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		09E184D2B7D8138F50CD2B2C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 03FC0F82CA0AE7416F24FD0C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 08C67D5ED0A4910D7B5B9CF7;
+			remoteInfo = "AlarmApp-Watch";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		3D7DAA09EF448DA55C102D41 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				8725EE0335C474016765318B /* AlarmApp-Watch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		056C882BA3A6385F21BBDA7A /* AlarmApp-Watch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "AlarmApp-Watch.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		090AAABA32ABF7E0C344A06B /* AlarmAppCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = AlarmAppCore; path = AlarmAppCore; sourceTree = SOURCE_ROOT; };
+		96DAB8321DC53ADE58270F8B /* AlarmApp_iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmApp_iOSApp.swift; sourceTree = "<group>"; };
+		B42AADB285C1CD34F36D18F3 /* AlarmApp_WatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmApp_WatchApp.swift; sourceTree = "<group>"; };
+		C2D22B60D033D36AC678640A /* AlarmApp-iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "AlarmApp-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		28888CA354A046D517AF84E7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7B1BA660344C97632C8E03DB /* AlarmAppCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3821AEB792251C1D50486FD8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				23C8329E8672FA36E5908CE3 /* AlarmAppCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		5AB86F21198BBA5725645AB4 /* AlarmApp-iOS */ = {
+			isa = PBXGroup;
+			children = (
+				96DAB8321DC53ADE58270F8B /* AlarmApp_iOSApp.swift */,
+			);
+			path = "AlarmApp-iOS";
+			sourceTree = "<group>";
+		};
+		840BF42703EDFF10D3F2AEA1 /* AlarmApp-Watch */ = {
+			isa = PBXGroup;
+			children = (
+				B42AADB285C1CD34F36D18F3 /* AlarmApp_WatchApp.swift */,
+			);
+			path = "AlarmApp-Watch";
+			sourceTree = "<group>";
+		};
+		B1EA8EE2EF2D0F9430F5C077 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				090AAABA32ABF7E0C344A06B /* AlarmAppCore */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		F0A2B35AD8205685CDF37B9C = {
+			isa = PBXGroup;
+			children = (
+				5AB86F21198BBA5725645AB4 /* AlarmApp-iOS */,
+				840BF42703EDFF10D3F2AEA1 /* AlarmApp-Watch */,
+				B1EA8EE2EF2D0F9430F5C077 /* Packages */,
+				FA3941CE83DF4A8F8E08E62C /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		FA3941CE83DF4A8F8E08E62C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C2D22B60D033D36AC678640A /* AlarmApp-iOS.app */,
+				056C882BA3A6385F21BBDA7A /* AlarmApp-Watch.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		08C67D5ED0A4910D7B5B9CF7 /* AlarmApp-Watch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C602083A89CF11FA28FDF03F /* Build configuration list for PBXNativeTarget "AlarmApp-Watch" */;
+			buildPhases = (
+				76B712D76E2072C4B9A0E314 /* Sources */,
+				3821AEB792251C1D50486FD8 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "AlarmApp-Watch";
+			packageProductDependencies = (
+				A976D6BEA0F5D3ABA581CD8B /* AlarmAppCore */,
+			);
+			productName = "AlarmApp-Watch";
+			productReference = 056C882BA3A6385F21BBDA7A /* AlarmApp-Watch.app */;
+			productType = "com.apple.product-type.application";
+		};
+		57A02B285D3FA7620975C844 /* AlarmApp-iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 664EABCE1DE83903AFC96697 /* Build configuration list for PBXNativeTarget "AlarmApp-iOS" */;
+			buildPhases = (
+				70BC789CEFF72ED8ED8BAAE1 /* Sources */,
+				28888CA354A046D517AF84E7 /* Frameworks */,
+				3D7DAA09EF448DA55C102D41 /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				6A1FBB90948F14E87E6AF605 /* PBXTargetDependency */,
+			);
+			name = "AlarmApp-iOS";
+			packageProductDependencies = (
+				F8E2BA89152CDD4B32104E72 /* AlarmAppCore */,
+			);
+			productName = "AlarmApp-iOS";
+			productReference = C2D22B60D033D36AC678640A /* AlarmApp-iOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		03FC0F82CA0AE7416F24FD0C /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = 9700743785FDE11BCB25E90C /* Build configuration list for PBXProject "AlarmApp" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = F0A2B35AD8205685CDF37B9C;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				833EA7C8914FA2F13CFDF97F /* XCLocalSwiftPackageReference "AlarmAppCore" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = FA3941CE83DF4A8F8E08E62C /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				57A02B285D3FA7620975C844 /* AlarmApp-iOS */,
+				08C67D5ED0A4910D7B5B9CF7 /* AlarmApp-Watch */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		70BC789CEFF72ED8ED8BAAE1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				501FB7D25EB4D624FB7A9FBC /* AlarmApp_iOSApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		76B712D76E2072C4B9A0E314 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A3BC47127A3C704417A7BD76 /* AlarmApp_WatchApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		6A1FBB90948F14E87E6AF605 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 08C67D5ED0A4910D7B5B9CF7 /* AlarmApp-Watch */;
+			targetProxy = 09E184D2B7D8138F50CD2B2C /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		831AA8CA2E1F1F9DC87FAEA1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_GENERATION_MODE = GeneratedFile;
+				MARKETING_VERSION = 0.0.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gktuoktay.AlarmApp.watchkitapp;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WKCompanionAppBundleIdentifier = com.gktuoktay.AlarmApp;
+			};
+			name = Debug;
+		};
+		8A4A6A777B603915DAAE2A00 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				BASE_SDK = iphoneos;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		A50EA7FD2298C7DB2B7157AB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_GENERATION_MODE = GeneratedFile;
+				MARKETING_VERSION = 0.0.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gktuoktay.AlarmApp.watchkitapp;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WKCompanionAppBundleIdentifier = com.gktuoktay.AlarmApp;
+			};
+			name = Release;
+		};
+		C3A9836153AF719DBBC5EB35 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				BASE_SDK = iphoneos;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		C7317CBAC39ADDD73BFB4CEE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_GENERATION_MODE = GeneratedFile;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.0.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gktuoktay.AlarmApp;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		EE6917B54BC78288C8271B9E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_GENERATION_MODE = GeneratedFile;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.0.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gktuoktay.AlarmApp;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		664EABCE1DE83903AFC96697 /* Build configuration list for PBXNativeTarget "AlarmApp-iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C7317CBAC39ADDD73BFB4CEE /* Debug */,
+				EE6917B54BC78288C8271B9E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		9700743785FDE11BCB25E90C /* Build configuration list for PBXProject "AlarmApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8A4A6A777B603915DAAE2A00 /* Debug */,
+				C3A9836153AF719DBBC5EB35 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C602083A89CF11FA28FDF03F /* Build configuration list for PBXNativeTarget "AlarmApp-Watch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				831AA8CA2E1F1F9DC87FAEA1 /* Debug */,
+				A50EA7FD2298C7DB2B7157AB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		833EA7C8914FA2F13CFDF97F /* XCLocalSwiftPackageReference "AlarmAppCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = AlarmAppCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A976D6BEA0F5D3ABA581CD8B /* AlarmAppCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AlarmAppCore;
+		};
+		F8E2BA89152CDD4B32104E72 /* AlarmAppCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AlarmAppCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 03FC0F82CA0AE7416F24FD0C /* Project object */;
+}
