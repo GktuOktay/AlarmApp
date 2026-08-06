@@ -11,7 +11,8 @@ Son güncelleme: 2026-08-06
 - GitHub: https://github.com/GktuOktay/AlarmApp
 - Yerel klasör: `Desktop/Projects/Hobies/AlarmApp`
 - Sürüm: `0.0.0` (`VERSION` + kullanıcıya dönük `CHANGELOG.md`)
-- İlk push / remote bağlantısı: insan veya ajan; **commit mesajında Cursor/Co-authored-by asla olmamalı** (gerekirse `git commit-tree` kullan)
+- Remote: `origin/main` bağlı; ilk import push edildi (`1be515f`)
+- Commit kuralı: `git commit` yerine gerekirse `git commit-tree` — **Co-authored-by: Cursor yasak**
 
 ## Ürün (özet)
 
@@ -23,7 +24,7 @@ Son güncelleme: 2026-08-06
 ## Açık kapılar
 
 - [ ] `docs/superpowers/specs/2026-08-06-urun-kararlari.md` K1–K4 kullanıcı onayı
-- [ ] Git remote ilk içerik push (boş repo hazır)
+- [x] Git remote ilk içerik push (main)
 - [ ] Faz 1 / Sprint 0 Xcode iskeleti henüz yok
 
 ## Önerilen ürün kararları (henüz kilitlenmedi)
