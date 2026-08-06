@@ -1,22 +1,23 @@
 import SwiftUI
+import SwiftData
 import AlarmAppCore
 
 @main
 struct AlarmApp_iOSApp: App {
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
+    private let container: ModelContainer
+
+    init() {
+        do {
+            container = try ModelContainerFactory.makeOnDisk()
+        } catch {
+            fatalError("SwiftData container oluşturulamadı: \(error)")
         }
     }
-}
 
-struct ContentView: View {
-    var body: some View {
-        Text("AlarmApp \(AlarmAppCoreModule.version)")
-            .padding()
+    var body: some Scene {
+        WindowGroup {
+            GroupListView()
+        }
+        .modelContainer(container)
     }
-}
-
-#Preview {
-    ContentView()
 }

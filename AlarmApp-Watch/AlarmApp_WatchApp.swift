@@ -5,17 +5,25 @@ import AlarmAppCore
 struct AlarmApp_WatchApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            WatchHomeView()
         }
     }
 }
 
-struct ContentView: View {
+struct WatchHomeView: View {
     var body: some View {
-        Text("AlarmApp \(AlarmAppCoreModule.version)")
+        VStack(spacing: 12) {
+            Text("AlarmApp")
+                .font(.headline)
+            Text("Gruplar telefonda yönetilir. “Uyandım” yakında.")
+                .font(.caption2)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.secondary)
+        }
+        .padding()
     }
 }
 
 #Preview {
-    ContentView()
+    WatchHomeView()
 }

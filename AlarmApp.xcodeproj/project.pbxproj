@@ -7,8 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		001C41AF5DBB3C3C3530A71C /* CreateGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7851CDBC1E306DE62709B407 /* CreateGroupView.swift */; };
 		23C8329E8672FA36E5908CE3 /* AlarmAppCore in Frameworks */ = {isa = PBXBuildFile; productRef = A976D6BEA0F5D3ABA581CD8B /* AlarmAppCore */; };
 		501FB7D25EB4D624FB7A9FBC /* AlarmApp_iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96DAB8321DC53ADE58270F8B /* AlarmApp_iOSApp.swift */; };
+		60B61F8C00D31FC690D81B20 /* GroupListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34863A659FB0C203038E7FC /* GroupListView.swift */; };
 		7B1BA660344C97632C8E03DB /* AlarmAppCore in Frameworks */ = {isa = PBXBuildFile; productRef = F8E2BA89152CDD4B32104E72 /* AlarmAppCore */; };
 		8725EE0335C474016765318B /* AlarmApp-Watch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 056C882BA3A6385F21BBDA7A /* AlarmApp-Watch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A3BC47127A3C704417A7BD76 /* AlarmApp_WatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B42AADB285C1CD34F36D18F3 /* AlarmApp_WatchApp.swift */; };
@@ -41,9 +43,11 @@
 /* Begin PBXFileReference section */
 		056C882BA3A6385F21BBDA7A /* AlarmApp-Watch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "AlarmApp-Watch.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		090AAABA32ABF7E0C344A06B /* AlarmAppCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = AlarmAppCore; path = AlarmAppCore; sourceTree = SOURCE_ROOT; };
+		7851CDBC1E306DE62709B407 /* CreateGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateGroupView.swift; sourceTree = "<group>"; };
 		96DAB8321DC53ADE58270F8B /* AlarmApp_iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmApp_iOSApp.swift; sourceTree = "<group>"; };
 		B42AADB285C1CD34F36D18F3 /* AlarmApp_WatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmApp_WatchApp.swift; sourceTree = "<group>"; };
 		C2D22B60D033D36AC678640A /* AlarmApp-iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "AlarmApp-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F34863A659FB0C203038E7FC /* GroupListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupListView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -70,6 +74,7 @@
 			isa = PBXGroup;
 			children = (
 				96DAB8321DC53ADE58270F8B /* AlarmApp_iOSApp.swift */,
+				CD62E3C1CC28522FAC997EC5 /* Views */,
 			);
 			path = "AlarmApp-iOS";
 			sourceTree = "<group>";
@@ -88,6 +93,15 @@
 				090AAABA32ABF7E0C344A06B /* AlarmAppCore */,
 			);
 			name = Packages;
+			sourceTree = "<group>";
+		};
+		CD62E3C1CC28522FAC997EC5 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				7851CDBC1E306DE62709B407 /* CreateGroupView.swift */,
+				F34863A659FB0C203038E7FC /* GroupListView.swift */,
+			);
+			path = Views;
 			sourceTree = "<group>";
 		};
 		F0A2B35AD8205685CDF37B9C = {
@@ -192,6 +206,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				501FB7D25EB4D624FB7A9FBC /* AlarmApp_iOSApp.swift in Sources */,
+				001C41AF5DBB3C3C3530A71C /* CreateGroupView.swift in Sources */,
+				60B61F8C00D31FC690D81B20 /* GroupListView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -223,7 +239,7 @@
 				INFOPLIST_FILE = "AlarmApp-Watch/Info.plist";
 				INFOPLIST_KEY_WKApplication = YES;
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.gktuoktay.AlarmApp;
-				MARKETING_VERSION = 0.0.2;
+				MARKETING_VERSION = 0.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.gktuoktay.AlarmApp.watchkitapp;
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -303,7 +319,7 @@
 				INFOPLIST_FILE = "AlarmApp-Watch/Info.plist";
 				INFOPLIST_KEY_WKApplication = YES;
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.gktuoktay.AlarmApp;
-				MARKETING_VERSION = 0.0.2;
+				MARKETING_VERSION = 0.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.gktuoktay.AlarmApp.watchkitapp;
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -378,7 +394,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.0.2;
+				MARKETING_VERSION = 0.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.gktuoktay.AlarmApp;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -396,7 +412,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.0.2;
+				MARKETING_VERSION = 0.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.gktuoktay.AlarmApp;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
