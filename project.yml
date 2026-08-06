@@ -18,16 +18,30 @@ targets:
       - path: AlarmApp-iOS
         excludes:
           - Info.plist
+    info:
+      path: AlarmApp-iOS/Info.plist
+      properties:
+        CFBundleDisplayName: AlarmApp
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        LSRequiresIPhoneOS: true
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
     dependencies:
       - package: AlarmAppCore
       - target: AlarmApp-Watch
         embed: true
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.gktuoktay.AlarmApp
-      GENERATE_INFOPLIST_FILE: YES
+      GENERATE_INFOPLIST_FILE: NO
+      INFOPLIST_KEY_UILaunchScreen_Generation: YES
       MARKETING_VERSION: "0.0.4"
       CURRENT_PROJECT_VERSION: "1"
       TARGETED_DEVICE_FAMILY: "1,2"
+      SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
   AlarmApp-Watch:
     type: application
     platform: watchOS
