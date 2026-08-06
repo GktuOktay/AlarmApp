@@ -8,6 +8,7 @@ alwaysApply: true
 - **Only the Auto model** may be used for this project’s agent work.
 - **Premium / paid high-tier models are forbidden** (do not switch to or recommend Opus, GPT-5 Pro, Claude premium tiers, “max”, “thinking-high” paid SKUs, etc. for AlarmApp tasks).
 - Prefer the smallest sufficient context: read targeted files; avoid dumping entire `docs/` trees unless needed.
+- **Build split:** verify with `swift test` in `AlarmAppCore`. Do not run full iOS `xcodebuild` by default — the human runs the app in Xcode.
 - Do not spawn unnecessary parallel subagents or re-read large files already summarized in `memory.md`.
 - Before long exploratory passes, check `memory.md` and phase plans first.
 - If a task seems to “need” a premium model, refuse the switch and continue with Auto — ask the human only if blocked on capability, not for a model upgrade.

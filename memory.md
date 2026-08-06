@@ -7,8 +7,11 @@ Son güncelleme: 2026-08-06
 ## Repo
 
 - GitHub: https://github.com/GktuOktay/AlarmApp
-- Sürüm: **0.0.4** — bildirim zamanlama + S3 detay + Bugün kapat bildirim iptali
-- Sonraki: Watch Uyandım, SkipWeek UI, onboarding
+## Çalışma biçimi (kilit)
+
+- Ajan: kod yazar + `AlarmAppCore` için `swift test` / `swift build` doğrular
+- İnsan: Xcode’da app Run / Preview / simülatör (tam `xcodebuild` app derlemesini ajan varsayılan olarak atlar — yavaş)
+- Toplu özellik yaz → insan bir kez derler
 
 ## Mimari sabit
 
