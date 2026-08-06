@@ -49,6 +49,8 @@ public struct CreateAlarmGroupResult: Sendable {
     public let groupId: UUID
     public let instanceCount: Int
     public let clockTimesPerDay: [ClockTime]
+    public let schedules: [AlarmSchedule]
+    public let groupName: String
 }
 
 /// Builds an `AlarmGroup` + pending `AlarmInstance`s for matching weekdays in the horizon.

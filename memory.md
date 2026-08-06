@@ -7,8 +7,8 @@ Son güncelleme: 2026-08-06
 ## Repo
 
 - GitHub: https://github.com/GktuOktay/AlarmApp
-- Sürüm: **0.0.3** — S1 liste + S2 oluştur UI canlı
-- Aç: `open AlarmApp.xcodeproj` → AlarmApp-iOS → Run
+- Sürüm: **0.0.4** — bildirim zamanlama + S3 detay + Bugün kapat bildirim iptali
+- Sonraki: Watch Uyandım, SkipWeek UI, onboarding
 
 ## Mimari sabit
 

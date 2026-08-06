@@ -63,7 +63,9 @@ public struct AlarmGroupSummary: Sendable, Identifiable, Equatable {
 /// Repository boundary uses only `Sendable` value types — never pass `@Model` across actors.
 public protocol AlarmRepository: Sendable {
     func createGroup(from prepared: PreparedAlarmGroup) async throws -> CreateAlarmGroupResult
-    func cancelToday(groupId: UUID) async throws
+    /// Cancels today's pending instances. Returns cancelled instance IDs (for notification cleanup).
+    @discardableResult
+    func cancelToday(groupId: UUID) async throws -> [UUID]
     func skipWeek(groupId: UUID, weekStart: Date) async throws
     func scheduleException(_ draft: AlarmExceptionDraft) async throws
     func handleWakeEvent(groupId: UUID, source: WakeSource, timestamp: Date) async throws
@@ -71,8 +73,16 @@ public protocol AlarmRepository: Sendable {
     func fetchActiveGroups() async throws -> [AlarmGroupSummary]
 }
 
+public enum AlarmNotificationAction {
+    public static let categoryId = "ALARM_INSTANCE"
+    public static let stopToday = "STOP_TODAY"
+    public static let snooze = "SNOOZE"
+}
+
 public protocol NotificationScheduling: Sendable {
-    func schedule(instanceId: UUID, fireDate: Date) async throws
+    func prepareCategories() async
+    func requestAuthorization() async throws -> Bool
+    func schedule(instanceId: UUID, fireDate: Date, title: String, body: String) async throws
     func cancelPending(instanceIds: [UUID]) async
 }
 

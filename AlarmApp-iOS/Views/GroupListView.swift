@@ -24,13 +24,17 @@ struct GroupListView: View {
                 } else {
                     List {
                         ForEach(groups, id: \.id) { group in
-                            GroupRowView(group: group)
-                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                    Button("Bugün kapat") {
-                                        Task { await cancelToday(groupId: group.id, name: group.name) }
-                                    }
-                                    .tint(.orange)
+                            NavigationLink {
+                                GroupDetailView(group: group)
+                            } label: {
+                                GroupRowView(group: group)
+                            }
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                Button("Bugün kapat") {
+                                    Task { await cancelToday(groupId: group.id, name: group.name) }
                                 }
+                                .tint(.orange)
+                            }
                         }
                     }
                     .listStyle(.insetGrouped)
@@ -80,7 +84,8 @@ struct GroupListView: View {
     private func cancelToday(groupId: UUID, name: String) async {
         do {
             let repo = SwiftDataAlarmRepository(modelContainer: modelContext.container)
-            try await repo.cancelToday(groupId: groupId)
+            let cancelled = try await repo.cancelToday(groupId: groupId)
+            await LocalNotificationScheduler().cancelPending(instanceIds: cancelled)
             await MainActor.run {
                 toastMessage = "\(name) bugün için kapatıldı"
                 Task {

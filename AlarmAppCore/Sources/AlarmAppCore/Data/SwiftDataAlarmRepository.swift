@@ -21,6 +21,8 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
         )
         modelContext.insert(group)
 
+        var schedules: [AlarmSchedule] = []
+        let calendar = Calendar.current
         for spec in prepared.instances {
             let instance = AlarmInstance(
                 scheduledDate: spec.scheduledDate,
@@ -30,6 +32,9 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
             )
             instance.group = group
             modelContext.insert(instance)
+            if let fire = AlarmFireDate.make(day: spec.scheduledDate, time: spec.scheduledTime, calendar: calendar) {
+                schedules.append(AlarmSchedule(instanceId: instance.id, fireDate: fire))
+            }
         }
 
         try modelContext.save()
@@ -40,14 +45,17 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
                 start: prepared.timeStart,
                 end: prepared.timeEnd,
                 intervalMinutes: prepared.intervalMinutes
-            )
+            ),
+            schedules: schedules,
+            groupName: group.name
         )
     }
 
-    public func cancelToday(groupId: UUID) async throws {
+    @discardableResult
+    public func cancelToday(groupId: UUID) async throws -> [UUID] {
         let cal = Calendar.current
         let start = cal.startOfDay(for: Date())
-        guard let end = cal.date(byAdding: .day, value: 1, to: start) else { return }
+        guard let end = cal.date(byAdding: .day, value: 1, to: start) else { return [] }
 
         let all = try modelContext.fetch(FetchDescriptor<AlarmInstance>())
         let matching = all.filter { instance in
@@ -61,12 +69,15 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
             throw SwiftDataAlarmRepositoryError.groupNotFound
         }
         let now = Date()
+        var cancelledIds: [UUID] = []
         for instance in matching {
             instance.status = .cancelled
             instance.cancelledReason = .manualToday
             instance.updatedAt = now
+            cancelledIds.append(instance.id)
         }
         try modelContext.save()
+        return cancelledIds
     }
 
     public func skipWeek(groupId: UUID, weekStart: Date) async throws {

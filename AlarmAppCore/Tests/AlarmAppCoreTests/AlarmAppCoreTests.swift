@@ -124,6 +124,19 @@ final class OverlapDetectorTests: XCTestCase {
     }
 }
 
+final class AlarmFireDateTests: XCTestCase {
+    func testCombinesDayAndClock() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let day = calendar.date(from: DateComponents(year: 2026, month: 8, day: 6))!
+        let fire = AlarmFireDate.make(day: day, time: ClockTime(hour: 6, minute: 25), calendar: calendar)
+        XCTAssertNotNil(fire)
+        XCTAssertEqual(calendar.component(.hour, from: fire!), 6)
+        XCTAssertEqual(calendar.component(.minute, from: fire!), 25)
+        XCTAssertEqual(calendar.component(.day, from: fire!), 6)
+    }
+}
+
 final class AlarmAppCoreSmokeTests: XCTestCase {
     func testModuleVersion() {
         XCTAssertFalse(AlarmAppCoreModule.version.isEmpty)

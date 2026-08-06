@@ -4,32 +4,40 @@ Bu dosya AlarmApp sürüm notlarını **son kullanıcıya** yönelik, sade Türk
 
 ---
 
-## 0.0.3 — 6 Ağustos 2026
+## 0.0.4 — 6 Ağustos 2026
 
-Telefonda ilk gerçek ekranlar açıldı. Uygulama hâlâ geliştirme aşamasında; alarm bildirimleri henüz çalmaz.
+Alarmlar artık cihaz bildirimlerine zamanlanıyor. Geliştirme sürümü; Critical Alert yok.
 
 ### Bu sürümde
 
-- Ana ekranda alarm gruplarını görebilirsin.
-- Yeni bir sabah grubu oluşturabilirsin (saat aralığı, aralık, günler).
-- Grubu sola kaydırarak “Bugün kapat” deneyebilirsin.
+- Grup oluşturunca gelecek alarmlar için bildirim planlanır.
+- “Bugün kapat” hem listeyi hem bekleyen bildirimleri temizler.
+- Grup detayında tek tek alarmları ve durumlarını görebilirsin.
+- Bildirimde “Bugün Kapat” ve “Ertele (5 dk)” seçenekleri vardır.
 
 ### Bilmen gerekenler
 
-- Bildirim sesi ve Watch “Uyandım” henüz yok.
-- Veriler yalnızca bu cihazda saklanır.
+- İlk açılışta bildirim izni ister.
+- Simülatörde bildirimler sınırlı çalışabilir; gerçek cihazda daha doğru test edilir.
+- Watch “Uyandım” henüz yok.
+
+---
+
+## 0.0.3 — 6 Ağustos 2026
+
+Telefonda ilk gerçek ekranlar: grup listesi ve grup oluşturma.
 
 ---
 
 ## 0.0.2 — 6 Ağustos 2026
 
-Alarm gruplarının nasıl üretileceği çekirdekte tanımlandı. Sunucu yok; her şey cihazda.
+Alarm grubu üretim çekirdeği eklendi.
 
 ---
 
 ## 0.0.1 — 6 Ağustos 2026
 
-Geliştirme iskeleti ve MIT lisansı eklendi.
+Geliştirme iskeleti ve MIT lisansı.
 
 ---
 

@@ -130,10 +130,26 @@ struct CreateGroupView: View {
             )
 
             let repo = SwiftDataAlarmRepository(modelContainer: modelContext.container)
-            _ = try await repo.createGroup(from: prepared)
+            let result = try await repo.createGroup(from: prepared)
 
-            if !overlaps.isEmpty {
-                // Saved anyway; toast-style feedback via error dialog is wrong — use print for now
+            let scheduler = LocalNotificationScheduler()
+            let authorized = try await scheduler.requestAuthorization()
+            if authorized {
+                let now = Date()
+                for schedule in result.schedules where schedule.fireDate > now {
+                    try await scheduler.schedule(
+                        instanceId: schedule.instanceId,
+                        fireDate: schedule.fireDate,
+                        title: result.groupName,
+                        body: String(
+                            format: "Alarm · %02d:%02d",
+                            Calendar.current.component(.hour, from: schedule.fireDate),
+                            Calendar.current.component(.minute, from: schedule.fireDate)
+                        )
+                    )
+                }
+            } else if !overlaps.isEmpty {
+                // still dismiss; permission denied is fine for local data
             }
 
             onFinished()
