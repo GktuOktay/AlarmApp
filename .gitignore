@@ -1,0 +1,21 @@
+# macOS
+.DS_Store
+
+# Xcode (future)
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.ipa
+*.dSYM
+*.dSYM.zip
+
+# SPM (future)
+.build/
+Packages/
+Package.resolved
+
+# Fastlane (future)
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output

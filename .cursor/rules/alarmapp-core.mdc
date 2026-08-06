@@ -1,0 +1,17 @@
+---
+description: AlarmApp global constraints — local-first, fail-safe, phase order
+alwaysApply: true
+---
+
+# AlarmApp core
+
+- **Local-first.** No cloud sync or analytics SDK by default (PRD NG2).
+- **`AlarmAppCore` must not `import SwiftUI`.** UI lives in iOS/Watch targets only.
+- **Fail-safe.** Never silently cancel alarms. Uncertainty → keep firing. Auto wake (F5) always needs user confirmation.
+- **Phases.** Follow `docs/superpowers/plans/`. Do not build Watch/HealthKit before MVP (F1+F3) is ready.
+- **Product decisions.** Before F1 instance-generation / SkipWeek logic, lock `docs/superpowers/specs/2026-08-06-urun-kararlari.md`.
+- **Commits.** Conventional Commits. **No Cursor / AI traces** in subject, body, or trailers (see `alarmapp-commits`).
+- **Version log.** Keep `VERSION` + end-user Turkish `CHANGELOG.md` in sync; start at `0.0.0`. Technical notes → `memory.md`.
+- **Models.** Auto only; premium models forbidden (`alarmapp-token-usage`).
+- **Memory.** Update `memory.md` when decisions/gates/repo state change.
+- **No web design stack** as primary UI guidance. No vendored third-party app clones.

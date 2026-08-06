@@ -1,0 +1,14 @@
+---
+description: AlarmAppCore package layering and API discipline
+globs: AlarmAppCore/**
+alwaysApply: false
+---
+
+# AlarmAppCore package
+
+- Layers only: **Domain** / **Data** / **Connectivity**.
+- Allowed frameworks: Foundation, SwiftData, WatchConnectivity, (v2) HealthKit, CoreMotion — **not** SwiftUI, UIKit, WatchKit.
+- Copy models/protocols from `docs/03-veri-modeli-ve-arayuzler.md`. Do not invent `WatchMessage` cases without updating `docs/03` first.
+- Prefer repository + use-case patterns named in `docs/02` and `docs/07`.
+- Domain must be testable with `swift test` (no simulator required for Core unit tests).
+- Persistence: SwiftData per ADR-4 unless the project explicitly switches to GRDB.

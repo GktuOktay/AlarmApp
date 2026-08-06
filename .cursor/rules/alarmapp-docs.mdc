@@ -1,0 +1,15 @@
+---
+description: Product docs language and reference catalog rules
+globs: docs/**
+alwaysApply: false
+---
+
+# AlarmApp docs
+
+- Product docs (`docs/00`–`07`, `09`) stay **Turkish**. Do not rewrite PRD/UX into English agent prose.
+- **`CHANGELOG.md`:** end-user Turkish only — friendly sentences, no file paths / agent toolkit jargon.
+- **`memory.md`:** short project memory for agents; update when durable state changes.
+- Agent tooling docs live in `AGENTS.md` and `.cursor/` (**English**).
+- References: `docs/09-referans-kaynaklar.md` is links + mapping only — **no** git submodules, no `vendor/` clones of Ice Cubes/Clendar/etc.
+- When contracts change (e.g. `WatchMessage`), update `docs/03` in the same change set as code.
+- Phase plans/specs: `docs/superpowers/plans/`, `docs/superpowers/specs/`.

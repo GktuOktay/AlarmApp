@@ -1,0 +1,14 @@
+---
+description: watchOS target UX and offline-first wake behavior
+globs: AlarmApp-Watch/**
+alwaysApply: false
+---
+
+# AlarmApp Watch
+
+- **Watch = quick decisions; iPhone = planning** (`docs/01`).
+- **Offline-first wake:** On “Uyandım”, cancel Watch-local notifications first, then sync via WatchConnectivity (`docs/02` §3).
+- **Uyandım control:** ≥ 44×44 pt, high contrast, haptic feedback.
+- **Undo:** 10 seconds on W2; leaving the app without undo commits the cancel.
+- **Cache only `TodayContext`** (and related summaries) — not full group/exception history (`docs/03` §2).
+- Complications (W3): follow HIG Complications; see `docs/09-referans-kaynaklar.md`.
