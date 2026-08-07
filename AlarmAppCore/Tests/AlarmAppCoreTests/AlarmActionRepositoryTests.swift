@@ -110,6 +110,134 @@ final class AlarmActionRepositoryTests: XCTestCase {
         XCTAssertEqual(wakeIds, [b.alarmId])
     }
 
+    func testSetWakeScheduleAlarmNilClears() async throws {
+        let (repo, _) = try makeRepo()
+        let now = Date()
+        let seeded = try await seedPendingInstance(repo: repo, at: now.addingTimeInterval(120), title: "Wake")
+
+        try await repo.setWakeScheduleAlarm(alarmId: seeded.alarmId)
+        try await repo.setWakeScheduleAlarm(alarmId: nil)
+
+        let alarms = try await repo.fetchActiveAlarms()
+        XCTAssertTrue(alarms.filter(\.isWakeSchedule).isEmpty)
+    }
+
+    func testCancelGroupTodayCancelsAndBypassesDay() async throws {
+        let (repo, container) = try makeRepo()
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let groupId = try await repo.createGroup(name: "Sabah")
+        let inGroup = try await seedPendingInstance(
+            repo: repo,
+            at: now.addingTimeInterval(60 * 60),
+            title: "InGroup",
+            groupId: groupId
+        )
+        let otherGroupId = try await repo.createGroup(name: "Diğer")
+        let otherGroup = try await seedPendingInstance(
+            repo: repo,
+            at: now.addingTimeInterval(90 * 60),
+            title: "OtherGroup",
+            groupId: otherGroupId
+        )
+        let ungrouped = try await seedPendingInstance(
+            repo: repo,
+            at: now.addingTimeInterval(120 * 60),
+            title: "Ungrouped"
+        )
+
+        let cancelled = try await repo.cancel(
+            scope: .groupToday(groupId),
+            reason: .wakePrompt,
+            now: now
+        )
+
+        XCTAssertEqual(Set(cancelled), [inGroup.instanceId])
+
+        let cancelledInstance = try fetchInstance(id: inGroup.instanceId, container: container)
+        XCTAssertEqual(cancelledInstance.status, .cancelled)
+        XCTAssertEqual(cancelledInstance.cancelledReason, .wakePrompt)
+
+        let otherInstance = try fetchInstance(id: otherGroup.instanceId, container: container)
+        let ungroupedInstance = try fetchInstance(id: ungrouped.instanceId, container: container)
+        XCTAssertEqual(otherInstance.status, .pending)
+        XCTAssertEqual(ungroupedInstance.status, .pending)
+
+        let day = calendar.startOfDay(for: now)
+        let bypassed = try await repo.isDayBypassed(alarmId: inGroup.alarmId, groupId: groupId, day: day)
+        let otherBypassed = try await repo.isDayBypassed(
+            alarmId: otherGroup.alarmId,
+            groupId: otherGroupId,
+            day: day
+        )
+        let ungroupedBypassed = try await repo.isDayBypassed(
+            alarmId: ungrouped.alarmId,
+            groupId: nil,
+            day: day
+        )
+        XCTAssertTrue(bypassed)
+        XCTAssertFalse(otherBypassed)
+        XCTAssertFalse(ungroupedBypassed)
+    }
+
+    func testCancelAllTodayCancelsAndBypassesDay() async throws {
+        let (repo, container) = try makeRepo()
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let groupId = try await repo.createGroup(name: "Sabah")
+        let grouped = try await seedPendingInstance(
+            repo: repo,
+            at: now.addingTimeInterval(60 * 60),
+            title: "Grouped",
+            groupId: groupId
+        )
+        let ungrouped = try await seedPendingInstance(
+            repo: repo,
+            at: now.addingTimeInterval(2 * 60 * 60),
+            title: "Ungrouped"
+        )
+        let tomorrow = try await seedPendingInstance(
+            repo: repo,
+            at: now.addingTimeInterval(26 * 60 * 60),
+            title: "Tomorrow"
+        )
+
+        let cancelled = try await repo.cancel(
+            scope: .allToday,
+            reason: .manualToday,
+            now: now
+        )
+
+        XCTAssertEqual(Set(cancelled), [grouped.instanceId, ungrouped.instanceId])
+
+        let groupedInstance = try fetchInstance(id: grouped.instanceId, container: container)
+        let ungroupedInstance = try fetchInstance(id: ungrouped.instanceId, container: container)
+        let tomorrowInstance = try fetchInstance(id: tomorrow.instanceId, container: container)
+        XCTAssertEqual(groupedInstance.status, .cancelled)
+        XCTAssertEqual(groupedInstance.cancelledReason, .manualToday)
+        XCTAssertEqual(ungroupedInstance.status, .cancelled)
+        XCTAssertEqual(tomorrowInstance.status, .pending)
+
+        let day = calendar.startOfDay(for: now)
+        let groupedBypassed = try await repo.isDayBypassed(
+            alarmId: grouped.alarmId,
+            groupId: groupId,
+            day: day
+        )
+        let ungroupedBypassed = try await repo.isDayBypassed(
+            alarmId: ungrouped.alarmId,
+            groupId: nil,
+            day: day
+        )
+        let tomorrowDay = calendar.startOfDay(for: now.addingTimeInterval(26 * 60 * 60))
+        let tomorrowBypassed = try await repo.isDayBypassed(
+            alarmId: tomorrow.alarmId,
+            groupId: nil,
+            day: tomorrowDay
+        )
+        XCTAssertTrue(groupedBypassed)
+        XCTAssertTrue(ungroupedBypassed)
+        XCTAssertFalse(tomorrowBypassed)
+    }
+
     // MARK: - Helpers
 
     private struct SeededInstance {
@@ -128,7 +256,8 @@ final class AlarmActionRepositoryTests: XCTestCase {
         at fireDate: Date,
         snoozeEnabled: Bool = true,
         snoozeMinutes: Int = SnoozePolicy.defaultMinutes,
-        title: String = "Test"
+        title: String = "Test",
+        groupId: UUID? = nil
     ) async throws -> SeededInstance {
         let day = calendar.startOfDay(for: fireDate)
         let comps = calendar.dateComponents([.hour, .minute], from: fireDate)
@@ -143,7 +272,7 @@ final class AlarmActionRepositoryTests: XCTestCase {
             daysOfWeek: [weekday],
             soundId: "default",
             soundVolume: 1.0,
-            groupId: nil,
+            groupId: groupId,
             endsOn: day,
             snoozeEnabled: snoozeEnabled,
             snoozeMinutes: snoozeMinutes,

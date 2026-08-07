@@ -98,64 +98,12 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
 
     @discardableResult
     public func cancelToday(groupId: UUID) async throws -> [UUID] {
-        let group = try requireGroup(id: groupId)
-        let cal = Calendar.autoupdatingCurrent
-        let start = cal.startOfDay(for: Date())
-        guard let end = cal.date(byAdding: .day, value: 1, to: start) else { return [] }
-
-        modelContext.insert(
-            AlarmException(
-                group: group,
-                alarmId: nil,
-                type: .singleDay,
-                startDate: start,
-                action: .skip
-            )
-        )
-
-        let all = try modelContext.fetch(FetchDescriptor<AlarmInstance>())
-        let matching = all.filter { instance in
-            instance.alarm?.group?.id == groupId
-                && instance.status == .pending
-                && instance.scheduledDate >= start
-                && instance.scheduledDate < end
-        }
-        if matching.isEmpty {
-            try modelContext.save()
-            return []
-        }
-        return try cancel(instances: matching, reason: .manualToday)
+        try cancelGroupToday(groupId: groupId, reason: .manualToday, now: Date())
     }
 
     @discardableResult
     public func cancelToday(alarmId: UUID) async throws -> [UUID] {
-        _ = try requireAlarm(id: alarmId)
-        let cal = Calendar.autoupdatingCurrent
-        let start = cal.startOfDay(for: Date())
-        guard let end = cal.date(byAdding: .day, value: 1, to: start) else { return [] }
-
-        modelContext.insert(
-            AlarmException(
-                group: nil,
-                alarmId: alarmId,
-                type: .singleDay,
-                startDate: start,
-                action: .skip
-            )
-        )
-
-        let all = try modelContext.fetch(FetchDescriptor<AlarmInstance>())
-        let matching = all.filter { instance in
-            instance.alarm?.id == alarmId
-                && instance.status == .pending
-                && instance.scheduledDate >= start
-                && instance.scheduledDate < end
-        }
-        if matching.isEmpty {
-            try modelContext.save()
-            return []
-        }
-        return try cancel(instances: matching, reason: .manualToday)
+        try cancelAlarmToday(alarmId: alarmId, reason: .manualToday, now: Date())
     }
 
     @discardableResult
@@ -414,34 +362,26 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
 
     @discardableResult
     public func cancel(scope: BulkCancelScope, reason: CancelReason, now: Date) async throws -> [UUID] {
-        let calendar = Calendar.autoupdatingCurrent
-        let dayStart = calendar.startOfDay(for: now)
-        guard let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart) else { return [] }
-
-        let all = try modelContext.fetch(FetchDescriptor<AlarmInstance>())
-        let matching = all.filter { instance in
-            guard instance.status == .pending else { return false }
-            guard let fire = AlarmFireDate.make(
-                day: instance.scheduledDate,
-                time: instance.scheduledTime,
-                calendar: calendar
-            ) else { return false }
-
-            switch scope {
-            case .groupToday(let groupId):
-                return instance.alarm?.group?.id == groupId
-                    && instance.scheduledDate >= dayStart
-                    && instance.scheduledDate < dayEnd
-            case .allToday:
-                return instance.scheduledDate >= dayStart
-                    && instance.scheduledDate < dayEnd
-            case .allNextHours:
+        switch scope {
+        case .groupToday(let groupId):
+            return try cancelGroupToday(groupId: groupId, reason: reason, now: now)
+        case .allToday:
+            return try cancelAllToday(reason: reason, now: now)
+        case .allNextHours:
+            let calendar = Calendar.autoupdatingCurrent
+            let all = try modelContext.fetch(FetchDescriptor<AlarmInstance>())
+            let matching = all.filter { instance in
+                guard instance.status == .pending else { return false }
+                guard let fire = AlarmFireDate.make(
+                    day: instance.scheduledDate,
+                    time: instance.scheduledTime,
+                    calendar: calendar
+                ) else { return false }
                 return scope.includesFireDate(fire, now: now)
             }
+            if matching.isEmpty { return [] }
+            return try cancel(instances: matching, reason: reason, at: now)
         }
-
-        if matching.isEmpty { return [] }
-        return try cancel(instances: matching, reason: reason, at: now)
     }
 
     public func setWakeScheduleAlarm(alarmId: UUID?) async throws {
@@ -672,6 +612,116 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
             groupId: alarm.group?.id,
             groupName: alarm.group?.name
         )
+    }
+
+    /// Matches `cancelToday(groupId:)`: inserts a group skip exception for `now`'s day, then cancels pending.
+    private func cancelGroupToday(groupId: UUID, reason: CancelReason, now: Date) throws -> [UUID] {
+        let group = try requireGroup(id: groupId)
+        let cal = Calendar.autoupdatingCurrent
+        let start = cal.startOfDay(for: now)
+        guard let end = cal.date(byAdding: .day, value: 1, to: start) else { return [] }
+
+        modelContext.insert(
+            AlarmException(
+                group: group,
+                alarmId: nil,
+                type: .singleDay,
+                startDate: start,
+                action: .skip
+            )
+        )
+
+        let all = try modelContext.fetch(FetchDescriptor<AlarmInstance>())
+        let matching = all.filter { instance in
+            instance.alarm?.group?.id == groupId
+                && instance.status == .pending
+                && instance.scheduledDate >= start
+                && instance.scheduledDate < end
+        }
+        if matching.isEmpty {
+            try modelContext.save()
+            return []
+        }
+        return try cancel(instances: matching, reason: reason, at: now)
+    }
+
+    /// Matches `cancelToday(alarmId:)`: inserts an alarm skip exception for `now`'s day, then cancels pending.
+    private func cancelAlarmToday(alarmId: UUID, reason: CancelReason, now: Date) throws -> [UUID] {
+        _ = try requireAlarm(id: alarmId)
+        let cal = Calendar.autoupdatingCurrent
+        let start = cal.startOfDay(for: now)
+        guard let end = cal.date(byAdding: .day, value: 1, to: start) else { return [] }
+
+        modelContext.insert(
+            AlarmException(
+                group: nil,
+                alarmId: alarmId,
+                type: .singleDay,
+                startDate: start,
+                action: .skip
+            )
+        )
+
+        let all = try modelContext.fetch(FetchDescriptor<AlarmInstance>())
+        let matching = all.filter { instance in
+            instance.alarm?.id == alarmId
+                && instance.status == .pending
+                && instance.scheduledDate >= start
+                && instance.scheduledDate < end
+        }
+        if matching.isEmpty {
+            try modelContext.save()
+            return []
+        }
+        return try cancel(instances: matching, reason: reason, at: now)
+    }
+
+    /// Cancels all pending instances on `now`'s calendar day and inserts skip exceptions
+    /// (group-level for grouped alarms, alarm-level for ungrouped) so rematerialization stays bypassed.
+    private func cancelAllToday(reason: CancelReason, now: Date) throws -> [UUID] {
+        let cal = Calendar.autoupdatingCurrent
+        let start = cal.startOfDay(for: now)
+        guard let end = cal.date(byAdding: .day, value: 1, to: start) else { return [] }
+
+        let all = try modelContext.fetch(FetchDescriptor<AlarmInstance>())
+        let matching = all.filter { instance in
+            instance.status == .pending
+                && instance.scheduledDate >= start
+                && instance.scheduledDate < end
+        }
+
+        var seenGroupIds = Set<UUID>()
+        var seenUngroupedAlarmIds = Set<UUID>()
+        for instance in matching {
+            if let group = instance.alarm?.group {
+                guard seenGroupIds.insert(group.id).inserted else { continue }
+                modelContext.insert(
+                    AlarmException(
+                        group: group,
+                        alarmId: nil,
+                        type: .singleDay,
+                        startDate: start,
+                        action: .skip
+                    )
+                )
+            } else if let alarmId = instance.alarm?.id {
+                guard seenUngroupedAlarmIds.insert(alarmId).inserted else { continue }
+                modelContext.insert(
+                    AlarmException(
+                        group: nil,
+                        alarmId: alarmId,
+                        type: .singleDay,
+                        startDate: start,
+                        action: .skip
+                    )
+                )
+            }
+        }
+
+        if matching.isEmpty {
+            return []
+        }
+        return try cancel(instances: matching, reason: reason, at: now)
     }
 
     private func cancel(
