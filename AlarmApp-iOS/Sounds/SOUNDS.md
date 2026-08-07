@@ -2,7 +2,7 @@
 
 License bar: CC0 / public domain only.
 
-All source recordings are from [BigSoundBank](https://bigsoundbank.com/) (Joseph Sardin), released under [CC0 1.0 Universal](https://bigsoundbank.com/licenses.html). Converted to mono CAF (LEI16) for `UNNotificationSound(named:)`. No Apple system UISounds.
+All source recordings are from [BigSoundBank](https://bigsoundbank.com/) (Joseph Sardin), released under [CC0 1.0 Universal](https://bigsoundbank.com/licenses.html). Converted to mono IMA4 CAF (`afconvert -f caff -d ima4`) for `UNNotificationSound(named:)` — notification-friendly size, ≤30s. No Apple system UISounds.
 
 | id | file | source URL | license | duration |
 |---|---|---|---|---|
