@@ -149,6 +149,16 @@ public protocol AlarmRepository: Sendable {
     /// Whether a skip exception covers this day for the given alarm (alarm-level or its group).
     func isDayBypassed(alarmId: UUID, groupId: UUID?, day: Date) async throws -> Bool
     func handleWakeEvent(groupId: UUID, source: WakeSource, timestamp: Date) async throws
+    /// Dismisses a single ringing/pending instance (`cancelled` + `userDismiss`).
+    @discardableResult
+    func dismissAlarm(alarmId: UUID, instanceId: UUID, now: Date) async throws -> [UUID]
+    /// Snoozes an instance: marks old as `.snoozed`, creates a new pending schedule at `now + snoozeMinutes`.
+    func snoozeAlarm(alarmId: UUID, instanceId: UUID, now: Date) async throws -> AlarmSchedule
+    /// Bulk-cancels pending instances matching `scope`. Wake UI may pass `.wakePrompt`.
+    @discardableResult
+    func cancel(scope: BulkCancelScope, reason: CancelReason, now: Date) async throws -> [UUID]
+    /// Marks at most one alarm as the wake schedule (`nil` clears).
+    func setWakeScheduleAlarm(alarmId: UUID?) async throws
     func todayContext() async throws -> TodayContext
     func fetchActiveAlarms() async throws -> [AlarmSummary]
     func fetchActiveGroups() async throws -> [AlarmGroupSummary]

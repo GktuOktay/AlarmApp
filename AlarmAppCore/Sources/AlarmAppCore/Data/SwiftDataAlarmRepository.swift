@@ -1,9 +1,11 @@
 import Foundation
 import SwiftData
 
-public enum SwiftDataAlarmRepositoryError: Error, Sendable {
+public enum SwiftDataAlarmRepositoryError: Error, Sendable, Equatable {
     case groupNotFound
     case alarmNotFound
+    case instanceNotFound
+    case snoozeDisabled
 }
 
 @ModelActor
@@ -363,6 +365,109 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
         try modelContext.save()
     }
 
+    @discardableResult
+    public func dismissAlarm(alarmId: UUID, instanceId: UUID, now: Date) async throws -> [UUID] {
+        let instance = try requireInstance(alarmId: alarmId, instanceId: instanceId)
+        instance.status = .cancelled
+        instance.cancelledReason = .userDismiss
+        instance.updatedAt = now
+        try modelContext.save()
+        return [instance.id]
+    }
+
+    public func snoozeAlarm(alarmId: UUID, instanceId: UUID, now: Date) async throws -> AlarmSchedule {
+        let instance = try requireInstance(alarmId: alarmId, instanceId: instanceId)
+        guard let alarm = instance.alarm else {
+            throw SwiftDataAlarmRepositoryError.alarmNotFound
+        }
+        guard alarm.snoozeEnabled else {
+            throw SwiftDataAlarmRepositoryError.snoozeDisabled
+        }
+
+        let calendar = Calendar.autoupdatingCurrent
+        let fireDate = SnoozePolicy.fireDate(from: now, minutes: alarm.snoozeMinutes)
+        let day = calendar.startOfDay(for: fireDate)
+        let comps = calendar.dateComponents([.hour, .minute], from: fireDate)
+        let time = ClockTime(hour: comps.hour ?? 0, minute: comps.minute ?? 0)
+
+        instance.status = .snoozed
+        instance.cancelledReason = .snoozed
+        instance.updatedAt = now
+
+        let snoozed = AlarmInstance(
+            scheduledDate: day,
+            scheduledTime: time,
+            status: .pending,
+            updatedAt: now
+        )
+        snoozed.alarm = alarm
+        modelContext.insert(snoozed)
+        try modelContext.save()
+
+        return AlarmSchedule(
+            instanceId: snoozed.id,
+            fireDate: fireDate,
+            soundId: alarm.soundId,
+            soundVolume: alarm.soundVolume
+        )
+    }
+
+    @discardableResult
+    public func cancel(scope: BulkCancelScope, reason: CancelReason, now: Date) async throws -> [UUID] {
+        let calendar = Calendar.autoupdatingCurrent
+        let dayStart = calendar.startOfDay(for: now)
+        guard let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart) else { return [] }
+
+        let all = try modelContext.fetch(FetchDescriptor<AlarmInstance>())
+        let matching = all.filter { instance in
+            guard instance.status == .pending else { return false }
+            guard let fire = AlarmFireDate.make(
+                day: instance.scheduledDate,
+                time: instance.scheduledTime,
+                calendar: calendar
+            ) else { return false }
+
+            switch scope {
+            case .groupToday(let groupId):
+                return instance.alarm?.group?.id == groupId
+                    && instance.scheduledDate >= dayStart
+                    && instance.scheduledDate < dayEnd
+            case .allToday:
+                return instance.scheduledDate >= dayStart
+                    && instance.scheduledDate < dayEnd
+            case .allNextHours:
+                return scope.includesFireDate(fire, now: now)
+            }
+        }
+
+        if matching.isEmpty { return [] }
+        return try cancel(instances: matching, reason: reason, at: now)
+    }
+
+    public func setWakeScheduleAlarm(alarmId: UUID?) async throws {
+        let alarms = try modelContext.fetch(FetchDescriptor<Alarm>())
+        let currentWakeId = alarms.first(where: \.isWakeSchedule)?.id
+        let stamp = Date()
+
+        if let alarmId {
+            _ = try requireAlarm(id: alarmId)
+            let selected = WakeSchedulePolicy.applying(selectedId: alarmId, currentWakeId: currentWakeId)
+            for alarm in alarms {
+                let shouldWake = alarm.id == selected
+                if alarm.isWakeSchedule != shouldWake {
+                    alarm.isWakeSchedule = shouldWake
+                    alarm.updatedAt = stamp
+                }
+            }
+        } else {
+            for alarm in alarms where alarm.isWakeSchedule {
+                alarm.isWakeSchedule = false
+                alarm.updatedAt = stamp
+            }
+        }
+        try modelContext.save()
+    }
+
     public func todayContext() async throws -> TodayContext {
         let cal = Calendar.autoupdatingCurrent
         let today = cal.startOfDay(for: Date())
@@ -569,8 +674,11 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
         )
     }
 
-    private func cancel(instances: [AlarmInstance], reason: CancelReason = .manualToday) throws -> [UUID] {
-        let now = Date()
+    private func cancel(
+        instances: [AlarmInstance],
+        reason: CancelReason = .manualToday,
+        at now: Date = Date()
+    ) throws -> [UUID] {
         var cancelledIds: [UUID] = []
         for instance in instances {
             instance.status = .cancelled
@@ -590,6 +698,10 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
         try modelContext.fetch(FetchDescriptor<Alarm>()).first { $0.id == id }
     }
 
+    private func fetchInstance(id: UUID) throws -> AlarmInstance? {
+        try modelContext.fetch(FetchDescriptor<AlarmInstance>()).first { $0.id == id }
+    }
+
     private func requireGroup(id: UUID) throws -> AlarmGroup {
         guard let group = try fetchGroup(id: id) else {
             throw SwiftDataAlarmRepositoryError.groupNotFound
@@ -602,5 +714,12 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
             throw SwiftDataAlarmRepositoryError.alarmNotFound
         }
         return alarm
+    }
+
+    private func requireInstance(alarmId: UUID, instanceId: UUID) throws -> AlarmInstance {
+        guard let instance = try fetchInstance(id: instanceId), instance.alarm?.id == alarmId else {
+            throw SwiftDataAlarmRepositoryError.instanceNotFound
+        }
+        return instance
     }
 }
