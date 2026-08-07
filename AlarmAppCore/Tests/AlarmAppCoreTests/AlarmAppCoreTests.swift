@@ -147,3 +147,66 @@ final class AlarmAppCoreSmokeTests: XCTestCase {
         XCTAssertNotNil(container)
     }
 }
+
+final class AlarmSoundCatalogTests: XCTestCase {
+    func testResolveUnknownFallsBackToDefault() {
+        let sound = AlarmSoundCatalog.resolve("nope")
+        XCTAssertEqual(sound.id, "default")
+        XCTAssertNil(sound.fileName)
+    }
+
+    func testClampVolume() {
+        XCTAssertEqual(AlarmSoundCatalog.clampVolume(-1), 0)
+        XCTAssertEqual(AlarmSoundCatalog.clampVolume(0.5), 0.5)
+        XCTAssertEqual(AlarmSoundCatalog.clampVolume(2), 1)
+    }
+
+    func testCatalogContainsDefaultAndBundledIds() {
+        let ids = Set(AlarmSoundCatalog.all.map(\.id))
+        XCTAssertTrue(ids.contains("default"))
+        XCTAssertTrue(ids.contains("classic_bell"))
+        XCTAssertTrue(ids.contains("digital_beep"))
+        XCTAssertTrue(ids.contains("mechanical_ring"))
+        XCTAssertTrue(ids.contains("electronic_buzz"))
+        XCTAssertTrue(ids.contains("soft_chime"))
+        XCTAssertTrue(ids.contains("radar_pulse"))
+    }
+}
+
+final class NotificationSoundResolverTests: XCTestCase {
+    func testDefaultWithoutCritical() {
+        let r = NotificationSoundResolver.resolve(
+            soundId: "default",
+            volume: 0.4,
+            criticalEnabled: false
+        )
+        XCTAssertEqual(r, .systemDefault)
+    }
+
+    func testNamedWithoutCritical() {
+        let r = NotificationSoundResolver.resolve(
+            soundId: "classic_bell",
+            volume: 0.8,
+            criticalEnabled: false
+        )
+        XCTAssertEqual(r, .named("classic_bell"))
+    }
+
+    func testDefaultWithCriticalUsesVolume() {
+        let r = NotificationSoundResolver.resolve(
+            soundId: "default",
+            volume: 0.25,
+            criticalEnabled: true
+        )
+        XCTAssertEqual(r, .criticalDefault(volume: 0.25))
+    }
+
+    func testUnknownIdWithCriticalNamedFallsBackDefaultCritical() {
+        let r = NotificationSoundResolver.resolve(
+            soundId: "missing",
+            volume: 1.5,
+            criticalEnabled: true
+        )
+        XCTAssertEqual(r, .criticalDefault(volume: 1.0))
+    }
+}
