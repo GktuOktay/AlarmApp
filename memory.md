@@ -53,5 +53,9 @@ Son güncelleme: 2026-08-07 · VERSION `0.0.7`
 - Cihaz tabanı: iPhone 11+ · iOS 17+
 - Katalog `id` ↔ bundle `.caf` adı aynı; Critical path `criticalAlertsEnabled` (varsayılan `false`)
 - `TodayContext.autoWakeDetectionEnabled` (legacy decode → `true`); S7 → `pushTodayContext`
+- `TodayContext.wakeAlarmId` / `wakeGroupId` / `nextWakeFireDate` (legacy → nil); Watch wake detection uses context, not full local catalog
+- `InstanceSummary.alarmId` (legacy → zero UUID); ringing candidate can use context-only summaries
+- WC: notActivated → enqueue outbound; flush on `activationDidComplete`
+- HealthKit entitlement: iOS + Watch `.entitlements` + `project.yml`
 - `handleWakeEvent` legacy; yeni UI `cancel(scope:reason: .wakePrompt)`
 - Status `.snoozed` + reason `.snoozed` (karıştırma)

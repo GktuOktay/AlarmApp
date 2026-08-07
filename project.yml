@@ -64,6 +64,8 @@ targets:
         embed: true
     entitlements:
       path: AlarmApp-iOS/AlarmApp-iOS.entitlements
+      properties:
+        com.apple.developer.healthkit: true
   AlarmApp-Watch:
     type: application
     platform: watchOS
@@ -109,3 +111,5 @@ targets:
       SWIFT_EMIT_LOC_STRINGS: YES
     entitlements:
       path: AlarmApp-Watch/AlarmApp-Watch.entitlements
+      properties:
+        com.apple.developer.healthkit: true

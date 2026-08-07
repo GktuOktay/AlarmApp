@@ -122,6 +122,27 @@ final class AlarmActionRepositoryTests: XCTestCase {
         XCTAssertTrue(alarms.filter(\.isWakeSchedule).isEmpty)
     }
 
+    func testTodayContextIncludesWakeFieldsAndInstanceAlarmId() async throws {
+        let (repo, _) = try makeRepo()
+        let now = Date()
+        let groupId = try await repo.createGroup(name: "Sabah")
+        let seeded = try await seedPendingInstance(
+            repo: repo,
+            at: now.addingTimeInterval(3600),
+            title: "Uyanma",
+            groupId: groupId
+        )
+        try await repo.setWakeScheduleAlarm(alarmId: seeded.alarmId)
+
+        let context = try await repo.todayContext()
+        XCTAssertEqual(context.wakeAlarmId, seeded.alarmId)
+        XCTAssertEqual(context.wakeGroupId, groupId)
+        XCTAssertNotNil(context.nextWakeFireDate)
+        let summary = try XCTUnwrap(context.activeGroups.first?.remainingInstances.first)
+        XCTAssertEqual(summary.id, seeded.instanceId)
+        XCTAssertEqual(summary.alarmId, seeded.alarmId)
+    }
+
     func testCancelGroupTodayCancelsAndBypassesDay() async throws {
         let (repo, container) = try makeRepo()
         let now = Date(timeIntervalSince1970: 1_700_000_000)

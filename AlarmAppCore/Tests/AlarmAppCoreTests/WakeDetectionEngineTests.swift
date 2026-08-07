@@ -183,3 +183,34 @@ final class WakeDetectionEngineTests: XCTestCase {
         }
     }
 }
+
+final class WakeScheduleFireDateTests: XCTestCase {
+    func testReturnsTodayWhileBeforeFire() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let day = calendar.date(from: DateComponents(year: 2024, month: 1, day: 15))!
+        let now = calendar.date(bySettingHour: 5, minute: 0, second: 0, of: day)!
+        let next = WakeScheduleFireDate.next(
+            time: ClockTime(hour: 7, minute: 0),
+            now: now,
+            calendar: calendar
+        )
+        let expected = calendar.date(bySettingHour: 7, minute: 0, second: 0, of: day)
+        XCTAssertEqual(next, expected)
+    }
+
+    func testReturnsTomorrowAfterTodayFire() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let day = calendar.date(from: DateComponents(year: 2024, month: 1, day: 15))!
+        let now = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: day)!
+        let next = WakeScheduleFireDate.next(
+            time: ClockTime(hour: 7, minute: 0),
+            now: now,
+            calendar: calendar
+        )
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: day)!
+        let expected = calendar.date(bySettingHour: 7, minute: 0, second: 0, of: tomorrow)
+        XCTAssertEqual(next, expected)
+    }
+}

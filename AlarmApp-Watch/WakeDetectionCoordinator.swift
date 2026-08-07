@@ -16,6 +16,8 @@ final class WakeDetectionCoordinator: ObservableObject {
     private var container: ModelContainer?
     private var tickTask: Task<Void, Never>?
     private var isEnabled = true
+    /// Latest iPhone today context — wake fire / ids come from here, not a full local catalog.
+    private var latestTodayContext: TodayContext?
 
     struct WakePromptContext: Identifiable, Equatable {
         var id: UUID { wakeAlarmId }
@@ -53,6 +55,12 @@ final class WakeDetectionCoordinator: ObservableObject {
         }
     }
 
+    /// Called when iPhone pushes `todayContextUpdate` (application context).
+    func updateTodayContext(_ context: TodayContext) {
+        latestTodayContext = context
+        updateEnabled(context.autoWakeDetectionEnabled)
+    }
+
     func dismissPromptWithoutAction() {
         // Hayır / timeout — no-op on alarms (fail-safe).
         if let offered = promptContext?.offeredAt {
@@ -80,17 +88,13 @@ final class WakeDetectionCoordinator: ObservableObject {
     private func evaluateOnce() async {
         guard isEnabled, promptContext == nil else { return }
         guard WatchRingingPresenter.shared.session == nil else { return }
-        guard let container else { return }
-
-        let repo = SwiftDataAlarmRepository(modelContainer: container)
-        guard let wake = try? await repo.fetchActiveAlarms().first(where: \.isWakeSchedule) else {
+        guard let context = latestTodayContext,
+              let wakeAlarmId = context.wakeAlarmId,
+              let wakeFire = context.nextWakeFireDate else {
             return
         }
 
-        let calendar = Calendar.autoupdatingCurrent
         let now = Date()
-        let wakeFire = nextWakeFireDate(for: wake, now: now, calendar: calendar)
-
         let config = WakeDetectionConfig(
             windowHoursBeforeWake: 4,
             cooldownMinutes: 20,
@@ -108,35 +112,21 @@ final class WakeDetectionCoordinator: ObservableObject {
 
         guard case .offerPrompt(let at)? = event else { return }
 
+        let title = await wakeTitle(for: wakeAlarmId) ?? "Uyanma"
         promptContext = WakePromptContext(
-            wakeAlarmId: wake.id,
-            groupId: wake.groupId,
-            title: wake.title.isEmpty ? "Uyanma" : wake.title,
+            wakeAlarmId: wakeAlarmId,
+            groupId: context.wakeGroupId,
+            title: title,
             offeredAt: at
         )
     }
 
-    private func nextWakeFireDate(
-        for wake: AlarmSummary,
-        now: Date,
-        calendar: Calendar
-    ) -> Date? {
-        // Prefer today's fire if still ahead or within window start; else tomorrow.
-        let todayStart = calendar.startOfDay(for: now)
-        guard let todayFire = AlarmFireDate.make(day: todayStart, time: wake.time, calendar: calendar) else {
+    private func wakeTitle(for wakeAlarmId: UUID) async -> String? {
+        guard let container else { return nil }
+        let repo = SwiftDataAlarmRepository(modelContainer: container)
+        guard let wake = try? await repo.fetchActiveAlarms().first(where: { $0.id == wakeAlarmId }) else {
             return nil
         }
-        let windowStart = todayFire.addingTimeInterval(-4 * 3600)
-        if now >= windowStart && now <= todayFire {
-            return todayFire
-        }
-        if now < windowStart {
-            return todayFire
-        }
-        // After today's fire — look at tomorrow (next sleep cycle).
-        guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: todayStart) else {
-            return nil
-        }
-        return AlarmFireDate.make(day: tomorrow, time: wake.time, calendar: calendar)
+        return wake.title.isEmpty ? nil : wake.title
     }
 }

@@ -14,6 +14,16 @@ struct TodayContext: Codable {
     var date: Date
     var activeGroups: [ActiveGroupSummary]
     var autoWakeDetectionEnabled: Bool  // S7; legacy decode → true
+    var wakeAlarmId: UUID?              // legacy → nil
+    var wakeGroupId: UUID?              // legacy → nil
+    var nextWakeFireDate: Date?         // Watch wake detection; legacy → nil
+}
+
+struct InstanceSummary: Codable, Identifiable {
+    var id: UUID
+    var alarmId: UUID                   // legacy → zero UUID
+    var time: ClockTime
+    var status: AlarmStatus
 }
 
 enum WatchMessage: Codable {
@@ -29,9 +39,10 @@ enum WatchMessage: Codable {
 
 ## Delivery strategy
 
-1. If `WCSession.isReachable` → `sendMessage` with JSON `payload`.
-2. Else / on failure → `transferUserInfo` (queued, guaranteed delivery).
-3. iPhone → Watch today summary: prefer `updateApplicationContext`.
+1. If session not yet `activated` → **enqueue**; flush on `activationDidComplete` (do not drop action messages).
+2. If `WCSession.isReachable` → `sendMessage` with JSON `payload`.
+3. Else / on failure → `transferUserInfo` (queued, guaranteed delivery).
+4. iPhone → Watch today summary: prefer `updateApplicationContext`.
 
 ## Offline-first wake
 

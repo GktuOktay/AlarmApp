@@ -31,7 +31,14 @@ final class WatchSyncBootstrap {
 
     func send(_ message: WatchMessage) {
         Task {
-            try? await WCSessionWatchConnectivityService.shared.send(message)
+            // Local cancel already applied; queue-until-activated avoids dropping peer sync.
+            do {
+                try await WCSessionWatchConnectivityService.shared.send(message)
+            } catch WatchConnectivityError.unsupported {
+                // Simulator / host without WCSession — nothing to deliver.
+            } catch {
+                // Fail-safe: keep local state; peer may catch up on next context push.
+            }
         }
     }
 
@@ -48,7 +55,7 @@ final class WatchSyncBootstrap {
                 forKey: autoWakePromptEnabledKey
             )
             await MainActor.run {
-                WakeDetectionCoordinator.shared.updateEnabled(context.autoWakeDetectionEnabled)
+                WakeDetectionCoordinator.shared.updateTodayContext(context)
             }
         }
 

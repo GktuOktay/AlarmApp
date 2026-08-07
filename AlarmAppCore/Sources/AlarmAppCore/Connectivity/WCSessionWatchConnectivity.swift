@@ -15,6 +15,7 @@ public enum WatchConnectivityError: Error, Sendable, Equatable {
 ///
 /// Delivery: reachable → `sendMessage` (fallback `transferUserInfo`);
 /// `todayContextUpdate` → `updateApplicationContext`.
+/// When the session is not yet activated, outbound messages are queued and flushed on activation.
 public final class WCSessionWatchConnectivityService: NSObject, WatchConnectivityService, @unchecked Sendable {
     public static let shared = WCSessionWatchConnectivityService()
 
@@ -24,6 +25,7 @@ public final class WCSessionWatchConnectivityService: NSObject, WatchConnectivit
     private var continuation: AsyncStream<WatchMessage>.Continuation?
     private let lock = NSLock()
     private var lastApplicationContextPayload: String?
+    private var pendingOutbound: [WatchMessage] = []
 
     private override init() {
         var continuation: AsyncStream<WatchMessage>.Continuation!
@@ -43,6 +45,8 @@ public final class WCSessionWatchConnectivityService: NSObject, WatchConnectivit
         session.delegate = self
         if session.activationState != .activated {
             session.activate()
+        } else {
+            Task { await self.flushPendingOutbound() }
         }
         if !session.receivedApplicationContext.isEmpty {
             ingest(dictionary: session.receivedApplicationContext)
@@ -51,12 +55,38 @@ public final class WCSessionWatchConnectivityService: NSObject, WatchConnectivit
 
     public func send(_ message: WatchMessage) async throws {
         guard let session else { throw WatchConnectivityError.unsupported }
-        guard session.activationState == .activated else {
+        if session.activationState != .activated {
             session.delegate = self
             session.activate()
-            throw WatchConnectivityError.notActivated
+            enqueue(message)
+            return
         }
+        try await deliver(message, session: session)
+    }
 
+    private func enqueue(_ message: WatchMessage) {
+        lock.lock()
+        pendingOutbound.append(message)
+        lock.unlock()
+    }
+
+    private func takePending() -> [WatchMessage] {
+        lock.lock()
+        let batch = pendingOutbound
+        pendingOutbound = []
+        lock.unlock()
+        return batch
+    }
+
+    fileprivate func flushPendingOutbound() async {
+        guard let session, session.activationState == .activated else { return }
+        let batch = takePending()
+        for message in batch {
+            try? await deliver(message, session: session)
+        }
+    }
+
+    private func deliver(_ message: WatchMessage, session: WCSession) async throws {
         let payload = try WatchMessageCodec.dictionary(encoding: message)
         let delivery = WatchMessageDelivery.choose(for: message, isReachable: session.isReachable)
 
@@ -112,6 +142,9 @@ extension WCSessionWatchConnectivityService: WCSessionDelegate {
         if !session.receivedApplicationContext.isEmpty {
             ingest(dictionary: session.receivedApplicationContext)
         }
+        if activationState == .activated {
+            Task { await self.flushPendingOutbound() }
+        }
     }
 
     public func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
@@ -154,6 +187,9 @@ public final class WCSessionWatchConnectivityService: WatchConnectivityService, 
 
     public let incomingMessages: AsyncStream<WatchMessage>
     private var continuation: AsyncStream<WatchMessage>.Continuation?
+    /// Test-only queue mirroring device enqueue-until-activated behavior.
+    public private(set) var pendingOutboundForTests: [WatchMessage] = []
+    public var isActivatedForTests = true
 
     private init() {
         var continuation: AsyncStream<WatchMessage>.Continuation!
@@ -161,9 +197,21 @@ public final class WCSessionWatchConnectivityService: WatchConnectivityService, 
         self.continuation = continuation
     }
 
-    public func activate() {}
+    public func activate() {
+        isActivatedForTests = true
+        let batch = pendingOutboundForTests
+        pendingOutboundForTests = []
+        for message in batch {
+            continuation?.yield(message)
+        }
+    }
 
     public func send(_ message: WatchMessage) async throws {
+        if !isActivatedForTests {
+            pendingOutboundForTests.append(message)
+            return
+        }
+        // Host without WCSession still cannot deliver to a peer.
         throw WatchConnectivityError.unsupported
     }
 }
@@ -175,6 +223,9 @@ public final class FakeWatchConnectivityService: WatchConnectivityService, @unch
     public private(set) var sent: [WatchMessage] = []
     public private(set) var deliveries: [WatchMessageDelivery] = []
     public var isReachable: Bool = true
+    /// When false, `send` enqueues until `flushPending()` (mirrors WCSession notActivated).
+    public var isActivated: Bool = true
+    public private(set) var pending: [WatchMessage] = []
 
     public let incomingMessages: AsyncStream<WatchMessage>
     private var continuation: AsyncStream<WatchMessage>.Continuation?
@@ -186,9 +237,22 @@ public final class FakeWatchConnectivityService: WatchConnectivityService, @unch
     }
 
     public func send(_ message: WatchMessage) async throws {
+        guard isActivated else {
+            pending.append(message)
+            return
+        }
         let delivery = WatchMessageDelivery.choose(for: message, isReachable: isReachable)
         deliveries.append(delivery)
         sent.append(message)
+    }
+
+    public func flushPending() async throws {
+        isActivated = true
+        let batch = pending
+        pending = []
+        for message in batch {
+            try await send(message)
+        }
     }
 
     public func emit(_ message: WatchMessage) {

@@ -22,6 +22,29 @@ public enum WakeDetectionEvent: Sendable, Equatable {
     case offerPrompt(at: Date)
 }
 
+/// Next fire for a wake-schedule clock time (today while not yet fired, else tomorrow).
+public enum WakeScheduleFireDate {
+    public static func next(
+        time: ClockTime,
+        now: Date,
+        calendar: Calendar = .autoupdatingCurrent,
+        windowHoursBefore: Int = 4
+    ) -> Date? {
+        _ = windowHoursBefore // reserved for callers that share detection-window constants
+        let todayStart = calendar.startOfDay(for: now)
+        guard let todayFire = AlarmFireDate.make(day: todayStart, time: time, calendar: calendar) else {
+            return nil
+        }
+        if now <= todayFire {
+            return todayFire
+        }
+        guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: todayStart) else {
+            return nil
+        }
+        return AlarmFireDate.make(day: tomorrow, time: time, calendar: calendar)
+    }
+}
+
 /// Pure wake-detection policy. Emits `.offerPrompt` only; never cancels alarms.
 public struct WakeDetectionEngine: Sendable {
     public init() {}

@@ -34,7 +34,13 @@ final class WatchSyncBootstrap {
         let repo = SwiftDataAlarmRepository(modelContainer: container)
         guard var context = try? await repo.todayContext() else { return }
         context.autoWakeDetectionEnabled = Self.autoWakeDetectionEnabledFromDefaults()
-        try? await WCSessionWatchConnectivityService.shared.send(.todayContextUpdate(context))
+        do {
+            try await WCSessionWatchConnectivityService.shared.send(.todayContextUpdate(context))
+        } catch WatchConnectivityError.unsupported {
+            // Host without WCSession.
+        } catch {
+            // Queued-until-activated path should not throw; other errors leave next push to retry.
+        }
     }
 
     private static func autoWakeDetectionEnabledFromDefaults() -> Bool {
@@ -47,7 +53,13 @@ final class WatchSyncBootstrap {
 
     func send(_ message: WatchMessage) {
         Task {
-            try? await WCSessionWatchConnectivityService.shared.send(message)
+            do {
+                try await WCSessionWatchConnectivityService.shared.send(message)
+            } catch WatchConnectivityError.unsupported {
+                // Host without WCSession.
+            } catch {
+                // Fail-safe: local phone state already updated.
+            }
         }
     }
 

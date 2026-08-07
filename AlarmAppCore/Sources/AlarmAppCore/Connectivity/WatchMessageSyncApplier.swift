@@ -119,35 +119,39 @@ public enum WatchMessageSyncApplier: Sendable {
         calendar: Calendar
     ) async throws -> WatchSyncEffects {
         let dayItems = try await repository.instances(on: context.date)
-        let contextIds = Set(
-            context.activeGroups.flatMap(\.remainingInstances).map(\.id)
-        )
+        let dayByInstanceId = Dictionary(uniqueKeysWithValues: dayItems.map { ($0.instanceId, $0) })
         let alarms = try await repository.fetchActiveAlarms()
         let alarmById = Dictionary(uniqueKeysWithValues: alarms.map { ($0.id, $0) })
 
         let windowStart = now.addingTimeInterval(-ringingLookbackSeconds)
         let windowEnd = now.addingTimeInterval(ringingLookaheadSeconds)
+        let dayStart = calendar.startOfDay(for: context.date)
 
-        for item in dayItems where contextIds.contains(item.instanceId) {
-            guard item.status == .pending || item.status == .fired else { continue }
-            guard let fire = AlarmFireDate.make(
-                day: calendar.startOfDay(for: context.date),
-                time: item.time,
-                calendar: calendar
-            ) else { continue }
-            guard fire >= windowStart, fire <= windowEnd else { continue }
+        // Prefer context summaries (Watch may be catalog-thin); enrich from local when present.
+        for group in context.activeGroups {
+            for summary in group.remainingInstances {
+                guard summary.status == .pending || summary.status == .fired else { continue }
+                guard let fire = AlarmFireDate.make(
+                    day: dayStart,
+                    time: summary.time,
+                    calendar: calendar
+                ) else { continue }
+                guard fire >= windowStart, fire <= windowEnd else { continue }
 
-            let summary = alarmById[item.alarmId]
-            let timeText = String(format: "%02d:%02d", item.time.hour, item.time.minute)
-            let candidate = WatchSyncEffects.RingingCandidate(
-                alarmId: item.alarmId,
-                instanceId: item.instanceId,
-                groupId: item.groupId,
-                title: item.title,
-                timeText: timeText,
-                snoozeEnabled: summary?.snoozeEnabled ?? true
-            )
-            return WatchSyncEffects(ringingCandidate: candidate)
+                let local = dayByInstanceId[summary.id]
+                let alarmId = local?.alarmId ?? summary.alarmId
+                let summaryAlarm = alarmById[alarmId]
+                let timeText = String(format: "%02d:%02d", summary.time.hour, summary.time.minute)
+                let candidate = WatchSyncEffects.RingingCandidate(
+                    alarmId: alarmId,
+                    instanceId: summary.id,
+                    groupId: local?.groupId ?? group.id,
+                    title: local?.title ?? summaryAlarm?.title ?? "Alarm",
+                    timeText: timeText,
+                    snoozeEnabled: summaryAlarm?.snoozeEnabled ?? true
+                )
+                return WatchSyncEffects(ringingCandidate: candidate)
+            }
         }
         return WatchSyncEffects()
     }

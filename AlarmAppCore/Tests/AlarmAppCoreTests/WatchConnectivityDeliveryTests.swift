@@ -68,6 +68,21 @@ final class WatchConnectivityDeliveryTests: XCTestCase {
         XCTAssertEqual(fake.deliveries.last, .applicationContext)
     }
 
+    func testFakeServiceQueuesUntilActivatedThenFlushes() async throws {
+        let fake = FakeWatchConnectivityService()
+        fake.isActivated = false
+        let dismiss = WatchMessage.dismissApplied(alarmId: UUID(), instanceId: UUID())
+        let wake = WatchMessage.wakeConfirmed(groupId: UUID(), timestamp: Date())
+        try await fake.send(dismiss)
+        try await fake.send(wake)
+        XCTAssertTrue(fake.sent.isEmpty)
+        XCTAssertEqual(fake.pending, [dismiss, wake])
+
+        try await fake.flushPending()
+        XCTAssertEqual(fake.pending, [])
+        XCTAssertEqual(fake.sent, [dismiss, wake])
+    }
+
     func testCodecRoundTripThroughDictionary() throws {
         let message = WatchMessage.wakeConfirmed(groupId: UUID(), timestamp: Date(timeIntervalSince1970: 42))
         let dict = try WatchMessageCodec.dictionary(encoding: message)

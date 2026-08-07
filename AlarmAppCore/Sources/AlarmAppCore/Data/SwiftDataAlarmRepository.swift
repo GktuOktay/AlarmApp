@@ -459,7 +459,8 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
 
     public func todayContext() async throws -> TodayContext {
         let cal = Calendar.autoupdatingCurrent
-        let today = cal.startOfDay(for: Date())
+        let now = Date()
+        let today = cal.startOfDay(for: now)
         guard let tomorrow = cal.date(byAdding: .day, value: 1, to: today) else {
             return TodayContext(date: today, activeGroups: [])
         }
@@ -475,14 +476,34 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
                         && $0.scheduledDate < tomorrow
                 }
                 .sorted { $0.scheduledTime < $1.scheduledTime }
-                .map { InstanceSummary(id: $0.id, time: $0.scheduledTime, status: $0.status) }
+                .compactMap { instance -> InstanceSummary? in
+                    guard let alarmId = instance.alarm?.id else { return nil }
+                    return InstanceSummary(
+                        id: instance.id,
+                        alarmId: alarmId,
+                        time: instance.scheduledTime,
+                        status: instance.status
+                    )
+                }
             if !remaining.isEmpty {
                 summaries.append(
                     ActiveGroupSummary(id: group.id, name: group.name, remainingInstances: remaining)
                 )
             }
         }
-        return TodayContext(date: today, activeGroups: summaries)
+
+        let alarms = try modelContext.fetch(FetchDescriptor<Alarm>())
+        let wake = alarms.first(where: { $0.isActive && $0.isWakeSchedule })
+        let nextWake = wake.flatMap {
+            WakeScheduleFireDate.next(time: $0.time, now: now, calendar: cal)
+        }
+        return TodayContext(
+            date: today,
+            activeGroups: summaries,
+            wakeAlarmId: wake?.id,
+            wakeGroupId: wake?.group?.id,
+            nextWakeFireDate: nextWake
+        )
     }
 
     public func fetchActiveAlarms() async throws -> [AlarmSummary] {

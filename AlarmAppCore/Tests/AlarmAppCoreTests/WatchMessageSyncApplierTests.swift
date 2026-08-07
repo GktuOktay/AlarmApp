@@ -94,7 +94,7 @@ final class WatchMessageSyncApplierTests: XCTestCase {
                     id: UUID(),
                     name: "G",
                     remainingInstances: [
-                        InstanceSummary(id: seeded.instanceId, time: time, status: .pending)
+                        InstanceSummary(id: seeded.instanceId, alarmId: seeded.alarmId, time: time, status: .pending)
                     ]
                 )
             ]
@@ -108,6 +108,36 @@ final class WatchMessageSyncApplierTests: XCTestCase {
         XCTAssertEqual(effects.ringingCandidate?.instanceId, seeded.instanceId)
         XCTAssertEqual(effects.ringingCandidate?.alarmId, seeded.alarmId)
         XCTAssertEqual(effects.ringingCandidate?.title, "Sabah")
+    }
+
+    func testTodayContextSuggestsRingingFromSummaryWhenLocalCatalogThin() async throws {
+        let (repo, _) = try makeRepo()
+        let now = Date()
+        let due = now.addingTimeInterval(-30)
+        let comps = calendar.dateComponents([.hour, .minute], from: due)
+        let time = ClockTime(hour: comps.hour ?? 0, minute: comps.minute ?? 0)
+        let instanceId = UUID()
+        let alarmId = UUID()
+        let context = TodayContext(
+            date: calendar.startOfDay(for: due),
+            activeGroups: [
+                ActiveGroupSummary(
+                    id: UUID(),
+                    name: "G",
+                    remainingInstances: [
+                        InstanceSummary(id: instanceId, alarmId: alarmId, time: time, status: .pending)
+                    ]
+                )
+            ]
+        )
+
+        let effects = try await WatchMessageSyncApplier.apply(
+            .todayContextUpdate(context),
+            repository: repo,
+            now: now
+        )
+        XCTAssertEqual(effects.ringingCandidate?.instanceId, instanceId)
+        XCTAssertEqual(effects.ringingCandidate?.alarmId, alarmId)
     }
 
     // MARK: - Helpers

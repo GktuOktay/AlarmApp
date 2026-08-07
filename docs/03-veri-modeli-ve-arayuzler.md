@@ -81,12 +81,26 @@ struct TodayContext: Codable {
     /// S7 “Otomatik uyanma sorusu” tercihi; iPhone → Watch applicationContext.
     /// Eski payload’da yoksa decode varsayılanı `true`.
     var autoWakeDetectionEnabled: Bool
+    /// Aktif uyanma programı alarmı (yoksa / eski payload → nil).
+    var wakeAlarmId: UUID?
+    /// Uyanma alarmının grubu (opsiyonel).
+    var wakeGroupId: UUID?
+    /// Watch uyanma algılama penceresi için sonraki uyanma ateş zamanı.
+    var nextWakeFireDate: Date?
 }
 
 struct ActiveGroupSummary: Codable, Identifiable {
     let id: UUID
     let name: String
     var remainingInstances: [InstanceSummary]
+}
+
+struct InstanceSummary: Codable, Identifiable {
+    let id: UUID
+    /// Eski payload’da yoksa decode varsayılanı sıfır UUID.
+    let alarmId: UUID
+    let time: ClockTime
+    let status: AlarmStatus
 }
 ```
 
@@ -158,4 +172,4 @@ enum WatchMessage: Codable, Sendable {
 }
 ```
 
-Teslim: `isReachable` → `sendMessage`; aksi / hata → `transferUserInfo`. Gün özeti için `updateApplicationContext` tercih edilir. Belirsizlikte alarmlar açık kalır (fail-safe).
+Teslim: `isReachable` → `sendMessage`; aksi / hata → `transferUserInfo`. Gün özeti için `updateApplicationContext` tercih edilir. Oturum henüz `activated` değilse giden mesajlar kuyruğa alınır ve `activationDidComplete` sonrası gönderilir. Belirsizlikte alarmlar açık kalır (fail-safe).
