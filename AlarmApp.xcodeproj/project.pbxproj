@@ -7,8 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		001C41AF5DBB3C3C3530A71C /* CreateGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7851CDBC1E306DE62709B407 /* CreateGroupView.swift */; };
-		1C428273F9CE56EDD56FD694 /* GroupDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8A45DAEF1930F321A9B13AC /* GroupDetailView.swift */; };
+		925CDCD46546C7113F6F2C55 /* CreateAlarmView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C98D98DDF4439D69DD3235B /* CreateAlarmView.swift */; };
+		B3F06917AC462F9B52C94642 /* AlarmDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85C88B31000C614E77E442EB /* AlarmDetailView.swift */; };
+		9CC4615398FB38B80BE6042D /* Weekday+Labels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36368DC574794807D036BFA8 /* Weekday+Labels.swift */; };
 		23C8329E8672FA36E5908CE3 /* AlarmAppCore in Frameworks */ = {isa = PBXBuildFile; productRef = A976D6BEA0F5D3ABA581CD8B /* AlarmAppCore */; };
 		501FB7D25EB4D624FB7A9FBC /* AlarmApp_iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96DAB8321DC53ADE58270F8B /* AlarmApp_iOSApp.swift */; };
 		60B61F8C00D31FC690D81B20 /* GroupListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34863A659FB0C203038E7FC /* GroupListView.swift */; };
@@ -42,13 +43,14 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		3C98D98DDF4439D69DD3235B /* CreateAlarmView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateAlarmView.swift; sourceTree = "<group>"; };
+		85C88B31000C614E77E442EB /* AlarmDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmDetailView.swift; sourceTree = "<group>"; };
+		36368DC574794807D036BFA8 /* Weekday+Labels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Weekday+Labels.swift"; sourceTree = "<group>"; };
 		056C882BA3A6385F21BBDA7A /* AlarmApp-Watch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "AlarmApp-Watch.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		090AAABA32ABF7E0C344A06B /* AlarmAppCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = AlarmAppCore; path = AlarmAppCore; sourceTree = SOURCE_ROOT; };
-		7851CDBC1E306DE62709B407 /* CreateGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateGroupView.swift; sourceTree = "<group>"; };
 		96DAB8321DC53ADE58270F8B /* AlarmApp_iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmApp_iOSApp.swift; sourceTree = "<group>"; };
 		B42AADB285C1CD34F36D18F3 /* AlarmApp_WatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmApp_WatchApp.swift; sourceTree = "<group>"; };
 		C2D22B60D033D36AC678640A /* AlarmApp-iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "AlarmApp-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		C8A45DAEF1930F321A9B13AC /* GroupDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupDetailView.swift; sourceTree = "<group>"; };
 		F34863A659FB0C203038E7FC /* GroupListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupListView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -100,8 +102,9 @@
 		CD62E3C1CC28522FAC997EC5 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				7851CDBC1E306DE62709B407 /* CreateGroupView.swift */,
-				C8A45DAEF1930F321A9B13AC /* GroupDetailView.swift */,
+				85C88B31000C614E77E442EB /* AlarmDetailView.swift */,
+				3C98D98DDF4439D69DD3235B /* CreateAlarmView.swift */,
+				36368DC574794807D036BFA8 /* Weekday+Labels.swift */,
 				F34863A659FB0C203038E7FC /* GroupListView.swift */,
 			);
 			path = Views;
@@ -209,8 +212,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				501FB7D25EB4D624FB7A9FBC /* AlarmApp_iOSApp.swift in Sources */,
-				001C41AF5DBB3C3C3530A71C /* CreateGroupView.swift in Sources */,
-				1C428273F9CE56EDD56FD694 /* GroupDetailView.swift in Sources */,
+				B3F06917AC462F9B52C94642 /* AlarmDetailView.swift in Sources */,
+				925CDCD46546C7113F6F2C55 /* CreateAlarmView.swift in Sources */,
+				9CC4615398FB38B80BE6042D /* Weekday+Labels.swift in Sources */,
 				60B61F8C00D31FC690D81B20 /* GroupListView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
