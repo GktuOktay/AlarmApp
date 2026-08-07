@@ -119,10 +119,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
             }
 
         case AlarmNotificationAction.stopToday:
-            guard let alarmId else {
-                await scheduler.cancelPending(instanceIds: [instanceId])
-                return
-            }
+            guard let alarmId else { return }
             do {
                 let cancelled = try await repo.dismissAlarm(
                     alarmId: alarmId,
