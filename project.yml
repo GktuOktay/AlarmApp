@@ -5,8 +5,10 @@ options:
     iOS: "17.0"
     watchOS: "10.0"
   createIntermediateGroups: true
+  developmentLanguage: tr
 settings:
   SWIFT_VERSION: "5.9"
+  DEVELOPMENT_LANGUAGE: tr
 packages:
   AlarmAppCore:
     path: AlarmAppCore
@@ -23,12 +25,31 @@ targets:
         buildPhase: resources
         excludes:
           - SOUNDS.md
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.gktuoktay.AlarmApp
+      GENERATE_INFOPLIST_FILE: NO
+      INFOPLIST_KEY_UILaunchScreen_Generation: YES
+      ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+      MARKETING_VERSION: "0.0.6"
+      CURRENT_PROJECT_VERSION: "1"
+      TARGETED_DEVICE_FAMILY: "1,2"
+      SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
+      SWIFT_EMIT_LOC_STRINGS: YES
     info:
       path: AlarmApp-iOS/Info.plist
       properties:
+        CFBundleDevelopmentRegion: tr
         CFBundleDisplayName: AlarmApp
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        CFBundleLocalizations:
+          - tr
+          - en
+          - fr
+          - es
+          - ru
+          - zh-Hans
+          - ar
         LSRequiresIPhoneOS: true
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
@@ -39,14 +60,6 @@ targets:
       - package: AlarmAppCore
       - target: AlarmApp-Watch
         embed: true
-    settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.gktuoktay.AlarmApp
-      GENERATE_INFOPLIST_FILE: NO
-      INFOPLIST_KEY_UILaunchScreen_Generation: YES
-      MARKETING_VERSION: "0.0.4"
-      CURRENT_PROJECT_VERSION: "1"
-      TARGETED_DEVICE_FAMILY: "1,2"
-      SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
   AlarmApp-Watch:
     type: application
     platform: watchOS
@@ -57,9 +70,18 @@ targets:
     info:
       path: AlarmApp-Watch/Info.plist
       properties:
+        CFBundleDevelopmentRegion: tr
         CFBundleDisplayName: AlarmApp
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        CFBundleLocalizations:
+          - tr
+          - en
+          - fr
+          - es
+          - ru
+          - zh-Hans
+          - ar
         WKApplication: true
         WKCompanionAppBundleIdentifier: com.gktuoktay.AlarmApp
         WKRunsIndependentlyOfCompanionApp: true
@@ -68,9 +90,11 @@ targets:
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.gktuoktay.AlarmApp.watchkitapp
       GENERATE_INFOPLIST_FILE: NO
-      MARKETING_VERSION: "0.0.4"
+      ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+      MARKETING_VERSION: "0.0.6"
       CURRENT_PROJECT_VERSION: "1"
       INFOPLIST_KEY_WKCompanionAppBundleIdentifier: com.gktuoktay.AlarmApp
       INFOPLIST_KEY_WKApplication: YES
       TARGETED_DEVICE_FAMILY: "4"
       SKIP_INSTALL: NO
+      SWIFT_EMIT_LOC_STRINGS: YES

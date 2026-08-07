@@ -7,8 +7,9 @@ struct CreateAlarmView: View {
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \AlarmGroup.name) private var groups: [AlarmGroup]
 
-    var onFinished: () -> Void
     var preselectedGroupId: UUID? = nil
+    var preferWakeSchedule: Bool = false
+    var onFinished: () -> Void
 
     @State private var title = "Sabah"
     @State private var timeDate = Calendar.current.date(
@@ -27,6 +28,9 @@ struct CreateAlarmView: View {
     @State private var soundId = "default"
     @State private var soundVolumePercent: Double = 100
     @State private var soundPreview = AlarmSoundPreview()
+    @State private var snoozeEnabled = true
+    @State private var snoozeMinutes = SnoozePolicy.defaultMinutes
+    @State private var isWakeSchedule = false
 
     private enum GroupSelection: Hashable {
         case none
@@ -34,11 +38,26 @@ struct CreateAlarmView: View {
         case createNew
     }
 
+    private var snoozeMinuteOptions: [Int] {
+        Array(SnoozePolicy.minMinutes...SnoozePolicy.maxMinutes)
+    }
+
     var body: some View {
         Form {
             Section {
+                DatePicker(
+                    "create.time",
+                    selection: $timeDate,
+                    displayedComponents: .hourAndMinute
+                )
+                .datePickerStyle(.wheel)
+                .labelsHidden()
+                .frame(maxWidth: .infinity)
+                .accessibilityLabel(Text("create.time"))
+            }
+
+            Section {
                 TextField("create.name", text: $title)
-                DatePicker("create.time", selection: $timeDate, displayedComponents: .hourAndMinute)
             }
 
             Section {
@@ -82,6 +101,33 @@ struct CreateAlarmView: View {
                 } footer: {
                     Text(hasEndDate ? "create.end_footer_on" : "create.end_footer_off")
                 }
+            }
+
+            Section {
+                Toggle("create.snooze", isOn: $snoozeEnabled)
+                    .tint(.green)
+                if snoozeEnabled {
+                    Picker("create.snooze_duration", selection: $snoozeMinutes) {
+                        ForEach(snoozeMinuteOptions, id: \.self) { minutes in
+                            Text(
+                                String(
+                                    format: String(localized: "create.snooze_minutes"),
+                                    minutes
+                                )
+                            )
+                            .tag(minutes)
+                            .foregroundStyle(.orange)
+                        }
+                    }
+                    .tint(.orange)
+                }
+            }
+
+            Section {
+                Toggle("create.wake_schedule", isOn: $isWakeSchedule)
+                    .tint(.green)
+            } footer: {
+                Text("create.wake_schedule_footer")
             }
 
             Section("create.group_section") {
@@ -160,9 +206,15 @@ struct CreateAlarmView: View {
             Text(errorMessage ?? "")
         }
         .onAppear {
-            guard !didApplyPreselection, let preselectedGroupId else { return }
-            groupSelection = .existing(preselectedGroupId)
-            didApplyPreselection = true
+            if !didApplyPreselection {
+                if let preselectedGroupId {
+                    groupSelection = .existing(preselectedGroupId)
+                }
+                if preferWakeSchedule {
+                    isWakeSchedule = true
+                }
+                didApplyPreselection = true
+            }
         }
         .onDisappear {
             soundPreview.stop()
@@ -185,6 +237,7 @@ struct CreateAlarmView: View {
             }
 
             let time = clockTime(from: timeDate)
+            let clampedSnooze = SnoozePolicy.clampMinutes(snoozeMinutes)
             let request = CreateAlarmRequest(
                 title: title,
                 time: time,
@@ -194,7 +247,10 @@ struct CreateAlarmView: View {
                 groupId: groupId,
                 repeats: repeats,
                 horizonDays: AlarmHorizon.notificationDays,
-                endDate: (repeats && hasEndDate) ? endDate : nil
+                endDate: (repeats && hasEndDate) ? endDate : nil,
+                snoozeEnabled: snoozeEnabled,
+                snoozeMinutes: clampedSnooze,
+                isWakeSchedule: false
             )
             let prepared = try CreateAlarm().prepare(request)
 
@@ -216,6 +272,9 @@ struct CreateAlarmView: View {
             }
 
             let result = try await repo.createAlarm(from: prepared)
+            if isWakeSchedule {
+                try await repo.setWakeScheduleAlarm(alarmId: result.alarmId)
+            }
 
             let scheduler = LocalNotificationScheduler()
             let authorized = try await scheduler.requestAuthorization()

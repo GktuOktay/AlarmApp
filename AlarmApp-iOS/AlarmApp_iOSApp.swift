@@ -6,6 +6,7 @@ import AlarmAppCore
 @main
 struct AlarmApp_iOSApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    @State private var preferences = AppPreferences()
     private let container: ModelContainer
 
     init() {
@@ -18,7 +19,7 @@ struct AlarmApp_iOSApp: App {
 
     var body: some Scene {
         WindowGroup {
-            GroupListView()
+            RootTabView(preferences: preferences)
                 .task {
                     let scheduler = LocalNotificationScheduler()
                     await scheduler.prepareCategories()

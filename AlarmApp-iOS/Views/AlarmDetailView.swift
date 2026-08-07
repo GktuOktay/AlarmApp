@@ -117,6 +117,63 @@ struct AlarmDetailView: View {
                 LabeledContent("detail.sound_volume", value: soundVolumePercentText)
             }
 
+            Section {
+                Toggle("detail.snooze", isOn: Binding(
+                    get: { alarm.snoozeEnabled },
+                    set: { newValue in
+                        alarm.snoozeEnabled = newValue
+                        alarm.updatedAt = Date()
+                        try? modelContext.save()
+                    }
+                ))
+                .tint(.green)
+
+                if alarm.snoozeEnabled {
+                    Picker("detail.snooze_duration", selection: Binding(
+                        get: { alarm.snoozeMinutes },
+                        set: { newValue in
+                            alarm.snoozeMinutes = SnoozePolicy.clampMinutes(newValue)
+                            alarm.updatedAt = Date()
+                            try? modelContext.save()
+                        }
+                    )) {
+                        ForEach(SnoozePolicy.minMinutes...SnoozePolicy.maxMinutes, id: \.self) { minutes in
+                            Text(
+                                String(
+                                    format: String(localized: "create.snooze_minutes"),
+                                    minutes
+                                )
+                            )
+                            .tag(minutes)
+                        }
+                    }
+                    .tint(.orange)
+                }
+
+                Toggle("detail.wake_schedule", isOn: Binding(
+                    get: { alarm.isWakeSchedule },
+                    set: { newValue in
+                        let previous = alarm.isWakeSchedule
+                        alarm.isWakeSchedule = newValue
+                        alarm.updatedAt = Date()
+                        Task {
+                            do {
+                                let repo = SwiftDataAlarmRepository(modelContainer: modelContext.container)
+                                try await repo.setWakeScheduleAlarm(alarmId: newValue ? alarm.id : nil)
+                            } catch {
+                                await MainActor.run {
+                                    alarm.isWakeSchedule = previous
+                                    errorMessage = String(localized: "error.wake_schedule")
+                                }
+                            }
+                        }
+                    }
+                ))
+                .tint(.green)
+            } footer: {
+                Text("detail.wake_schedule_footer")
+            }
+
             Section("bypass.section") {
                 DatePicker(
                     "bypass.start",
