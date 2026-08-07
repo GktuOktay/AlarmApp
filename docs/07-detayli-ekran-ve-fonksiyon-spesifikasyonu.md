@@ -13,7 +13,7 @@
 ## S1 — Ana Ekran (Alarm Listesi)
 
 ### Amaç
-Kullanıcının tüm alarmlarını tek bakışta görmesi; gruplu olanlarda toplu “bugün kapat” / “bu hafta pas geç” aksiyonlarına erişmesi.
+Kullanıcının tüm alarmlarını Saat hissiyle tek bakışta görmesi; uyanma programı üstte, diğerleri altta; gruplu olanlarda toplu “bugün kapat” / “bu hafta pas geç” aksiyonlarına erişmesi.
 
 ### Giriş Noktaları
 - Uygulama açılışı (onboarding tamamlanmışsa varsayılan ekran)
@@ -23,10 +23,12 @@ Kullanıcının tüm alarmlarını tek bakışta görmesi; gruplu olanlarda topl
 ```
 TabView
 ├── Tab "Alarmlar" → NavigationStack
-│   ├── Title: "Alarmlar"
-│   ├── Trailing: "+" → S2 (yeni alarm)
-│   └── List — her Alarm için satır (saat, günler, isteğe bağlı grup badge)
-│       └── swipe: Bugün kapat (alarm veya bağlı grup)
+│   ├── Title: "Alarmlar" · Trailing: "+" → S2
+│   ├── Section "Uyku | Uyanma Zamanı"
+│   │   └── isWakeSchedule alarmı (yoksa “Alarm Yok” + DEĞİŞTİR → S2)
+│   └── Section "Diğer"
+│       └── kalan Alarm satırları (saat, günler, toggle isActive, isteğe bağlı grup badge)
+│           └── swipe: Bugün kapat (alarm veya bağlı grup)
 └── Tab "Takvim" → S4
 ```
 
@@ -34,13 +36,14 @@ TabView
 | Durum | Görünüm |
 |---|---|
 | **Boş** | "Henüz alarm yok" + "Alarm oluştur" CTA |
-| **Dolu** | Alarm listesi (oluşturma / saate göre) |
+| **Dolu** | Uyku \| Uyanma kartı + Diğer listesi |
 
 ### Fonksiyonlar
 | Eylem | Use Case |
 |---|---|
 | "+" | → S2 CreateAlarm |
-| Satıra dokun | → S3 Alarm detay |
+| Satıra dokun / DEĞİŞTİR | → S2/S3 uyanma veya diğer alarm |
+| Toggle | `isActive` güncelle |
 | Swipe Bugün kapat | `cancelToday(alarmId:)` veya grupluysa `cancelToday(groupId:)` |
 
 ---
@@ -48,18 +51,20 @@ TabView
 ## S2 — Alarm Oluştur / Düzenle
 
 ### Amaç
-Tek bir alarmı saat, tekrar günleri, ses ve isteğe bağlı grup ile tanımlamak.
+Tek bir alarmı saat, tekrar günleri, ses, erteleme ve isteğe bağlı grup ile tanımlamak.
 
 ### Bileşen Haritası
 ```
 Form
 ├── Ad (title)
-├── Saat (DatePicker hourAndMinute)
+├── Saat (büyük tekerlek / DatePicker hourAndMinute)
 ├── Tekrar günleri (Pzt–Paz)
 ├── Grup (Picker: Grup yok | mevcut gruplar | + yeni grup adı)
 ├── Ses (katalog listesi + önizleme)
 ├── Ses düzeyi (Slider 0–100)
-└── Kaydet → CreateAlarm (+ optional groupId; soundId + soundVolume)
+├── Ertele (toggle; varsayılan açık)
+├── Erteleme süresi (Ertele açıkken; 1…30 dk, varsayılan 9)
+└── Kaydet → CreateAlarm (+ groupId; soundId + soundVolume; snooze*; isWakeSchedule ataması)
 ```
 
 ---
@@ -99,42 +104,49 @@ Seçili gün için istisna / özel alarm (şimdilik S4 liste salt okunur iskelet
 ## S6 — Onay Bildirimi (Uyanma)
 
 ### Amaç
-Watch'tan gelen wake event sonrası (ya da v2'de otomatik algılamada) kullanıcıdan onay almak.
+Erken uyanma / Watch algılaması sonrası kullanıcıdan **açık onay** almak; onaysız iptal yok. (F5 tarzı prompt bu milestone’da; kalibrasyon v2’de.)
 
 ### Giriş Noktaları
-- Sistem bildirimi (uygulama arka planda/kapalıyken) — `UNNotificationContent` actionable notification
-- Uygulama ön plandayken — in-app banner (aynı içerik, native `UNUserNotificationCenterDelegate` ile ön planda da gösterilir)
+- Watch “Uyandın mı?” prompt’u (birincil)
+- Sistem bildirimi / in-app banner (telefon yedek yolu)
+- Çalma ekranı “Daha fazla” → toplu kapat seçenekleri (telefon + Watch)
 
 ### Bileşen Haritası
 ```
-Actionable Notification
-├── Başlık: "Uyandığını fark ettik 👋"
-├── Gövde: "Sabah Grubu'ndan kalan N alarm var. İptal edelim mi?"
-└── Aksiyonlar: [Evet, İptal Et] [Hayır, Devam Etsin]
+Watch Prompt
+├── Başlık: "Uyandın mı?"
+├── Gövde: "Kalan alarmları kapatayım mı?"
+└── Aksiyonlar: [Evet] → toplu kapat seçenekleri · [Hayır] → no-op
 
-In-App Banner (ön planda, üstten kayan)
-├── Aynı içerik
-└── Otomatik kaybolma: 15 saniye (yanıt verilmezse alarm normal çalmaya devam eder)
+Çalma ekranı (katman 1)
+├── Alarmı kapat · Ertele · Daha fazla
+Çalma ekranı (katman 2)
+├── Bu grubun bugünkü alarmlarını kapat
+├── 3 saat içerisindeki tüm alarmları kapat
+└── Bugünkü tüm alarmları kapat
 ```
 
 ### Durumlar
 | Durum | Görünüm |
 |---|---|
-| **watch_manual kaynaklı** (F2, kullanıcı Watch'ta zaten "Uyandım"a basmış) | Bu bildirim aslında **bilgilendirme** amaçlı, aksiyonlar yerine tek "Tamam" butonu — çünkü Watch zaten kararı uyguladı |
-| **watch_auto kaynaklı** (v2, F5) | Gerçek onay isteniyor, iki aksiyon butonu aktif |
+| **Manuel / çalma** | Katman 1–2 aksiyonları; Ertele kapalıysa Ertele gizli |
+| **Algılama prompt** | “Uyandın mı?”; Hayır / timeout → alarmlar devam |
+| **watch_manual senkron** | Watch kararı uygulandıysa telefonda bilgilendirme yeterli olabilir |
 
 ### Fonksiyonlar
 | Eylem | Tetiklenen Use Case | Sonuç |
 |---|---|---|
-| "Evet, İptal Et" | `HandleWakeEvent(groupId:, confirmed: true)` | Kalan instance'lar cancelled |
-| "Hayır, Devam Etsin" | `HandleWakeEvent(groupId:, confirmed: false)` + cooldown kaydı | Alarmlar devam eder, aynı grup için 15dk yeniden sorulmaz (v2 cooldown) |
-| Yanıt yok, 15sn geçer | — | Hiçbir şey değişmez (fail-safe varsayılan, PRD F5 kabul kriteri) |
+| Alarmı kapat | `dismissAlarm` / `cancel(..., .userDismiss)` | İlgili instance kapanır |
+| Ertele | `snoozeAlarm` | `snoozeMinutes` sonra yeni pending |
+| Toplu kapat (Evet / Daha fazla) | `cancel(scope:, reason: .wakePrompt \| …)` | Scope’a uyan pending’ler iptal |
+| Hayır / yanıt yok | — | Fail-safe: hiçbir şey değişmez |
 
 ### Veri Bağımlılıkları
-- `WakeEventLog` kaydı her durumda oluşturulur (confirmed: true/false)
+- `TodayContext.autoWakeDetectionEnabled` (S7 → Watch)
+- `WakeDetectionEngine` yalnızca prompt önerir; cancel etmez
 
 ### Kenar Durumları / Çıkış Noktaları
-- Kullanıcı bildirime dokunup uygulamayı açarsa → doğrudan S3 (ilgili grubun detayı) açılır, karar orada da verilebilir.
+- Cooldown: aynı pencerede tekrar soru bastırılabilir; sessiz iptal yok.
 
 ---
 
@@ -154,9 +166,9 @@ Form
 │   └── "Watch'ı Yeniden Eşleştir" (sorun giderme linki)
 ├── Section("İzinler")
 │   ├── Bildirim izni durumu + "Ayarlar'ı Aç" (Sistem Ayarları'na deep link)
-│   └── HealthKit izni (v2) — toggle, açıklama metniyle
-├── Section("Otomatik Uyanma Algılama") — sadece v2'de görünür
-│   └── Toggle: F5 açık/kapalı (PRD F5 kabul kriteri: varsayılan durum, kalibrasyon sonucuna göre)
+│   └── HealthKit izni — uyku okuma; reddedilirse otomatik soru disabled
+├── Section("Otomatik uyanma sorusu")  // F5-style prompt bu milestone’da
+│   └── Toggle: varsayılan açık; Watch’a `TodayContext.autoWakeDetectionEnabled` ile yansır
 ├── Section("Veri")
 │   ├── "Uyanma Geçmişini Temizle" (WakeEventLog temizliği)
 │   └── Otomatik temizlik süresi seçici (30/90/180 gün)
@@ -176,7 +188,7 @@ Form
 | Eylem | Tetiklenen Use Case | Sonuç |
 |---|---|---|
 | "Ayarlar'ı Aç" | `UIApplication.openSettingsURLString` | Sistem Ayarları'na yönlendirme |
-| F5 toggle | `UpdateSettings(autoWakeDetectionEnabled: Bool)` | v2 algılama motoru açılır/kapanır |
+| F5 / otomatik uyanma toggle | tercih + `pushTodayContext()` | Watch `autoWakeDetectionEnabled` senkronu |
 | "Uyanma Geçmişini Temizle" | `ClearWakeEventLog()` | Onay dialog'u sonrası tüm `WakeEventLog` silinir |
 
 ### Veri Bağımlılıkları
@@ -238,44 +250,45 @@ TabView (paging, sayfa göstergeli)
 ## W1 — Ana Watch Ekranı
 
 ### Amaç
-Aktif/yaklaşan alarm durumunu göstermek ve "Uyandım" aksiyonuna anlık erişim sağlamak.
+Aktif/yaklaşan alarm durumunu göstermek; çalma aksiyonları, manuel “Uyandım” ve algılama “Uyandın mı?” prompt’una erişim.
 
 ### Giriş Noktaları
 - Watch app açılışı
 - Complication dokunma (→ W1)
 - Alarm çaldığında otomatik ön plana gelme
+- Erken-uyanma algılaması (S7 açıkken) → “Uyandın mı?” overlay
 
 ### Bileşen Haritası
 ```
 NavigationStack (watchOS, tek sayfa ağırlıklı)
-├── Üst: Sonraki/aktif grup adı (küçük, gri)
-├── Orta: Büyük saat gösterimi (sonraki alarm saati) VEYA
-│         "Şu an çalıyor: 06:25" (alarm aktifken, animasyonlu)
-└── Alt: BÜYÜK "Uyandım" butonu (tam genişlik, yüksek kontrast)
-         — sadece bugün aktif bir grup varsa görünür
+├── Üst: Sonraki/aktif grup veya alarm özeti
+├── Orta: Büyük saat VEYA çalma UI (Kapat / Ertele / Daha fazla)
+├── Prompt overlay (koşullu): "Uyandın mı?" · Evet → toplu seçenekler · Hayır
+└── Alt: BÜYÜK "Uyandım" (manuel; bugün aktif grup/alarm varken)
 ```
 
 ### Durumlar
 | Durum | Görünüm |
 |---|---|
-| **Bugün aktif grup yok** | "Bugün alarm yok" mesajı, buton gizli |
-| **Grup aktif ama henüz ilk alarm çalmadı** | Saat + "İlk alarm: 06:00" — buton görünür ama ikincil stilde (henüz uyanma anlamlı değil, ama erken de basılabilir) |
-| **Alarm çalıyor** | Kırmızı/turuncu vurgulu, titreşen saat gösterimi, buton birincil (dolu renk) stilde |
-| **Tüm alarmlar zaten iptal/bitmiş** | "Bugün tamamlandı ✓" + buton gizli |
-| **iPhone ile senkron kopuk** | Küçük üst ikon (bulut-çizgili), ama buton yine de çalışır (local-first, bkz. Mimari Bölüm 3) |
+| **Bugün aktif yok** | "Bugün alarm yok", buton/prompt gizli |
+| **Yaklaşan / pencere** | Saat özeti; algılama tetiklenirse “Uyandın mı?” |
+| **Alarm çalıyor** | 2 katmanlı çalma UI (telefon ile aynı kapsam seçenekleri) |
+| **Tüm alarmlar bitmiş** | "Bugün tamamlandı ✓" |
+| **iPhone senkron kopuk** | Local-first: Watch yine local iptal + kuyruklu sync |
 
 ### Fonksiyonlar
 | Eylem | Tetiklenen Use Case | Sonuç |
 |---|---|---|
-| "Uyandım" butonu | `HandleWakeEvent(groupId:, source: .watchManual)` — **doğrudan Watch'ın local `AlarmAppCore` instance'ında çalışır** | 1) Watch local notification'ları hemen iptal 2) Haptic geri bildirim 3) W2'ye geçiş 4) Arka planda `WatchConnectivityService.send(.wakeConfirmed)` |
-| Uzun basma (buton üzerinde) | — | Tooltip: "Bu grubun bugünkü kalan alarmlarını iptal eder" (ilk kullanımda otomatik gösterilir, sonra gizlenebilir) |
+| "Uyandım" / Evet + kapsam | `cancel(scope:, reason: .wakePrompt)` local; sonra `WatchMessage` sync | Local bildirimler hemen iptal; iPhone’a `wakeConfirmed` / `bulkCancelApplied` |
+| Çalma Kapat / Ertele | `dismissAlarm` / `snoozeAlarm` + sync case’leri | Peer’e `dismissApplied` / `snoozeApplied` |
+| Hayır / timeout | — | Fail-safe; alarmlar devam |
 
 ### Veri Bağımlılıkları
-- `TodayContext` (iPhone'dan `updateApplicationContext` ile senkronize, Watch local cache)
+- `TodayContext` (+ `autoWakeDetectionEnabled`) — `updateApplicationContext` / `todayContextUpdate`
 
 ### Kenar Durumları / Çıkış Noktaları
-- Birden fazla grup aynı anda "bugün aktif" ise (nadir ama mümkün, ör. sabah + öğle grubu çakışırsa), W1'de bir segment/liste görünümüne geçilir — her grup için ayrı "Uyandım" satırı. Bu durum PRD'de netleştirilmemiş bir edge case, ürün kararı gerektirir (bkz. Açık Sorular).
-- Çıkış: buton → W2
+- Çoklu grup: her grup için ayrı satır/aksiyon (ürün edge case; bkz. Açık Sorular).
+- Gerçek cihaz E2E sync insan doğrulaması bekliyor.
 
 ---
 

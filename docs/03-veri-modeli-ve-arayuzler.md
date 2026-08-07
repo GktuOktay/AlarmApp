@@ -78,6 +78,9 @@ final class WakeEventLog { /* groupId, detectedAt, source, confirmed */ }
 struct TodayContext: Codable {
     let date: Date
     let activeGroups: [ActiveGroupSummary]  // gruplu sabah senaryosu
+    /// S7 “Otomatik uyanma sorusu” tercihi; iPhone → Watch applicationContext.
+    /// Eski payload’da yoksa decode varsayılanı `true`.
+    var autoWakeDetectionEnabled: Bool
 }
 
 struct ActiveGroupSummary: Codable, Identifiable {

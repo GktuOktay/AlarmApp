@@ -3,6 +3,7 @@
 
 **Doküman sahibi:** Ürün/Teknik Tasarım
 **Platform:** iOS + watchOS — tamamen native Swift/SwiftUI, tek codebase (paylaşımlı Swift Package mimarisi)
+**Minimum cihaz:** iPhone 11 ve sonrası · **Minimum OS:** iOS 17+ / watchOS 10+ (SwiftData)
 **Versiyon:** 1.1 (Swift'e geçiş sonrası revizyon)
 **Durum:** Taslak — geliştirme öncesi onay bekliyor
 
@@ -45,7 +46,7 @@ Sabahları birden fazla alarm kurarak "erteleme güvenliği" arayan kullanıcıl
 ## 4. Hedefler (Goals) ve Hedef Olmayanlar (Non-Goals)
 
 ### Goals (v1 kapsamı)
-- G1: Kullanıcı bir zaman aralığına gruplanmış çoklu alarm oluşturabilmeli.
+- G1: Kullanıcı tekil alarm kurabilmeli; isteğe bağlı olarak birden fazla alarmı gruplayabilmeli.
 - G2: Watch'ta manuel "Uyandım" onayıyla kalan grup alarmları iptal edilebilmeli.
 - G3: Telefon üzerinden "bugün kapat" / "bu hafta pas geç" aksiyonları tek dokunuşla yapılabilmeli.
 - G4: Yıl içindeki herhangi bir tarih için önceden istisna/plan tanımlanabilmeli.
@@ -65,14 +66,14 @@ Sabahları birden fazla alarm kurarak "erteleme güvenliği" arayan kullanıcıl
 
 ## 5. Özellik Spesifikasyonları ve Kabul Kriterleri
 
-### F1 — Alarm Grubu Oluşturma
-**Açıklama:** Kullanıcı bir başlangıç saati, bitiş saati, aralık (dakika) ve tekrar günleri (Pzt-Paz) girerek bir "Alarm Grubu" oluşturur. Uygulama bu aralıktaki tüm tekil alarmları otomatik üretir.
+### F1 — Alarm Oluşturma ve İsteğe Bağlı Gruplama
+**Açıklama:** Kullanıcı her alarmı tek başına kurar (saat, tekrar günleri, ses). Grup isteğe bağlıdır: birden fazla alarm aynı gruba bağlanabilir; tekil alarm da geçerlidir. Grup, “Uyandım / bugün kapat” gibi toplu aksiyonlar içindir — aralık üreteci yoktur.
 
 **Kabul Kriterleri:**
-- [ ] Kullanıcı 06:00 başlangıç, 07:00 bitiş, 5 dk aralık girdiğinde 13 adet alarm örneği (`AlarmInstance`) üretilmeli (dahil-dahil aralık, ürün kararı olarak netleştirilecek — bkz. Açık Sorular).
-- [ ] Grup adı, ses seçimi, tekrar günleri özelleştirilebilmeli.
-- [ ] Grup oluşturma ekranı 3 adımdan fazla olmamalı (zaman aralığı → aralık/sıklık → gün seçimi).
-- [ ] Aynı gün içinde çakışan iki grup varsa kullanıcı uyarılmalı.
+- [ ] Kullanıcı saat + tekrar günleri ile tek bir `Alarm` oluşturabilmeli; seçili günlerde horizon boyunca `AlarmInstance` üretilmeli.
+- [ ] Alarm isteğe bağlı bir `AlarmGroup`’a atanabilmeli veya grupsuz kalabilmeli.
+- [ ] Aynı gün kümesi ve aynı saatte çakışan iki alarm varsa kullanıcı uyarılmalı.
+- [ ] Takvimde (F4) o güne düşen alarmlar görünmeli.
 
 ### F2 — Watch Manuel "Uyandım" Onayı
 **Açıklama:** Watch'ta aktif alarm çalarken veya son 30 dakika içinde çalmışsa, ekranda büyük "Uyandım" butonu görünür.
@@ -101,6 +102,8 @@ Sabahları birden fazla alarm kurarak "erteleme güvenliği" arayan kullanıcıl
 ### F5 (v2) — Otomatik Uyanma Algılama
 **Açıklama:** HealthKit kalp atış hızı + CoreMotion hareket verisiyle uyanma anı tahmin edilir, kullanıcıya onay sorulur.
 
+> **Milestone notu (2026-08-07):** Onaylı erken-uyanma prompt’u (Watch “Uyandın mı?”, Ayarlar toggle) uyanma/ertele sürümüne öne alındı; kalibrasyon ve yanlış-pozitif ölçümü v2’de kalır.
+
 **Kabul Kriterleri (yüksek seviye, v2 detayları ayrı teknik dokümanda):**
 - [ ] Algılama asla kullanıcı onayı olmadan alarm iptal etmemeli (fail-safe: sessiz kalırsa alarm çalmaya devam eder).
 - [ ] Yanlış pozitif oranı kullanıcı testinde ölçülmeli, %15'in üzerinde ise F5 varsayılan kapalı gelmeli.
@@ -122,12 +125,10 @@ Sabahları birden fazla alarm kurarak "erteleme güvenliği" arayan kullanıcıl
 
 ## 7. Kapsam Dışı Riskler / Ürün Kararları Gerektiren Açık Sorular
 
-1. Alarm aralığı hesaplanırken bitiş saati dahil mi hariç mi? (06:00-07:00, 5dk aralık → son alarm 06:55 mi 07:00 mi?)
-2. "Bu hafta pas geç" ifadesi takvim haftası mı (Pzt-Paz) yoksa bugünden itibaren 7 gün mü?
-3. Kullanıcı grubu sildiğinde geçmiş istisna kayıtları da silinsin mi, yoksa arşivlensin mi?
-4. Critical Alert entitlement başvurusu reddedilirse, ürünün "sessiz modu delme" vaadi nasıl konumlandırılacak? (Pazarlama/App Store açıklaması buna göre revize edilmeli.)
-
-Bu sorular **F1-F4 geliştirmesi başlamadan önce** karara bağlanmalı; aksi halde veri modeli ve UX akışlarında geriye dönük değişiklik riski var.
+1. ~~Alarm aralığı bitiş dahil mi?~~ → **Geçersiz** (alarm-first; aralık üreteci yok).
+2. "Bu hafta pas geç" → **K2:** takvim haftası Pzt–Paz (kilitli).
+3. Grup silinince alarmlar → **grupsuz kalır**; istisnalar cascade.
+4. Critical Alert → **K4:** garantisiz (kilitli).
 
 ---
 

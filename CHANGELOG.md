@@ -4,6 +4,25 @@ Bu dosya AlarmApp sürüm notlarını **son kullanıcıya** yönelik, sade Türk
 
 ---
 
+## 0.0.7 — 7 Ağustos 2026
+
+Erteleme süresi, Saat benzeri liste, çalma seçenekleri ve Watch’ta “Uyandın mı?” sorusu geldi. Geliştirme sürümü.
+
+### Bu sürümde
+
+- Her alarm için ertelemeyi açıp kapatabilir, süreyi (ör. 9 dk) ayarlayabilirsin.
+- Alarmlar listesi Saat hissiyle düzenlendi: üstte Uyku | Uyanma Zamanı, altta Diğer.
+- Alarm çalınca Kapat, Ertele ve Daha fazla seçenekleri var; grup bugünü, önümüzdeki 3 saat veya bugünkü tüm alarmları kapatabilirsin.
+- Watch, uyanmış olabileceğini düşünürse “Uyandın mı?” diye sorar; onaylamadan kalan alarmlar kapanmaz.
+- Ayarlar’da “Otomatik uyanma sorusu” açılıp kapatılabilir.
+
+### Bilmen gerekenler
+
+- Watch ile telefonun gerçek cihazda birlikte senkronu henüz insan tarafından doğrulanmadı; simülatörde sınırlı kalabilir.
+- Soruya cevap vermezsen veya “Hayır” dersen alarmlar planlandığı gibi çalmaya devam eder.
+
+---
+
 ## 0.0.6 — 7 Ağustos 2026
 
 Alarm oluştururken ses seçebilir ve ses düzeyini ayarlayabilirsiniz.

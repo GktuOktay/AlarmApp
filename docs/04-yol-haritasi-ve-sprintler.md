@@ -15,6 +15,8 @@
 | **v1.1** | Cilalama, App Store hazırlığı, Critical Alert başvurusu | Sprint 8-9 |
 | **v2.0** | F5 — otomatik uyanma algılama (HealthKit/CoreMotion) | Sprint 10-14 |
 
+> **Not (2026-08-07):** F5 tarzı erken-uyanma **onay prompt’u** (Watch “Uyandın mı?”, S7 toggle, HealthKit Sleep + hareket; onaysız iptal yok) uyanma/ertele/Saat-UI milestone’una çekildi. Tam F5 kalibrasyon / saha testi hâlâ v2.0 kapsamındadır.
+
 ---
 
 ## Faz 0 — Proje Kurulumu (Sprint 0, 1 hafta)

@@ -10,9 +10,18 @@ description: Safe WatchConnectivity and wake-sync for AlarmApp. Use when editing
 Read and follow `docs/03-veri-modeli-ve-arayuzler.md` §4:
 
 ```swift
+struct TodayContext: Codable {
+    var date: Date
+    var activeGroups: [ActiveGroupSummary]
+    var autoWakeDetectionEnabled: Bool  // S7; legacy decode → true
+}
+
 enum WatchMessage: Codable {
-    case todayContextUpdate(TodayContext)              // iPhone → Watch
-    case wakeConfirmed(groupId: UUID, timestamp: Date) // Watch → iPhone
+    case todayContextUpdate(TodayContext)                                    // iPhone → Watch
+    case wakeConfirmed(groupId: UUID, timestamp: Date)                       // Watch → iPhone
+    case snoozeApplied(alarmId: UUID, instanceId: UUID, fireDate: Date)
+    case dismissApplied(alarmId: UUID, instanceId: UUID)
+    case bulkCancelApplied(scope: BulkCancelScope, timestamp: Date)
 }
 ```
 
