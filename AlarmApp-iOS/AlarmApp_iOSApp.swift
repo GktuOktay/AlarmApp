@@ -6,22 +6,19 @@ import AlarmAppCore
 @main
 struct AlarmApp_iOSApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @State private var preferences = AppPreferences()
     private let container: ModelContainer
 
     init() {
         do {
             container = try ModelContainerFactory.makeOnDisk()
         } catch {
-            fatalError("SwiftData container failed: \(error)")
+            fatalError("SwiftData container oluşturulamadı: \(error)")
         }
     }
 
     var body: some Scene {
         WindowGroup {
-            RootTabView(preferences: preferences)
-                .environment(\.locale, preferences.locale)
-                .preferredColorScheme(preferences.appearance.preferredColorScheme)
+            GroupListView()
                 .task {
                     let scheduler = LocalNotificationScheduler()
                     await scheduler.prepareCategories()
@@ -83,6 +80,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
 
         switch response.actionIdentifier {
         case AlarmNotificationAction.stopToday, UNNotificationDefaultActionIdentifier:
+            // Full "bugün kapat" needs groupId; for now cancel this notification only.
+            // Group-level cancel is available from the list swipe.
             await LocalNotificationScheduler().cancelPending(instanceIds: [instanceId])
         case AlarmNotificationAction.snooze:
             let fire = Date().addingTimeInterval(5 * 60)
