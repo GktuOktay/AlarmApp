@@ -5,17 +5,12 @@ import SwiftData
 public final class AlarmGroup {
     @Attribute(.unique) public var id: UUID
     public var name: String
-    public var timeStart: ClockTime
-    public var timeEnd: ClockTime
-    public var intervalMinutes: Int
-    public var daysOfWeek: [Weekday]
-    public var soundId: String
     public var isActive: Bool
     public var createdAt: Date
     public var updatedAt: Date
 
-    @Relationship(deleteRule: .cascade, inverse: \AlarmInstance.group)
-    public var instances: [AlarmInstance] = []
+    @Relationship(deleteRule: .nullify, inverse: \Alarm.group)
+    public var alarms: [Alarm] = []
 
     @Relationship(deleteRule: .cascade, inverse: \AlarmException.group)
     public var exceptions: [AlarmException] = []
@@ -23,23 +18,70 @@ public final class AlarmGroup {
     public init(
         id: UUID = UUID(),
         name: String,
-        timeStart: ClockTime,
-        timeEnd: ClockTime,
-        intervalMinutes: Int,
-        daysOfWeek: [Weekday],
-        soundId: String,
         isActive: Bool = true,
         createdAt: Date = Date(),
         updatedAt: Date = Date()
     ) {
         self.id = id
         self.name = name
-        self.timeStart = timeStart
-        self.timeEnd = timeEnd
-        self.intervalMinutes = intervalMinutes
-        self.daysOfWeek = daysOfWeek
-        self.soundId = soundId
         self.isActive = isActive
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+}
+
+@Model
+public final class Alarm {
+    @Attribute(.unique) public var id: UUID
+    public var title: String
+    /// Minutes from midnight — stored as Int so SwiftData can query/sort (Codable `ClockTime` is not a keypath).
+    public var timeMinutes: Int
+    /// Stored as raw `Weekday` ints for SwiftData compatibility.
+    public var daysOfWeekRaw: [Int]
+    public var soundId: String
+    public var soundVolume: Double
+    public var isActive: Bool
+    /// Optional inclusive end date; nil = açık uçlu (horizon ile üretilir).
+    public var endsOn: Date?
+    public var createdAt: Date
+    public var updatedAt: Date
+    public var group: AlarmGroup?
+
+    @Relationship(deleteRule: .cascade, inverse: \AlarmInstance.alarm)
+    public var instances: [AlarmInstance] = []
+
+    public var time: ClockTime {
+        get { ClockTime.from(minutesFromMidnight: timeMinutes) }
+        set { timeMinutes = newValue.minutesFromMidnight }
+    }
+
+    public var daysOfWeek: [Weekday] {
+        get { daysOfWeekRaw.compactMap(Weekday.init(rawValue:)) }
+        set { daysOfWeekRaw = newValue.map(\.rawValue) }
+    }
+
+    public init(
+        id: UUID = UUID(),
+        title: String,
+        time: ClockTime,
+        daysOfWeek: [Weekday],
+        soundId: String = "default",
+        soundVolume: Double = 1.0,
+        isActive: Bool = true,
+        endsOn: Date? = nil,
+        group: AlarmGroup? = nil,
+        createdAt: Date = Date(),
+        updatedAt: Date = Date()
+    ) {
+        self.id = id
+        self.title = title
+        self.timeMinutes = time.minutesFromMidnight
+        self.daysOfWeekRaw = daysOfWeek.map(\.rawValue)
+        self.soundId = soundId
+        self.soundVolume = soundVolume
+        self.isActive = isActive
+        self.endsOn = endsOn
+        self.group = group
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
@@ -48,16 +90,34 @@ public final class AlarmGroup {
 @Model
 public final class AlarmInstance {
     @Attribute(.unique) public var id: UUID
-    public var group: AlarmGroup?
+    public var alarm: Alarm?
     public var scheduledDate: Date
-    public var scheduledTime: ClockTime
-    public var status: AlarmStatus
-    public var cancelledReason: CancelReason?
+    public var scheduledTimeMinutes: Int
+    public var statusRaw: String
+    public var cancelledReasonRaw: String?
     public var updatedAt: Date
+
+    public var scheduledTime: ClockTime {
+        get { ClockTime.from(minutesFromMidnight: scheduledTimeMinutes) }
+        set { scheduledTimeMinutes = newValue.minutesFromMidnight }
+    }
+
+    public var status: AlarmStatus {
+        get { AlarmStatus(rawValue: statusRaw) ?? .pending }
+        set { statusRaw = newValue.rawValue }
+    }
+
+    public var cancelledReason: CancelReason? {
+        get {
+            guard let cancelledReasonRaw else { return nil }
+            return CancelReason(rawValue: cancelledReasonRaw)
+        }
+        set { cancelledReasonRaw = newValue?.rawValue }
+    }
 
     public init(
         id: UUID = UUID(),
-        group: AlarmGroup? = nil,
+        alarm: Alarm? = nil,
         scheduledDate: Date,
         scheduledTime: ClockTime,
         status: AlarmStatus = .pending,
@@ -65,11 +125,11 @@ public final class AlarmInstance {
         updatedAt: Date = Date()
     ) {
         self.id = id
-        self.group = group
+        self.alarm = alarm
         self.scheduledDate = scheduledDate
-        self.scheduledTime = scheduledTime
-        self.status = status
-        self.cancelledReason = cancelledReason
+        self.scheduledTimeMinutes = scheduledTime.minutesFromMidnight
+        self.statusRaw = status.rawValue
+        self.cancelledReasonRaw = cancelledReason?.rawValue
         self.updatedAt = updatedAt
     }
 }
@@ -78,16 +138,29 @@ public final class AlarmInstance {
 public final class AlarmException {
     @Attribute(.unique) public var id: UUID
     public var group: AlarmGroup?
-    public var type: ExceptionType
+    /// Optional alarm-level target (mutually exclusive with group for skip bypass).
+    public var alarmId: UUID?
+    public var typeRaw: String
     public var startDate: Date
     public var endDate: Date?
-    public var action: ExceptionAction
+    public var actionRaw: String
     public var replacementGroupId: UUID?
     public var createdAt: Date
+
+    public var type: ExceptionType {
+        get { ExceptionType(rawValue: typeRaw) ?? .singleDay }
+        set { typeRaw = newValue.rawValue }
+    }
+
+    public var action: ExceptionAction {
+        get { ExceptionAction(rawValue: actionRaw) ?? .skip }
+        set { actionRaw = newValue.rawValue }
+    }
 
     public init(
         id: UUID = UUID(),
         group: AlarmGroup? = nil,
+        alarmId: UUID? = nil,
         type: ExceptionType,
         startDate: Date,
         endDate: Date? = nil,
@@ -97,10 +170,11 @@ public final class AlarmException {
     ) {
         self.id = id
         self.group = group
-        self.type = type
+        self.alarmId = alarmId
+        self.typeRaw = type.rawValue
         self.startDate = startDate
         self.endDate = endDate
-        self.action = action
+        self.actionRaw = action.rawValue
         self.replacementGroupId = replacementGroupId
         self.createdAt = createdAt
     }
@@ -111,9 +185,14 @@ public final class WakeEventLog {
     @Attribute(.unique) public var id: UUID
     public var groupId: UUID
     public var detectedAt: Date
-    public var source: WakeSource
+    public var sourceRaw: String
     public var confirmed: Bool
     public var createdAt: Date
+
+    public var source: WakeSource {
+        get { WakeSource(rawValue: sourceRaw) ?? .phoneManual }
+        set { sourceRaw = newValue.rawValue }
+    }
 
     public init(
         id: UUID = UUID(),
@@ -126,7 +205,7 @@ public final class WakeEventLog {
         self.id = id
         self.groupId = groupId
         self.detectedAt = detectedAt
-        self.source = source
+        self.sourceRaw = source.rawValue
         self.confirmed = confirmed
         self.createdAt = createdAt
     }

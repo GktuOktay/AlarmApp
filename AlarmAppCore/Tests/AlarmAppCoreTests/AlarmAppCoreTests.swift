@@ -1,69 +1,16 @@
 import XCTest
 @testable import AlarmAppCore
 
-final class AlarmInstanceGeneratorTests: XCTestCase {
-    func testInclusiveEndProducesThirteenAlarms() throws {
-        let times = try AlarmInstanceGenerator.clockTimes(
-            start: ClockTime(hour: 6, minute: 0),
-            end: ClockTime(hour: 7, minute: 0),
-            intervalMinutes: 5
-        )
-        XCTAssertEqual(times.count, 13)
-        XCTAssertEqual(times.first, ClockTime(hour: 6, minute: 0))
-        XCTAssertEqual(times.last, ClockTime(hour: 7, minute: 0))
-    }
-
-    func testStartEqualsEndProducesOne() throws {
-        let times = try AlarmInstanceGenerator.clockTimes(
-            start: ClockTime(hour: 6, minute: 0),
-            end: ClockTime(hour: 6, minute: 0),
-            intervalMinutes: 5
-        )
-        XCTAssertEqual(times, [ClockTime(hour: 6, minute: 0)])
-    }
-
-    func testInvalidIntervalThrows() {
-        XCTAssertThrowsError(
-            try AlarmInstanceGenerator.clockTimes(
-                start: ClockTime(hour: 6, minute: 0),
-                end: ClockTime(hour: 7, minute: 0),
-                intervalMinutes: 0
-            )
-        ) { error in
-            XCTAssertEqual(error as? AlarmInstanceGenerationError, .invalidInterval)
-        }
-    }
-
-    func testOvernightWindow() throws {
-        let times = try AlarmInstanceGenerator.clockTimes(
-            start: ClockTime(hour: 23, minute: 30),
-            end: ClockTime(hour: 0, minute: 30),
-            intervalMinutes: 30
-        )
-        XCTAssertEqual(
-            times,
-            [
-                ClockTime(hour: 23, minute: 30),
-                ClockTime(hour: 0, minute: 0),
-                ClockTime(hour: 0, minute: 30)
-            ]
-        )
-    }
-}
-
-final class CreateAlarmGroupTests: XCTestCase {
-    func testPrepareCreatesInstancesOnMatchingWeekdays() throws {
+final class CreateAlarmTests: XCTestCase {
+    func testPrepareStoresWeeklyPatternWithoutInstances() throws {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0)!
-        // Monday 2026-08-03
         let monday = calendar.date(from: DateComponents(year: 2026, month: 8, day: 3))!
 
-        let prepared = try CreateAlarmGroup().prepare(
-            CreateAlarmGroupRequest(
-                name: "Sabah",
-                timeStart: ClockTime(hour: 6, minute: 0),
-                timeEnd: ClockTime(hour: 6, minute: 10),
-                intervalMinutes: 5,
+        let prepared = try CreateAlarm().prepare(
+            CreateAlarmRequest(
+                title: "Sabah",
+                time: ClockTime(hour: 6, minute: 0),
                 daysOfWeek: [.monday],
                 horizonDays: 7,
                 fromDate: monday,
@@ -72,55 +19,330 @@ final class CreateAlarmGroupTests: XCTestCase {
             )
         )
 
-        // 3 times/day × 1 Monday in a 7-day window starting Monday = 3
-        // Wait: Mon Aug 3 only one Monday in 7 days? Aug 3 Mon ... Aug 9 Sun — one Monday.
-        XCTAssertEqual(prepared.instances.count, 3)
-        XCTAssertEqual(prepared.instances.map(\.scheduledTime).sorted(), [
-            ClockTime(hour: 6, minute: 0),
-            ClockTime(hour: 6, minute: 5),
-            ClockTime(hour: 6, minute: 10)
-        ])
+        XCTAssertTrue(prepared.instances.isEmpty)
+        XCTAssertEqual(prepared.daysOfWeek, [.monday])
+        XCTAssertEqual(prepared.time, ClockTime(hour: 6, minute: 0))
+        XCTAssertNil(prepared.endsOn)
+        XCTAssertNil(prepared.groupId)
     }
 
-    func testEmptyNameFails() {
+    func testPrepareWithTwoWeekdaysKeepsPatternOnly() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let monday = calendar.date(from: DateComponents(year: 2026, month: 8, day: 3))!
+
+        let prepared = try CreateAlarm().prepare(
+            CreateAlarmRequest(
+                title: "Sabah",
+                time: ClockTime(hour: 6, minute: 30),
+                daysOfWeek: [.monday, .wednesday],
+                horizonDays: 7,
+                fromDate: monday,
+                calendar: calendar,
+                now: monday
+            )
+        )
+
+        XCTAssertTrue(prepared.instances.isEmpty)
+        XCTAssertEqual(prepared.daysOfWeek, [.monday, .wednesday])
+    }
+
+    func testEmptyTitleFails() {
         XCTAssertThrowsError(
-            try CreateAlarmGroup().prepare(
-                CreateAlarmGroupRequest(
-                    name: "  ",
-                    timeStart: ClockTime(hour: 6, minute: 0),
-                    timeEnd: ClockTime(hour: 7, minute: 0),
-                    intervalMinutes: 5,
+            try CreateAlarm().prepare(
+                CreateAlarmRequest(
+                    title: "  ",
+                    time: ClockTime(hour: 6, minute: 0),
                     daysOfWeek: [.monday]
                 )
             )
         ) { error in
-            XCTAssertEqual(error as? CreateAlarmGroupError, .emptyName)
+            XCTAssertEqual(error as? CreateAlarmError, .emptyTitle)
         }
+    }
+
+    func testPrepareWithEndDateStoresPatternNotInstances() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let monday = calendar.date(from: DateComponents(year: 2026, month: 8, day: 3))!
+        let friday = calendar.date(from: DateComponents(year: 2026, month: 8, day: 7))!
+
+        let prepared = try CreateAlarm().prepare(
+            CreateAlarmRequest(
+                title: "Hafta",
+                time: ClockTime(hour: 7, minute: 0),
+                daysOfWeek: [.monday, .wednesday, .friday],
+                endDate: friday,
+                fromDate: monday,
+                calendar: calendar,
+                now: monday
+            )
+        )
+
+        XCTAssertTrue(prepared.instances.isEmpty)
+        XCTAssertEqual(prepared.endsOn, calendar.startOfDay(for: friday))
+        XCTAssertEqual(prepared.daysOfWeek, [.monday, .wednesday, .friday])
+    }
+
+    func testEndDateBeforeStartFails() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let monday = calendar.date(from: DateComponents(year: 2026, month: 8, day: 3))!
+        let sunday = calendar.date(from: DateComponents(year: 2026, month: 8, day: 2))!
+
+        XCTAssertThrowsError(
+            try CreateAlarm().prepare(
+                CreateAlarmRequest(
+                    title: "X",
+                    time: ClockTime(hour: 6, minute: 0),
+                    daysOfWeek: [.monday],
+                    endDate: sunday,
+                    fromDate: monday,
+                    calendar: calendar,
+                    now: monday
+                )
+            )
+        ) { error in
+            XCTAssertEqual(error as? CreateAlarmError, .endDateBeforeStart)
+        }
+    }
+
+    func testOneShotCreatesSingleInstance() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let day = calendar.date(from: DateComponents(year: 2026, month: 8, day: 6))!
+
+        let prepared = try CreateAlarm().prepare(
+            CreateAlarmRequest(
+                title: "Tek",
+                time: ClockTime(hour: 8, minute: 0),
+                daysOfWeek: [],
+                repeats: false,
+                fromDate: day,
+                calendar: calendar,
+                now: day
+            )
+        )
+
+        XCTAssertEqual(prepared.instances.count, 1)
+        XCTAssertEqual(prepared.endsOn, calendar.startOfDay(for: day))
+        XCTAssertEqual(prepared.daysOfWeek, [.thursday])
+    }
+
+    func testPrepareClampsVolumeAndKeepsSoundId() throws {
+        let prepared = try CreateAlarm().prepare(
+            CreateAlarmRequest(
+                title: "Ses",
+                time: ClockTime(hour: 6, minute: 0),
+                daysOfWeek: [.monday],
+                soundId: "classic_bell",
+                soundVolume: 1.8,
+                repeats: true
+            )
+        )
+        XCTAssertEqual(prepared.soundId, "classic_bell")
+        XCTAssertEqual(prepared.soundVolume, 1.0)
+    }
+
+    func testPrepareUnknownSoundBecomesDefault() throws {
+        let prepared = try CreateAlarm().prepare(
+            CreateAlarmRequest(
+                title: "Ses",
+                time: ClockTime(hour: 6, minute: 0),
+                daysOfWeek: [.monday],
+                soundId: "nope",
+                soundVolume: 0.3
+            )
+        )
+        XCTAssertEqual(prepared.soundId, "default")
+        XCTAssertEqual(prepared.soundVolume, 0.3)
+    }
+}
+
+final class AlarmOccurrenceExpanderTests: XCTestCase {
+    func testExpandsMatchingWeekdaysOnly() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let monday = calendar.date(from: DateComponents(year: 2026, month: 8, day: 3))!
+        let sunday = calendar.date(from: DateComponents(year: 2026, month: 8, day: 9))!
+        let alarm = AlarmPatternSnapshot(
+            id: UUID(),
+            title: "Sabah",
+            time: ClockTime(hour: 6, minute: 0),
+            daysOfWeek: [.monday, .wednesday],
+            isActive: true,
+            endsOn: nil,
+            createdAt: monday
+        )
+
+        let occ = AlarmOccurrenceExpander.expand(
+            alarms: [alarm],
+            exceptions: [],
+            from: monday,
+            to: sunday,
+            calendar: calendar
+        )
+        XCTAssertEqual(occ.count, 2)
+        XCTAssertEqual(calendar.component(.day, from: occ[0].dayStart), 3)
+        XCTAssertEqual(calendar.component(.day, from: occ[1].dayStart), 5)
+    }
+
+    func testRespectsEndDateAndBypass() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let monday = calendar.date(from: DateComponents(year: 2026, month: 8, day: 3))!
+        let friday = calendar.date(from: DateComponents(year: 2026, month: 8, day: 7))!
+        let alarmId = UUID()
+        let alarm = AlarmPatternSnapshot(
+            id: alarmId,
+            title: "Sabah",
+            time: ClockTime(hour: 7, minute: 0),
+            daysOfWeek: [.monday, .wednesday, .friday],
+            isActive: true,
+            endsOn: friday,
+            createdAt: monday
+        )
+        let wed = calendar.date(from: DateComponents(year: 2026, month: 8, day: 5))!
+        let exceptions: [BypassExceptionTuple] = [
+            (alarmId, nil, wed, nil, .skip, .singleDay)
+        ]
+
+        let occ = AlarmOccurrenceExpander.expand(
+            alarms: [alarm],
+            exceptions: exceptions,
+            from: monday,
+            to: friday,
+            calendar: calendar
+        )
+        XCTAssertEqual(occ.count, 2)
+        XCTAssertEqual(Set(occ.map { calendar.component(.day, from: $0.dayStart) }), Set([3, 7]))
+    }
+}
+
+final class BypassAlarmsTests: XCTestCase {
+    func testAlarmLevelSkip() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let day = calendar.date(from: DateComponents(year: 2026, month: 8, day: 6))!
+        let alarmId = UUID()
+
+        let skipped = BypassAlarms.isSkipped(
+            day: day,
+            alarmId: alarmId,
+            groupId: nil,
+            exceptions: [
+                (alarmId: alarmId, groupId: nil, start: day, end: nil, action: .skip, type: .singleDay)
+            ],
+            calendar: calendar
+        )
+        XCTAssertTrue(skipped)
+    }
+
+    func testGroupLevelSkipAppliesToMember() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let day = calendar.date(from: DateComponents(year: 2026, month: 8, day: 6))!
+        let alarmId = UUID()
+        let groupId = UUID()
+
+        let skipped = BypassAlarms.isSkipped(
+            day: day,
+            alarmId: alarmId,
+            groupId: groupId,
+            exceptions: [
+                (alarmId: nil, groupId: groupId, start: day, end: nil, action: .skip, type: .singleDay)
+            ],
+            calendar: calendar
+        )
+        XCTAssertTrue(skipped)
+    }
+
+    func testDateRangeCoversInclusiveDays() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let start = calendar.date(from: DateComponents(year: 2026, month: 8, day: 6))!
+        let end = calendar.date(from: DateComponents(year: 2026, month: 8, day: 8))!
+        let mid = calendar.date(from: DateComponents(year: 2026, month: 8, day: 7))!
+        let after = calendar.date(from: DateComponents(year: 2026, month: 8, day: 9))!
+        let alarmId = UUID()
+
+        let exceptions: [(UUID?, UUID?, Date, Date?, ExceptionAction, ExceptionType)] = [
+            (alarmId, nil, start, end, .skip, .dateRange)
+        ]
+        XCTAssertTrue(BypassAlarms.isSkipped(day: start, alarmId: alarmId, groupId: nil, exceptions: exceptions, calendar: calendar))
+        XCTAssertTrue(BypassAlarms.isSkipped(day: mid, alarmId: alarmId, groupId: nil, exceptions: exceptions, calendar: calendar))
+        XCTAssertTrue(BypassAlarms.isSkipped(day: end, alarmId: alarmId, groupId: nil, exceptions: exceptions, calendar: calendar))
+        XCTAssertFalse(BypassAlarms.isSkipped(day: after, alarmId: alarmId, groupId: nil, exceptions: exceptions, calendar: calendar))
+    }
+
+    func testDraftSameDayIsSingleDay() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let day = calendar.date(from: DateComponents(year: 2026, month: 8, day: 6))!
+        let draft = BypassAlarms.draft(from: day, to: day, target: .alarm(UUID()), calendar: calendar)
+        XCTAssertEqual(draft.type, .singleDay)
+        XCTAssertNil(draft.endDate)
+    }
+
+    func testDraftMultiDayIsDateRange() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let start = calendar.date(from: DateComponents(year: 2026, month: 8, day: 6))!
+        let end = calendar.date(from: DateComponents(year: 2026, month: 8, day: 10))!
+        let draft = BypassAlarms.draft(from: start, to: end, target: .group(UUID()), calendar: calendar)
+        XCTAssertEqual(draft.type, .dateRange)
+        XCTAssertEqual(draft.endDate, calendar.startOfDay(for: end))
+    }
+
+    func testPastSingleDayIsFullyPast() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let day = calendar.date(from: DateComponents(year: 2026, month: 8, day: 5))!
+        let today = calendar.date(from: DateComponents(year: 2026, month: 8, day: 6))!
+        XCTAssertTrue(BypassAlarms.isFullyPast(start: day, end: nil, type: .singleDay, asOf: today, calendar: calendar))
+        XCTAssertFalse(BypassAlarms.isFullyPast(start: today, end: nil, type: .singleDay, asOf: today, calendar: calendar))
+    }
+
+    func testPastRangeIsFullyPastOnlyAfterLastDay() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let start = calendar.date(from: DateComponents(year: 2026, month: 8, day: 6))!
+        let end = calendar.date(from: DateComponents(year: 2026, month: 8, day: 8))!
+        let onLast = end
+        let after = calendar.date(from: DateComponents(year: 2026, month: 8, day: 9))!
+        XCTAssertFalse(BypassAlarms.isFullyPast(start: start, end: end, type: .dateRange, asOf: onLast, calendar: calendar))
+        XCTAssertTrue(BypassAlarms.isFullyPast(start: start, end: end, type: .dateRange, asOf: after, calendar: calendar))
     }
 }
 
 final class OverlapDetectorTests: XCTestCase {
-    func testDetectsSharedDayAndTime() throws {
-        let times = try AlarmInstanceGenerator.clockTimes(
-            start: ClockTime(hour: 6, minute: 0),
-            end: ClockTime(hour: 6, minute: 10),
-            intervalMinutes: 5
-        )
-        let overlaps = AlarmGroupOverlapDetector.overlaps(
+    func testDetectsSharedDayAndTime() {
+        let overlaps = AlarmOverlapDetector.overlaps(
             candidateDays: [.monday, .tuesday],
-            candidateTimes: times,
+            candidateTime: ClockTime(hour: 6, minute: 5),
             existing: [
                 (
                     id: UUID(),
-                    name: "Eski",
+                    title: "Eski",
                     days: [.monday],
-                    times: [ClockTime(hour: 6, minute: 5)]
+                    time: ClockTime(hour: 6, minute: 5)
                 )
             ]
         )
         XCTAssertEqual(overlaps.count, 1)
         XCTAssertEqual(overlaps[0].time, ClockTime(hour: 6, minute: 5))
         XCTAssertEqual(overlaps[0].weekday, .monday)
+    }
+
+    func testDifferentTimeNoOverlap() {
+        let overlaps = AlarmOverlapDetector.overlaps(
+            candidateDays: [.monday],
+            candidateTime: ClockTime(hour: 7, minute: 0),
+            existing: [
+                (id: UUID(), title: "Eski", days: [.monday], time: ClockTime(hour: 6, minute: 0))
+            ]
+        )
+        XCTAssertTrue(overlaps.isEmpty)
     }
 }
 
