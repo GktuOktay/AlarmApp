@@ -42,7 +42,12 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
             instance.alarm = alarm
             modelContext.insert(instance)
             if let fire = AlarmFireDate.make(day: spec.scheduledDate, time: spec.scheduledTime, calendar: calendar) {
-                schedules.append(AlarmSchedule(instanceId: instance.id, fireDate: fire))
+                schedules.append(AlarmSchedule(
+                    instanceId: instance.id,
+                    fireDate: fire,
+                    soundId: alarm.soundId,
+                    soundVolume: alarm.soundVolume
+                ))
             }
         }
 
@@ -494,7 +499,12 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
                 instance.alarm = alarm
                 modelContext.insert(instance)
                 if let fire = AlarmFireDate.make(day: occ.dayStart, time: alarm.time, calendar: cal), fire > now {
-                    newSchedules.append(AlarmSchedule(instanceId: instance.id, fireDate: fire))
+                    newSchedules.append(AlarmSchedule(
+                        instanceId: instance.id,
+                        fireDate: fire,
+                        soundId: alarm.soundId,
+                        soundVolume: alarm.soundVolume
+                    ))
                 }
             }
         }

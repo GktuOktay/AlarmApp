@@ -7,9 +7,14 @@ public enum LocalNotificationSchedulerError: Error, Sendable {
 
 public struct LocalNotificationScheduler: NotificationScheduling {
     private let center: UNUserNotificationCenter
+    private let criticalAlertsEnabled: Bool
 
-    public init(center: UNUserNotificationCenter = .current()) {
+    public init(
+        center: UNUserNotificationCenter = .current(),
+        criticalAlertsEnabled: Bool = false
+    ) {
         self.center = center
+        self.criticalAlertsEnabled = criticalAlertsEnabled
     }
 
     public func prepareCategories() async {
@@ -36,17 +41,26 @@ public struct LocalNotificationScheduler: NotificationScheduling {
         try await center.requestAuthorization(options: [.alert, .sound, .badge])
     }
 
-    public func schedule(instanceId: UUID, fireDate: Date, title: String, body: String) async throws {
+    public func schedule(
+        instanceId: UUID,
+        fireDate: Date,
+        title: String,
+        body: String,
+        soundId: String,
+        soundVolume: Double
+    ) async throws {
         guard fireDate > Date() else { return }
 
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
-        content.sound = .default
+        content.sound = makeSound(soundId: soundId, soundVolume: soundVolume)
         content.categoryIdentifier = AlarmNotificationAction.categoryId
         content.userInfo = [
             "instanceId": instanceId.uuidString,
-            "groupName": title
+            "groupName": title,
+            "soundId": soundId,
+            "soundVolume": soundVolume,
         ]
         content.interruptionLevel = .timeSensitive
 
@@ -67,5 +81,25 @@ public struct LocalNotificationScheduler: NotificationScheduling {
         let ids = instanceIds.map(\.uuidString)
         center.removePendingNotificationRequests(withIdentifiers: ids)
         center.removeDeliveredNotifications(withIdentifiers: ids)
+    }
+
+    private func makeSound(soundId: String, soundVolume: Double) -> UNNotificationSound {
+        switch NotificationSoundResolver.resolve(
+            soundId: soundId,
+            volume: soundVolume,
+            criticalEnabled: criticalAlertsEnabled
+        ) {
+        case .systemDefault:
+            return .default
+        case .named(let name):
+            return UNNotificationSound(named: UNNotificationSoundName(name))
+        case .criticalDefault(let volume):
+            return .defaultCriticalSound(withAudioVolume: volume)
+        case .criticalNamed(let name, let volume):
+            return UNNotificationSound.criticalSoundNamed(
+                UNNotificationSoundName(name),
+                withAudioVolume: volume
+            )
+        }
     }
 }

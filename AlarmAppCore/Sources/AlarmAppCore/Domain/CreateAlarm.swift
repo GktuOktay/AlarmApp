@@ -72,10 +72,19 @@ public struct AlarmSchedule: Sendable, Equatable, Identifiable {
     public var id: UUID { instanceId }
     public let instanceId: UUID
     public let fireDate: Date
+    public let soundId: String
+    public let soundVolume: Double
 
-    public init(instanceId: UUID, fireDate: Date) {
+    public init(
+        instanceId: UUID,
+        fireDate: Date,
+        soundId: String = "default",
+        soundVolume: Double = 1.0
+    ) {
         self.instanceId = instanceId
         self.fireDate = fireDate
+        self.soundId = soundId
+        self.soundVolume = soundVolume
     }
 }
 

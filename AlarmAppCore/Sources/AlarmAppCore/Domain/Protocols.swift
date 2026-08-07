@@ -162,7 +162,14 @@ public enum AlarmNotificationAction {
 public protocol NotificationScheduling: Sendable {
     func prepareCategories() async
     func requestAuthorization() async throws -> Bool
-    func schedule(instanceId: UUID, fireDate: Date, title: String, body: String) async throws
+    func schedule(
+        instanceId: UUID,
+        fireDate: Date,
+        title: String,
+        body: String,
+        soundId: String,
+        soundVolume: Double
+    ) async throws
     func cancelPending(instanceIds: [UUID]) async
 }
 

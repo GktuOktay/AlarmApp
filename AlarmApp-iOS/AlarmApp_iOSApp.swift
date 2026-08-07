@@ -6,23 +6,50 @@ import AlarmAppCore
 @main
 struct AlarmApp_iOSApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    @State private var preferences = AppPreferences()
     private let container: ModelContainer
 
     init() {
         do {
             container = try ModelContainerFactory.makeOnDisk()
         } catch {
-            fatalError("SwiftData container oluşturulamadı: \(error)")
+            fatalError("SwiftData container failed: \(error)")
         }
     }
 
     var body: some Scene {
         WindowGroup {
-            GroupListView()
+            RootTabView(preferences: preferences)
+                .environment(\.locale, preferences.locale)
+                .preferredColorScheme(preferences.appearance.preferredColorScheme)
                 .task {
                     let scheduler = LocalNotificationScheduler()
                     await scheduler.prepareCategories()
                     _ = try? await scheduler.requestAuthorization()
+
+                    let repo = SwiftDataAlarmRepository(modelContainer: container)
+                    _ = try? await repo.purgeExpiredExceptions(asOf: Date())
+                    let newSchedules = (try? await repo.extendOpenEndedSchedules(
+                        horizonDays: AlarmHorizon.notificationDays,
+                        calendar: .autoupdatingCurrent,
+                        now: Date()
+                    )) ?? []
+                    let now = Date()
+                    for schedule in newSchedules where schedule.fireDate > now {
+                        let timeText = String(
+                            format: "%02d:%02d",
+                            Calendar.autoupdatingCurrent.component(.hour, from: schedule.fireDate),
+                            Calendar.autoupdatingCurrent.component(.minute, from: schedule.fireDate)
+                        )
+                        try? await scheduler.schedule(
+                            instanceId: schedule.instanceId,
+                            fireDate: schedule.fireDate,
+                            title: String(localized: "calendar.alarm_fallback"),
+                            body: String(format: String(localized: "notif.alarm_body"), timeText),
+                            soundId: schedule.soundId,
+                            soundVolume: schedule.soundVolume
+                        )
+                    }
                 }
         }
         .modelContainer(container)
@@ -56,16 +83,18 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
 
         switch response.actionIdentifier {
         case AlarmNotificationAction.stopToday, UNNotificationDefaultActionIdentifier:
-            // Full "bugün kapat" needs groupId; for now cancel this notification only.
-            // Group-level cancel is available from the list swipe.
             await LocalNotificationScheduler().cancelPending(instanceIds: [instanceId])
         case AlarmNotificationAction.snooze:
             let fire = Date().addingTimeInterval(5 * 60)
+            let soundId = (info["soundId"] as? String) ?? "default"
+            let soundVolume = (info["soundVolume"] as? Double) ?? 1.0
             try? await LocalNotificationScheduler().schedule(
                 instanceId: instanceId,
                 fireDate: fire,
                 title: response.notification.request.content.title,
-                body: "Ertelendi — 5 dakika sonra"
+                body: String(localized: "notif.snoozed"),
+                soundId: soundId,
+                soundVolume: soundVolume
             )
         default:
             break
