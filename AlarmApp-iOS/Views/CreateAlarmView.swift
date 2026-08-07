@@ -24,6 +24,9 @@ struct CreateAlarmView: View {
     @State private var errorMessage: String?
     @State private var overlapWarning: String?
     @State private var didApplyPreselection = false
+    @State private var soundId = "default"
+    @State private var soundVolumePercent: Double = 100
+    @State private var soundPreview = AlarmSoundPreview()
 
     private enum GroupSelection: Hashable {
         case none
@@ -94,6 +97,35 @@ struct CreateAlarmView: View {
                 }
             }
 
+            Section {
+                ForEach(AlarmSoundCatalog.all) { sound in
+                    Button {
+                        soundId = sound.id
+                        soundPreview.play(
+                            soundId: sound.id,
+                            volume: soundVolumePercent / 100
+                        )
+                    } label: {
+                        HStack {
+                            Text(LocalizedStringKey(sound.displayNameKey))
+                            Spacer()
+                            if sound.id == soundId {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+                .sensoryFeedback(.selection, trigger: soundId)
+                VStack(alignment: .leading) {
+                    Text("create.sound_volume")
+                    Slider(value: $soundVolumePercent, in: 0...100, step: 1)
+                }
+            } header: {
+                Text("create.sound_section")
+            } footer: {
+                Text("create.sound_volume_footer")
+            }
+
             if let overlapWarning {
                 Section {
                     Text(overlapWarning)
@@ -132,6 +164,9 @@ struct CreateAlarmView: View {
             groupSelection = .existing(preselectedGroupId)
             didApplyPreselection = true
         }
+        .onDisappear {
+            soundPreview.stop()
+        }
     }
 
     private func save() async {
@@ -154,7 +189,8 @@ struct CreateAlarmView: View {
                 title: title,
                 time: time,
                 daysOfWeek: Array(selectedDays),
-                soundId: "default",
+                soundId: soundId,
+                soundVolume: soundVolumePercent / 100.0,
                 groupId: groupId,
                 repeats: repeats,
                 horizonDays: AlarmHorizon.notificationDays,
