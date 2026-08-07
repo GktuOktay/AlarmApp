@@ -225,9 +225,9 @@ struct GroupDetailView: View {
         }
         .sheet(isPresented: $isCreatingAlarm) {
             NavigationStack {
-                CreateAlarmView(onFinished: {
+                CreateAlarmView(preselectedGroupId: group.id) {
                     isCreatingAlarm = false
-                }, preselectedGroupId: group.id)
+                }
             }
         }
         .confirmationDialog("bypass.confirm_group", isPresented: $showBypassConfirm, titleVisibility: .visible) {

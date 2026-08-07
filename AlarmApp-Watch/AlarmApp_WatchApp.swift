@@ -19,19 +19,12 @@ struct AlarmApp_WatchApp: App {
     var body: some Scene {
         WindowGroup {
             NavigationStack {
-                Group {
-                    if let session = ringing.session {
-                        AlarmRingingView(session: session) {
-                            ringing.dismiss()
-                        }
-                    } else if let prompt = wakeDetection.promptContext {
-                        WakePromptView(context: prompt) {
-                            wakeDetection.clearPrompt()
-                        }
-                    } else {
-                        WatchHomeView()
-                    }
-                }
+                WatchRootContent(
+                    ringingSession: ringing.session,
+                    wakePrompt: wakeDetection.promptContext,
+                    onDismissRinging: { ringing.dismiss() },
+                    onClearWakePrompt: { wakeDetection.clearPrompt() }
+                )
             }
             .modelContainer(container)
             .environmentObject(ringing)
@@ -40,6 +33,26 @@ struct AlarmApp_WatchApp: App {
                 WatchSyncBootstrap.shared.start(container: container)
                 let enabled = UserDefaults.standard.object(forKey: "app.autoWakePromptEnabled") as? Bool ?? true
                 wakeDetection.start(container: container, isEnabled: enabled)
+            }
+        }
+    }
+}
+
+/// Separates observation from view switching so property-wrapper type-check stays clear.
+private struct WatchRootContent: View {
+    let ringingSession: WatchRingingSession?
+    let wakePrompt: WakeDetectionCoordinator.WakePromptContext?
+    let onDismissRinging: () -> Void
+    let onClearWakePrompt: () -> Void
+
+    var body: some View {
+        Group {
+            if let session = ringingSession {
+                AlarmRingingView(session: session, onFinished: onDismissRinging)
+            } else if let prompt = wakePrompt {
+                WakePromptView(context: prompt, onFinished: onClearWakePrompt)
+            } else {
+                WatchHomeView()
             }
         }
     }

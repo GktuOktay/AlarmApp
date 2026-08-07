@@ -1,11 +1,14 @@
 import Foundation
-import UserNotifications
+@preconcurrency import UserNotifications
 
 public enum LocalNotificationSchedulerError: Error, Sendable {
     case notAuthorized
 }
 
-public struct LocalNotificationScheduler: NotificationScheduling {
+/// Schedules local notifications. `UNUserNotificationCenter` is not `Sendable`;
+/// we mark the wrapper `@unchecked Sendable` because the shared center is used
+/// only through Apple’s async APIs from cooperative contexts.
+public struct LocalNotificationScheduler: NotificationScheduling, @unchecked Sendable {
     private let center: UNUserNotificationCenter
     private let criticalAlertsEnabled: Bool
 
@@ -86,11 +89,20 @@ public struct LocalNotificationScheduler: NotificationScheduling {
     }
 
     private func makeSound(soundId: String, soundVolume: Double) -> UNNotificationSound {
-        switch NotificationSoundResolver.resolve(
+        let resolved = NotificationSoundResolver.resolve(
             soundId: soundId,
             volume: soundVolume,
             criticalEnabled: criticalAlertsEnabled
-        ) {
+        )
+
+        #if os(watchOS)
+        // watchOS: named / critical custom sounds are unavailable — use system default.
+        switch resolved {
+        case .systemDefault, .named, .criticalDefault, .criticalNamed:
+            return .default
+        }
+        #else
+        switch resolved {
         case .systemDefault:
             return .default
         case .named(let name):
@@ -103,5 +115,6 @@ public struct LocalNotificationScheduler: NotificationScheduling {
                 withAudioVolume: volume
             )
         }
+        #endif
     }
 }
