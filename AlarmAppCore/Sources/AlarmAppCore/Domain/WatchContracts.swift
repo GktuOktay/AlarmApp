@@ -1,6 +1,6 @@
 import Foundation
 
-public struct TodayContext: Codable, Sendable {
+public struct TodayContext: Codable, Equatable, Sendable {
     public var date: Date
     public var activeGroups: [ActiveGroupSummary]
 
@@ -10,7 +10,7 @@ public struct TodayContext: Codable, Sendable {
     }
 }
 
-public struct ActiveGroupSummary: Codable, Identifiable, Sendable {
+public struct ActiveGroupSummary: Codable, Equatable, Identifiable, Sendable {
     public var id: UUID
     public var name: String
     public var remainingInstances: [InstanceSummary]
@@ -22,7 +22,7 @@ public struct ActiveGroupSummary: Codable, Identifiable, Sendable {
     }
 }
 
-public struct InstanceSummary: Codable, Identifiable, Sendable {
+public struct InstanceSummary: Codable, Equatable, Identifiable, Sendable {
     public var id: UUID
     public var time: ClockTime
     public var status: AlarmStatus
@@ -34,7 +34,10 @@ public struct InstanceSummary: Codable, Identifiable, Sendable {
     }
 }
 
-public enum WatchMessage: Codable, Sendable {
+public enum WatchMessage: Codable, Equatable, Sendable {
     case todayContextUpdate(TodayContext)
     case wakeConfirmed(groupId: UUID, timestamp: Date)
+    case snoozeApplied(alarmId: UUID, instanceId: UUID, fireDate: Date)
+    case dismissApplied(alarmId: UUID, instanceId: UUID)
+    case bulkCancelApplied(scope: BulkCancelScope, timestamp: Date)
 }
