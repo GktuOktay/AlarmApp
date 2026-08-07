@@ -281,13 +281,14 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
         )
     }
 
-    public func handleWakeEvent(groupId: UUID, source: WakeSource, timestamp: Date) async throws {
+    @discardableResult
+    public func handleWakeEvent(groupId: UUID, source: WakeSource, timestamp: Date) async throws -> [UUID] {
         let cal = Calendar.autoupdatingCurrent
         let dayStart = cal.startOfDay(for: timestamp)
-        guard let dayEnd = cal.date(byAdding: .day, value: 1, to: dayStart) else { return }
+        guard let dayEnd = cal.date(byAdding: .day, value: 1, to: dayStart) else { return [] }
 
         let groupExists = try fetchGroup(id: groupId) != nil
-        guard groupExists else { return }
+        guard groupExists else { return [] }
 
         let all = try modelContext.fetch(FetchDescriptor<AlarmInstance>())
         let pending = all.filter {
@@ -312,11 +313,18 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
             )
         )
         try modelContext.save()
+        return pending.map(\.id)
     }
 
     @discardableResult
     public func dismissAlarm(alarmId: UUID, instanceId: UUID, now: Date) async throws -> [UUID] {
-        let instance = try requireInstance(alarmId: alarmId, instanceId: instanceId)
+        guard let instance = try fetchInstance(id: instanceId), instance.alarm?.id == alarmId else {
+            // Missing locally (peer sync / already purged) — still report id for notification cancel.
+            return [instanceId]
+        }
+        if instance.status == .cancelled || instance.status == .snoozed {
+            return [instance.id]
+        }
         instance.status = .cancelled
         instance.cancelledReason = .userDismiss
         instance.updatedAt = now
@@ -333,8 +341,47 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
             throw SwiftDataAlarmRepositoryError.snoozeDisabled
         }
 
-        let calendar = Calendar.autoupdatingCurrent
         let fireDate = SnoozePolicy.fireDate(from: now, minutes: alarm.snoozeMinutes)
+        return try materializeSnooze(
+            instance: instance,
+            alarm: alarm,
+            fireDate: fireDate,
+            now: now
+        )
+    }
+
+    @discardableResult
+    public func applyRemoteSnooze(
+        alarmId: UUID,
+        instanceId: UUID,
+        fireDate: Date,
+        now: Date
+    ) async throws -> AlarmSchedule? {
+        guard let instance = try fetchInstance(id: instanceId), instance.alarm?.id == alarmId else {
+            return nil
+        }
+        if instance.status == .snoozed || instance.status == .cancelled {
+            return nil
+        }
+        guard let alarm = instance.alarm else {
+            throw SwiftDataAlarmRepositoryError.alarmNotFound
+        }
+        // Peer may snooze even if local snoozeEnabled was toggled off — honor the peer action.
+        return try materializeSnooze(
+            instance: instance,
+            alarm: alarm,
+            fireDate: fireDate,
+            now: now
+        )
+    }
+
+    private func materializeSnooze(
+        instance: AlarmInstance,
+        alarm: Alarm,
+        fireDate: Date,
+        now: Date
+    ) throws -> AlarmSchedule {
+        let calendar = Calendar.autoupdatingCurrent
         let day = calendar.startOfDay(for: fireDate)
         let comps = calendar.dateComponents([.hour, .minute], from: fireDate)
         let time = ClockTime(hour: comps.hour ?? 0, minute: comps.minute ?? 0)

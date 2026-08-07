@@ -32,7 +32,8 @@ Son güncelleme: 2026-08-07
 - [x] S1/S2/S3 alarm UI + S4 takvim iskeleti
 - [x] Alarm ses kataloğu + soundVolume + S2 önizleme
 - [ ] Uyanma / ertele / Saat-UI + Watch prompt — spec `2026-08-07-uyanma-ertele-ve-saat-ui-design.md`, plan `2026-08-07-uyanma-ertele-ve-saat-ui.md`
-  - Core dismiss/snooze/bulk + Saat list/form + **çalma UI (iOS/Watch) + bildirim Ertele=`snoozeMinutes`** hazır; WC sync + WakeDetection sonraki
+  - Core dismiss/snooze/bulk + Saat list/form + çalma UI + bildirim Ertele + **WCSession köprü / sync apply** hazır; WakeDetection sonraki
+  - WC: reachable→sendMessage else transferUserInfo; today→applicationContext; gerçek cihaz E2E henüz doğrulanmadı
 - [ ] SkipWeek UI
 
 ## Tasarım kilidi (2026-08-07)

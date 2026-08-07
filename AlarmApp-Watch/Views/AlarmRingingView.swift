@@ -156,6 +156,9 @@ struct AlarmRingingView: View {
                     now: Date()
                 )
                 await LocalNotificationScheduler().cancelPending(instanceIds: cancelled)
+                WatchSyncBootstrap.shared.send(
+                    .dismissApplied(alarmId: session.alarmId, instanceId: session.instanceId)
+                )
             }
         case .snooze:
             await runConfirmed {
@@ -175,6 +178,13 @@ struct AlarmRingingView: View {
                     body: "Alarm · \(session.timeText)",
                     soundId: schedule.soundId,
                     soundVolume: schedule.soundVolume
+                )
+                WatchSyncBootstrap.shared.send(
+                    .snoozeApplied(
+                        alarmId: session.alarmId,
+                        instanceId: session.instanceId,
+                        fireDate: schedule.fireDate
+                    )
                 )
             }
         }
@@ -200,6 +210,9 @@ struct AlarmRingingView: View {
             }
             let cancelled = try await repo.cancel(scope: scope, reason: reason, now: now)
             await LocalNotificationScheduler().cancelPending(instanceIds: cancelled)
+            WatchSyncBootstrap.shared.send(
+                .bulkCancelApplied(scope: scope, timestamp: now)
+            )
         }
     }
 

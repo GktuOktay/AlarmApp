@@ -148,12 +148,23 @@ public protocol AlarmRepository: Sendable {
     func purgeExpiredExceptions(asOf now: Date) async throws -> Int
     /// Whether a skip exception covers this day for the given alarm (alarm-level or its group).
     func isDayBypassed(alarmId: UUID, groupId: UUID?, day: Date) async throws -> Bool
-    func handleWakeEvent(groupId: UUID, source: WakeSource, timestamp: Date) async throws
+    /// Cancels today's pending instances for the group; returns cancelled instance ids (idempotent if none left).
+    @discardableResult
+    func handleWakeEvent(groupId: UUID, source: WakeSource, timestamp: Date) async throws -> [UUID]
     /// Dismisses a single ringing/pending instance (`cancelled` + `userDismiss`).
+    /// Idempotent when the instance is already cancelled or snoozed.
     @discardableResult
     func dismissAlarm(alarmId: UUID, instanceId: UUID, now: Date) async throws -> [UUID]
     /// Snoozes an instance: marks old as `.snoozed`, creates a new pending schedule at `now + snoozeMinutes`.
     func snoozeAlarm(alarmId: UUID, instanceId: UUID, now: Date) async throws -> AlarmSchedule
+    /// Peer sync snooze using the counterpart's `fireDate`. No-op (returns nil) if already terminal.
+    @discardableResult
+    func applyRemoteSnooze(
+        alarmId: UUID,
+        instanceId: UUID,
+        fireDate: Date,
+        now: Date
+    ) async throws -> AlarmSchedule?
     /// Bulk-cancels pending instances matching `scope`. Wake UI may pass `.wakePrompt`.
     @discardableResult
     func cancel(scope: BulkCancelScope, reason: CancelReason, now: Date) async throws -> [UUID]

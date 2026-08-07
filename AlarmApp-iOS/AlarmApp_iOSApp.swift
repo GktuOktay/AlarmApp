@@ -34,6 +34,8 @@ struct AlarmApp_iOSApp: App {
                     .modelContainer(container)
                 }
                 .task {
+                    WatchSyncBootstrap.shared.start(container: container)
+
                     let scheduler = LocalNotificationScheduler()
                     await scheduler.prepareCategories()
                     _ = try? await scheduler.requestAuthorization()
@@ -62,6 +64,7 @@ struct AlarmApp_iOSApp: App {
                             soundVolume: schedule.soundVolume
                         )
                     }
+                    await WatchSyncBootstrap.shared.pushTodayContext()
                 }
         }
         .modelContainer(container)
@@ -127,6 +130,11 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
                     now: Date()
                 )
                 await scheduler.cancelPending(instanceIds: cancelled)
+                await MainActor.run {
+                    WatchSyncBootstrap.shared.send(
+                        .dismissApplied(alarmId: alarmId, instanceId: instanceId)
+                    )
+                }
             } catch {
                 // Fail-safe: keep firing — do not invent a cancel.
             }
@@ -154,6 +162,15 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
                     soundId: schedule.soundId,
                     soundVolume: schedule.soundVolume
                 )
+                await MainActor.run {
+                    WatchSyncBootstrap.shared.send(
+                        .snoozeApplied(
+                            alarmId: alarmId,
+                            instanceId: instanceId,
+                            fireDate: schedule.fireDate
+                        )
+                    )
+                }
             } catch {
                 // Fail-safe: snoozeDisabled or missing instance — leave alarm state alone.
             }

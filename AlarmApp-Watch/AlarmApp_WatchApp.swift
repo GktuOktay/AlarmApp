@@ -30,6 +30,9 @@ struct AlarmApp_WatchApp: App {
             }
             .modelContainer(container)
             .environmentObject(ringing)
+            .task {
+                WatchSyncBootstrap.shared.start(container: container)
+            }
         }
     }
 }
