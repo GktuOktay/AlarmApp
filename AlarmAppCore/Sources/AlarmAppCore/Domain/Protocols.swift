@@ -183,6 +183,7 @@ public protocol NotificationScheduling: Sendable {
     func requestAuthorization() async throws -> Bool
     func schedule(
         instanceId: UUID,
+        alarmId: UUID,
         fireDate: Date,
         title: String,
         body: String,

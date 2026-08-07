@@ -3,15 +3,21 @@ import SwiftData
 import UserNotifications
 import AlarmAppCore
 
+enum AppModelStore {
+    static var container: ModelContainer!
+}
+
 @main
 struct AlarmApp_iOSApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var preferences = AppPreferences()
+    @StateObject private var ringing = RingingPresenter.shared
     private let container: ModelContainer
 
     init() {
         do {
             container = try ModelContainerFactory.makeOnDisk()
+            AppModelStore.container = container
         } catch {
             fatalError("SwiftData container oluşturulamadı: \(error)")
         }
@@ -20,6 +26,13 @@ struct AlarmApp_iOSApp: App {
     var body: some Scene {
         WindowGroup {
             RootTabView(preferences: preferences)
+                .environmentObject(ringing)
+                .fullScreenCover(item: $ringing.session) { session in
+                    AlarmRingingView(session: session) {
+                        ringing.dismiss()
+                    }
+                    .modelContainer(container)
+                }
                 .task {
                     let scheduler = LocalNotificationScheduler()
                     await scheduler.prepareCategories()
@@ -41,6 +54,7 @@ struct AlarmApp_iOSApp: App {
                         )
                         try? await scheduler.schedule(
                             instanceId: schedule.instanceId,
+                            alarmId: schedule.alarmId,
                             fireDate: schedule.fireDate,
                             title: String(localized: "calendar.alarm_fallback"),
                             body: String(format: String(localized: "notif.alarm_body"), timeText),
@@ -79,23 +93,74 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
               let instanceId = UUID(uuidString: instanceString)
         else { return }
 
+        let alarmId: UUID? = {
+            if let s = info["alarmId"] as? String { return UUID(uuidString: s) }
+            return nil
+        }()
+
+        guard let container = AppModelStore.container else { return }
+        let repo = SwiftDataAlarmRepository(modelContainer: container)
+        let scheduler = LocalNotificationScheduler()
+        let title = response.notification.request.content.title
+
         switch response.actionIdentifier {
-        case AlarmNotificationAction.stopToday, UNNotificationDefaultActionIdentifier:
-            // Full "bugün kapat" needs groupId; for now cancel this notification only.
-            // Group-level cancel is available from the list swipe.
-            await LocalNotificationScheduler().cancelPending(instanceIds: [instanceId])
+        case UNNotificationDefaultActionIdentifier:
+            guard let alarmId else { return }
+            let session = await MainActor.run {
+                RingingPresenter.makeSession(
+                    container: container,
+                    alarmId: alarmId,
+                    instanceId: instanceId,
+                    fallbackTitle: title
+                )
+            }
+            await MainActor.run {
+                RingingPresenter.shared.present(session)
+            }
+
+        case AlarmNotificationAction.stopToday:
+            guard let alarmId else {
+                await scheduler.cancelPending(instanceIds: [instanceId])
+                return
+            }
+            do {
+                let cancelled = try await repo.dismissAlarm(
+                    alarmId: alarmId,
+                    instanceId: instanceId,
+                    now: Date()
+                )
+                await scheduler.cancelPending(instanceIds: cancelled)
+            } catch {
+                // Fail-safe: keep firing — do not invent a cancel.
+            }
+
         case AlarmNotificationAction.snooze:
-            let fire = Date().addingTimeInterval(5 * 60)
-            let soundId = (info["soundId"] as? String) ?? "default"
-            let soundVolume = (info["soundVolume"] as? Double) ?? 1.0
-            try? await LocalNotificationScheduler().schedule(
-                instanceId: instanceId,
-                fireDate: fire,
-                title: response.notification.request.content.title,
-                body: String(localized: "notif.snoozed"),
-                soundId: soundId,
-                soundVolume: soundVolume
-            )
+            guard let alarmId else { return }
+            do {
+                let schedule = try await repo.snoozeAlarm(
+                    alarmId: alarmId,
+                    instanceId: instanceId,
+                    now: Date()
+                )
+                await scheduler.cancelPending(instanceIds: [instanceId])
+                let timeText = String(
+                    format: "%02d:%02d",
+                    Calendar.autoupdatingCurrent.component(.hour, from: schedule.fireDate),
+                    Calendar.autoupdatingCurrent.component(.minute, from: schedule.fireDate)
+                )
+                try await scheduler.schedule(
+                    instanceId: schedule.instanceId,
+                    alarmId: schedule.alarmId,
+                    fireDate: schedule.fireDate,
+                    title: title,
+                    body: String(format: String(localized: "notif.alarm_body"), timeText),
+                    soundId: schedule.soundId,
+                    soundVolume: schedule.soundVolume
+                )
+            } catch {
+                // Fail-safe: snoozeDisabled or missing instance — leave alarm state alone.
+            }
+
         default:
             break
         }

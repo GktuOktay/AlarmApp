@@ -67,6 +67,9 @@ targets:
       - path: AlarmApp-Watch
         excludes:
           - Info.plist
+      - path: AlarmApp-iOS/Localizable.xcstrings
+        buildPhase: resources
+        optional: true
     info:
       path: AlarmApp-Watch/Info.plist
       properties:

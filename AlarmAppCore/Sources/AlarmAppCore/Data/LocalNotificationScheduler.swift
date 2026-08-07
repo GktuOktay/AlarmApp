@@ -20,12 +20,12 @@ public struct LocalNotificationScheduler: NotificationScheduling {
     public func prepareCategories() async {
         let stop = UNNotificationAction(
             identifier: AlarmNotificationAction.stopToday,
-            title: "Bugün Kapat",
+            title: "Alarmı kapat",
             options: [.foreground]
         )
         let snooze = UNNotificationAction(
             identifier: AlarmNotificationAction.snooze,
-            title: "Ertele (5 dk)",
+            title: "Ertele",
             options: []
         )
         let category = UNNotificationCategory(
@@ -43,6 +43,7 @@ public struct LocalNotificationScheduler: NotificationScheduling {
 
     public func schedule(
         instanceId: UUID,
+        alarmId: UUID,
         fireDate: Date,
         title: String,
         body: String,
@@ -58,6 +59,7 @@ public struct LocalNotificationScheduler: NotificationScheduling {
         content.categoryIdentifier = AlarmNotificationAction.categoryId
         content.userInfo = [
             "instanceId": instanceId.uuidString,
+            "alarmId": alarmId.uuidString,
             "groupName": title,
             "soundId": soundId,
             "soundVolume": soundVolume,

@@ -288,6 +288,7 @@ struct CreateAlarmView: View {
                     )
                     try await scheduler.schedule(
                         instanceId: schedule.instanceId,
+                        alarmId: schedule.alarmId,
                         fireDate: schedule.fireDate,
                         title: result.title,
                         body: String(format: String(localized: "notif.alarm_body"), timeText),

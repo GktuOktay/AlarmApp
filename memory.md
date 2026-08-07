@@ -31,8 +31,16 @@ Son güncelleme: 2026-08-07
 - [x] Alarm-first modeller + CreateAlarm + repo + bildirim
 - [x] S1/S2/S3 alarm UI + S4 takvim iskeleti
 - [x] Alarm ses kataloğu + soundVolume + S2 önizleme
-- [ ] Watch “Uyandım”
+- [ ] Uyanma / ertele / Saat-UI + Watch prompt — spec `2026-08-07-uyanma-ertele-ve-saat-ui-design.md`, plan `2026-08-07-uyanma-ertele-ve-saat-ui.md`
+  - Core dismiss/snooze/bulk + Saat list/form + **çalma UI (iOS/Watch) + bildirim Ertele=`snoozeMinutes`** hazır; WC sync + WakeDetection sonraki
 - [ ] SkipWeek UI
+
+## Tasarım kilidi (2026-08-07)
+
+- Çalma: Kapat / Ertele / Daha fazla → grup bugünü · 3s tümü · bugün tümü
+- Ertele alarm bazlı (`snoozeMinutes`, varsayılan 9)
+- Liste: Uyku \| Uyanma + Diğer (Saat hissi)
+- Algılama: HK Sleep + hareket (+ HR yedek, sahte workout yok); onaysız iptal yok
 
 ## Kod notları
 
