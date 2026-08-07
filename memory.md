@@ -1,6 +1,6 @@
 # memory.md — AlarmApp proje hafızası
 
-Son güncelleme: 2026-08-06
+Son güncelleme: 2026-08-07
 
 ---
 
@@ -16,24 +16,28 @@ Son güncelleme: 2026-08-06
 ## Mimari sabit
 
 - **Local-first / sunucusuz:** tüm özellikler cihazda; bulut zorunluluğu yok
+- **Cihaz tabanı:** iPhone 11+ · iOS 17+ / watchOS 10+ (SwiftData)
 
 ## Ürün kararları (KİLİTLİ)
 
-- K1: Bitiş dahil → 06:00–07:00 / 5dk = 13
+- **Alarm-first:** Alarm birincil; grup isteğe bağlı; tekrar/saat alarmda (`2026-08-06-alarm-first-model-design.md`)
+- K1: ~~Aralık bitiş dahil~~ → **arşiv** (üreteç yok)
 - K2: Takvim haftası Pzt–Paz
-- K3: Cascade sil
+- K3: Grup silinince alarmlar nullify (grupsuz kalır); istisna cascade
 - K4: Critical Alert garantisiz
 
 ## Açık kapılar
 
-- [x] F1 generator + modeller + CreateAlarmGroup + overlap + SwiftData repo (kod)
-- [ ] `swift test` yeşil (Xcode toolchain)
-- [ ] XcodeGen ile `.xcodeproj`
-- [ ] Bildirim zamanlama (UNUserNotificationCenter)
-- [ ] S1/S2/S3 UI
+- [x] Alarm-first modeller + CreateAlarm + repo + bildirim
+- [x] S1/S2/S3 alarm UI + S4 takvim iskeleti
+- [x] Alarm ses kataloğu + soundVolume + S2 önizleme
+- [ ] Watch “Uyandım”
+- [ ] SkipWeek UI
 
 ## Kod notları
 
-- Saatler `ClockTime` (Codable); dokümandaki `DateComponents` alanları bununla temsil
-- Instance ufku varsayılan 14 gün
+- Saatler `ClockTime` (Codable)
+- Instance ufku varsayılan 14 gün (alarm `daysOfWeek` üzerinden)
 - `SkipWeek` haftanın Pzt startOfDay + 7 gün
+- Cihaz tabanı: iPhone 11+ · iOS 17+
+- Katalog `id` ↔ bundle `.caf` adı aynı; Critical path `criticalAlertsEnabled` (varsayılan `false`)

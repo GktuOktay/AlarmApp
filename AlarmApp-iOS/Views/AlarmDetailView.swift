@@ -47,6 +47,18 @@ struct AlarmDetailView: View {
         return String(format: String(localized: "detail.pattern_weekly"), days)
     }
 
+    private var soundDisplayName: String {
+        String(
+            localized: String.LocalizationValue(
+                AlarmSoundCatalog.resolve(alarm.soundId).displayNameKey
+            )
+        )
+    }
+
+    private var soundVolumePercentText: String {
+        "\(Int((alarm.soundVolume * 100).rounded()))%"
+    }
+
     private var nextOccurrences: [AlarmOccurrence] {
         let snapshot = AlarmPatternSnapshot(
             id: alarm.id,
@@ -101,6 +113,8 @@ struct AlarmDetailView: View {
                 } else {
                     LabeledContent("detail.ends", value: String(localized: "detail.ends_none"))
                 }
+                LabeledContent("detail.sound", value: soundDisplayName)
+                LabeledContent("detail.sound_volume", value: soundVolumePercentText)
             }
 
             Section("bypass.section") {

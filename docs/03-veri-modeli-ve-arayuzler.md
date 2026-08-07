@@ -1,188 +1,118 @@
-# Veri Modeli ve Arayüz Sözleşmeleri (Rev. 2 — Tamamen Native Swift)
+# Veri Modeli ve Arayüz Sözleşmeleri (Rev. 3 — Alarm-First)
 ## Akıllı Alarm Uygulaması
 
-**İlişkili doküman:** `02-teknik-mimari.md`
-**Değişiklik notu:** Önceki revizyondaki "Platform Kanal Sözleşmesi" (MethodChannel/EventChannel) bölümü tamamen kaldırıldı — artık gerek yok. Veri şeması SQL yerine SwiftData `@Model` sınıfları olarak ifade ediliyor.
+**İlişkili doküman:** `02-teknik-mimari.md`  
+**Değişiklik notu:** Rev. 3 — `Alarm` birincil varlık; `AlarmGroup` isteğe bağlı kapsayıcı. Aralık üreteci kaldırıldı. Spec: `docs/superpowers/specs/2026-08-06-alarm-first-model-design.md`.
 
 ---
 
-## 1. Veri Şeması (SwiftData — `AlarmAppCore` paketi içinde, iPhone tarafı tek doğruluk kaynağı)
+## 1. Veri Şeması (SwiftData — `AlarmAppCore`)
 
 ```swift
-import SwiftData
-import Foundation
-
-// Not: Saat alanları uygulamada `ClockTime` (saat+dakika, Codable) olarak saklanır;
-// dokümandaki DateComponents ile aynı bilgi modelidir.
-
 @Model
 final class AlarmGroup {
     @Attribute(.unique) var id: UUID
     var name: String
-    var timeStart: DateComponents      // saat/dakika
-    var timeEnd: DateComponents
-    var intervalMinutes: Int
-    var daysOfWeek: [Weekday]          // enum: mon, tue, wed, thu, fri, sat, sun
-    var soundId: String
     var isActive: Bool
     var createdAt: Date
     var updatedAt: Date
 
-    @Relationship(deleteRule: .cascade, inverse: \AlarmInstance.group)
-    var instances: [AlarmInstance] = []
+    @Relationship(deleteRule: .nullify, inverse: \Alarm.group)
+    var alarms: [Alarm] = []
 
-    @Relationship(deleteRule: .cascade)
+    @Relationship(deleteRule: .cascade, inverse: \AlarmException.group)
     var exceptions: [AlarmException] = []
+}
+
+@Model
+final class Alarm {
+    @Attribute(.unique) var id: UUID
+    var title: String
+    var time: ClockTime
+    var daysOfWeek: [Weekday]
+    var soundId: String          // AlarmSoundCatalog id; "default" = sistem bildirimi
+    var soundVolume: Double      // 0.0…1.0 (UI yüzde; Domain clamp)
+    var isActive: Bool
+    var createdAt: Date
+    var updatedAt: Date
+    var group: AlarmGroup?
+
+    @Relationship(deleteRule: .cascade, inverse: \AlarmInstance.alarm)
+    var instances: [AlarmInstance] = []
 }
 
 @Model
 final class AlarmInstance {
     @Attribute(.unique) var id: UUID
-    var group: AlarmGroup?
-    var scheduledDate: Date            // gün başlangıcı (00:00, yerel)
-    var scheduledTime: DateComponents  // "06:25"
-    var status: AlarmStatus            // enum: pending, fired, cancelled, snoozed
-    var cancelledReason: CancelReason? // enum: wakeWatch, manualToday, manualWeek, exception
+    var alarm: Alarm?
+    var scheduledDate: Date
+    var scheduledTime: ClockTime
+    var status: AlarmStatus
+    var cancelledReason: CancelReason?
     var updatedAt: Date
 }
 
 @Model
-final class AlarmException {
-    @Attribute(.unique) var id: UUID
-    var group: AlarmGroup?             // nil ise tüm gruplar için geçerli
-    var type: ExceptionType            // enum: singleDay, dateRange, weeklyOverride
-    var startDate: Date
-    var endDate: Date?                 // dateRange için dolu
-    var action: ExceptionAction        // enum: skip, replace
-    var replacementGroupId: UUID?
-    var createdAt: Date
-}
+final class AlarmException { /* group?, type, startDate, endDate?, action, … */ }
 
 @Model
-final class WakeEventLog {
-    @Attribute(.unique) var id: UUID
-    var groupId: UUID
-    var detectedAt: Date
-    var source: WakeSource             // enum: watchManual, watchAuto, phoneManual
-    var confirmed: Bool
-    var createdAt: Date
-}
+final class WakeEventLog { /* groupId, detectedAt, source, confirmed */ }
 ```
 
-**Indeksleme notu:** SwiftData, `#Index` makrosuyla (iOS 18+) veya sorgu tarafında `#Predicate` optimizasyonuyla `(group, scheduledDate)` bileşimini hızlandırabilir. GRDB'ye geçilirse bu doğrudan bir composite SQL index'e karşılık gelir.
-
-**Veri temizliği politikası:** Değişmedi — 90 günden eski `fired`/`cancelled` kayıtlar arka planda (`BGAppRefreshTask` ile) temizlenir.
-
-**Migration:** `SchemaMigrationPlan` ile versiyonlu şema geçişleri tanımlanır; her yeni alan/model değişikliği yeni bir `VersionedSchema` olarak eklenir, `MigrationStage.lightweight` veya `.custom` ile geçiş kuralları yazılır.
+**Ses kataloğu:** `AlarmSoundCatalog` — `default` + bundle CC0 `.caf` tonları (`classic_bell`, `digital_beep`, …). Katalog `id` ↔ dosya adı aynı kalmalı.  
+**Veri temizliği:** 90 günden eski `fired`/`cancelled` kayıtlar arka planda temizlenir.  
+**Migration:** 0.0.x şema kırılması kabul; temiz kurulum.
 
 ---
 
-## 2. Watch Tarafı — Hafif Önbellek (değişmedi kavramsal olarak, artık SwiftData ile)
-
-Watch, tam veri modelini tutmaz; iPhone'dan `updateApplicationContext` ile gelen "bugünkü aktif gruplar" verisini kendi küçük SwiftData store'unda (veya basitçe `Codable` + dosya sistemi) saklar:
+## 2. Watch — Hafif Önbellek
 
 ```swift
 struct TodayContext: Codable {
     let date: Date
-    let activeGroups: [ActiveGroupSummary]
+    let activeGroups: [ActiveGroupSummary]  // gruplu sabah senaryosu
 }
 
 struct ActiveGroupSummary: Codable, Identifiable {
-    let id: UUID            // groupId
+    let id: UUID
     let name: String
     var remainingInstances: [InstanceSummary]
-}
-
-struct InstanceSummary: Codable, Identifiable {
-    let id: UUID
-    let time: DateComponents
-    var status: AlarmStatus
 }
 ```
 
 ---
 
-## 3. Domain Katmanı Arayüzü (AlarmAppCore — artık "platform kanalı" değil, doğrudan protokol)
-
-Önceki mimaride Dart↔Swift arasında JSON serileştirilen bir "sözleşme" gerekiyordu. Artık iOS ve watchOS target'ları aynı Swift tiplerini doğrudan import ettiği için, sözleşme basitçe bir **protokol arayüzü**:
+## 3. Domain Arayüzü
 
 ```swift
 protocol AlarmRepository {
-    func createGroup(from prepared: PreparedAlarmGroup) async throws -> CreateAlarmGroupResult
-    func cancelToday(groupId: UUID) async throws
+    func createAlarm(from prepared: PreparedAlarm) async throws -> CreateAlarmResult
+    func createGroup(name: String) async throws -> UUID
+    func assignAlarm(alarmId: UUID, to groupId: UUID?) async throws
+    func cancelToday(groupId: UUID) async throws -> [UUID]
+    func cancelToday(alarmId: UUID) async throws -> [UUID]
     func skipWeek(groupId: UUID, weekStart: Date) async throws
     func scheduleException(_ draft: AlarmExceptionDraft) async throws
     func handleWakeEvent(groupId: UUID, source: WakeSource, timestamp: Date) async throws
     func todayContext() async throws -> TodayContext
+    func fetchActiveAlarms() async throws -> [AlarmSummary]
     func fetchActiveGroups() async throws -> [AlarmGroupSummary]
+    func instances(on day: Date) async throws -> [DayAlarmItem]
 }
 
 protocol NotificationScheduling {
-    func schedule(instanceId: UUID, fireDate: Date) async throws
+    func prepareCategories() async
+    func requestAuthorization() async throws -> Bool
+    func schedule(
+        instanceId: UUID,
+        fireDate: Date,
+        title: String,
+        body: String,
+        soundId: String,
+        soundVolume: Double
+    ) async throws
     func cancelPending(instanceIds: [UUID]) async
 }
-
-protocol WatchConnectivityService {
-    func send(_ message: WatchMessage) async throws
-    var incomingMessages: AsyncStream<WatchMessage> { get }
-}
 ```
 
-> Swift 6: Actor sınırından `@Model` geçirilmez; API `Sendable` değer tipleri kullanır. Persistans `@ModelActor` içinde kalır.
-
-Bu protokoller `AlarmAppCore` paketinde tanımlanır; iOS ve watchOS target'ları kendi somut implementasyonlarını (ör. iOS'ta tam `SwiftDataAlarmRepository`, Watch'ta hafif `WatchCacheAlarmRepository`) enjekte eder. Bu, önceki mimarideki MethodChannel sözleşmesinin yerini alıyor — **JSON serileştirme yok, doğrudan tip-güvenli Swift çağrısı var.**
-
----
-
-## 4. WatchConnectivity Mesaj Sözleşmesi (değişmedi — bu zaten native bir API'ydi)
-
-```swift
-enum WatchMessage: Codable {
-    case todayContextUpdate(TodayContext)          // iPhone → Watch, updateApplicationContext
-    case wakeConfirmed(groupId: UUID, timestamp: Date)  // Watch → iPhone, sendMessage/transferUserInfo
-}
-```
-
-**Teslimat garantisi stratejisi (değişmedi):**
-1. `WCSession.sendMessage` dene (anlık, `isReachable == true` ise)
-2. Başarısız olursa `WCSession.transferUserInfo` ile kuyrukla (garanti teslimat, iPhone arka planda bile olsa işlenir)
-
-```swift
-func send(_ message: WatchMessage) async throws {
-    let data = try JSONEncoder().encode(message)
-    if session.isReachable {
-        session.sendMessage(["payload": data], replyHandler: nil) { error in
-            // fallback: transferUserInfo
-        }
-    } else {
-        session.transferUserInfo(["payload": data])
-    }
-}
-```
-
----
-
-## 5. HealthKit Sorgu Şeması (v2, F5 — değişmedi, zaten native Swift'ti)
-
-```swift
-let heartRateType = HKQuantityType(.heartRate)
-let query = HKAnchoredObjectQuery(
-    type: heartRateType,
-    predicate: predicateForAlarmWindow,
-    anchor: nil,
-    limit: HKObjectQueryNoLimit
-) { ... }
-
-let sleepType = HKCategoryType(.sleepAnalysis)
-```
-
-Heuristik girdiler (değişmedi): bazal nabza göre artış + `CMMotionActivity` hareket sinyali → kullanıcı onayına sunulan "olası uyanma" event'i.
-
----
-
-## 6. Veri Gizliliği Notları (değişmedi)
-
-- HealthKit verisi cihaz dışına hiçbir zaman gönderilmez.
-- `WakeEventLog` opsiyoneldir, ayarlardan kapatılabilir/temizlenebilir.
-- Üçüncü taraf analytics SDK'sı yok.
-- **Ek not (Swift-only avantajı):** Flutter köprüsünün olmaması, veri akışının uçtan uca tek bir dilde ve tek bir process modelinde izlenebilir olması anlamına gelir — güvenlik denetimi (audit) için daha az yüzey alanı.
+`AlarmSchedule` oluşturma / uzatma / erteleme yolları aynı `soundId` + `soundVolume` taşır. Critical Alert yokken (`criticalAlertsEnabled` varsayılan `false`) normal bildirim sesi kullanılır; düzey Critical entitlement ile anlamlıdır (K4).

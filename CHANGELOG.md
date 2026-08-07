@@ -4,6 +4,23 @@ Bu dosya AlarmApp sürüm notlarını **son kullanıcıya** yönelik, sade Türk
 
 ---
 
+## 0.0.6 — 7 Ağustos 2026
+
+Alarm oluştururken ses seçebilir ve ses düzeyini ayarlayabilirsiniz.
+
+### Bu sürümde
+
+- Hazır seslerden birini seçersin; dokununca kısa önizleme çalar.
+- Ses düzeyini kaydırıcıyla ayarlarsın.
+- Alarm detayında seçili ses adı ve düzey yüzdesi görünür.
+
+### Bilmen gerekenler
+
+- Critical Alert yoksa düzey cihazın sistem sesine göre sınırlı kalabilir.
+- Watch “Uyandım” hâlâ yok.
+
+---
+
 ## 0.0.4 — 6 Ağustos 2026
 
 Alarmlar artık cihaz bildirimlerine zamanlanıyor. Geliştirme sürümü; Critical Alert yok.

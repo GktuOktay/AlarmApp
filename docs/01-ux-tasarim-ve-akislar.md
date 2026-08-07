@@ -117,7 +117,7 @@ Interruption Level: .timeSensitive (Critical Alert onayı gelirse yükseltilir)
 ```
 Başlık: "⏰ Sabah Grubu"
 Gövde: "06:25 — Uyanma vakti"
-Ses: Kullanıcı seçimi, varsayılan uzun/döngüsel çalan ses dosyası
+Ses: Uygulama CC0 ses paketi (katalog) veya sistem varsayılanı; kullanıcı seçimi + ses düzeyi (0–100)
 Aksiyon: [Ertele 5dk] [Kapat]
 ```
 

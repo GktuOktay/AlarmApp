@@ -10,241 +10,89 @@
 
 # İPHONE EKRANLARI
 
-## S1 — Ana Ekran (Grup Listesi)
+## S1 — Ana Ekran (Alarm Listesi)
 
 ### Amaç
-Kullanıcının tüm alarm gruplarını tek bakışta görmesi ve en sık kullanılan aksiyonlara (bugün kapat, bu hafta pas geç) tek dokunuşla erişmesi.
+Kullanıcının tüm alarmlarını tek bakışta görmesi; gruplu olanlarda toplu “bugün kapat” / “bu hafta pas geç” aksiyonlarına erişmesi.
 
 ### Giriş Noktaları
 - Uygulama açılışı (onboarding tamamlanmışsa varsayılan ekran)
-- Herhangi bir alt ekrandan "geri" / tab bar'dan "Ana Sayfa"
+- Tab bar "Alarmlar"
+
+### Bileşen Haritası
+```
+TabView
+├── Tab "Alarmlar" → NavigationStack
+│   ├── Title: "Alarmlar"
+│   ├── Trailing: "+" → S2 (yeni alarm)
+│   └── List — her Alarm için satır (saat, günler, isteğe bağlı grup badge)
+│       └── swipe: Bugün kapat (alarm veya bağlı grup)
+└── Tab "Takvim" → S4
+```
+
+### Durumlar
+| Durum | Görünüm |
+|---|---|
+| **Boş** | "Henüz alarm yok" + "Alarm oluştur" CTA |
+| **Dolu** | Alarm listesi (oluşturma / saate göre) |
+
+### Fonksiyonlar
+| Eylem | Use Case |
+|---|---|
+| "+" | → S2 CreateAlarm |
+| Satıra dokun | → S3 Alarm detay |
+| Swipe Bugün kapat | `cancelToday(alarmId:)` veya grupluysa `cancelToday(groupId:)` |
+
+---
+
+## S2 — Alarm Oluştur / Düzenle
+
+### Amaç
+Tek bir alarmı saat, tekrar günleri, ses ve isteğe bağlı grup ile tanımlamak.
+
+### Bileşen Haritası
+```
+Form
+├── Ad (title)
+├── Saat (DatePicker hourAndMinute)
+├── Tekrar günleri (Pzt–Paz)
+├── Grup (Picker: Grup yok | mevcut gruplar | + yeni grup adı)
+├── Ses (katalog listesi + önizleme)
+├── Ses düzeyi (Slider 0–100)
+└── Kaydet → CreateAlarm (+ optional groupId; soundId + soundVolume)
+```
+
+---
+
+## S3 — Alarm Detay
+
+### Amaç
+Seçili alarmın özeti ve planlanmış `AlarmInstance` satırları; ses adı + düzey yüzdesi özeti.
+
+---
+
+## S4 — Takvim
+
+### Amaç
+Ay görünümünde instance’ı olan günleri işaretlemek; güne dokununca o günün alarm listesini göstermek.
 
 ### Bileşen Haritası
 ```
 NavigationStack
-├── NavigationBar
-│   ├── Title: "Alarmlarım"
-│   └── Trailing: "+" butonu (→ S2, yeni grup)
-├── Watch Bağlantı Rozeti (üst banner, koşullu — bkz. Durumlar)
-├── ScrollView
-│   └── LazyVStack — her AlarmGroup için bir GroupCard
-│       ├── GroupCard
-│       │   ├── Başlık (grup adı)
-│       │   ├── Alt başlık ("06:00–07:00 · Pzt-Cum · 13 alarm")
-│       │   ├── Durum rozeti ("Aktif" / "Bugün tamamlandı ✓" / "Bu hafta pasif" / "Devre dışı")
-│       │   ├── Sonraki alarm zamanı (varsa)
-│       │   └── .swipeActions(): [Bugün Kapat] [Bu Hafta Pas Geç] (sola kaydır)
-│       └── .contextMenu() (uzun bas): [Düzenle] [Bugün Kapat] [Bu Hafta Pas Geç]
-│                                       [Kalıcı Durdur] [Sil]
-└── TabBar: [Ana Sayfa] [Takvim] [Ayarlar]
+├── Ay ileri/geri
+├── CalendarGrid — gün hücresi + nokta (o gün pending/aktif instance varsa)
+└── Seçili gün → liste (saat + alarm adı + grup badge)
 ```
 
-### Durumlar
-| Durum | Görünüm |
-|---|---|
-| **Boş (hiç grup yok)** | Ortada illüstrasyon + "Henüz alarm grubun yok" + "İlk Grubunu Oluştur" CTA butonu (→ S2) |
-| **Dolu** | Yukarıdaki GroupCard listesi, oluşturulma tarihine göre değil, **sonraki çalma saatine göre** sıralı |
-| **Watch bağlı değil** | Üstte kalıcı olmayan (dismissible) banner: "Apple Watch bağlı değil — otomatik uyanma algılama kullanılamıyor, manuel kontroller çalışmaya devam ediyor" |
-| **Watch senkron bekliyor** | GroupCard'da küçük saat ikonu rozeti: "Watch senkron bekliyor" (Bluetooth kopukluğu durumunda) |
-| **Yükleniyor (ilk açılış, DB henüz okunmadı)** | `ProgressView`, skeleton kart placeholder'ları |
-
-### Fonksiyonlar
-| Eylem | Tetiklenen Use Case | Sonuç |
-|---|---|---|
-| "+" butonuna dokun | — (navigasyon) | S2'ye boş formla geçiş |
-| Karta dokun | — (navigasyon) | S3 (Grup Detay) |
-| Swipe → "Bugün Kapat" | `CancelGroupForToday(groupId:)` | Bugünkü `pending` instance'lar `cancelled`, pending notification'lar kaldırılır, kart rozeti "Bugün tamamlandı ✓" olur |
-| Swipe → "Bu Hafta Pas Geç" | Önce onay dialog'u açılır (bkz. altta), onay sonrası `SkipWeek(groupId:, weekStart:)` | Haftalık `AlarmException` kaydı oluşur |
-| Context menu → "Kalıcı Durdur" | `UpdateGroup(groupId:, isActive: false)` | Grup pasif hale gelir, gelecekteki tüm instance'lar iptal edilir, ama grup silinmez (geri açılabilir) |
-| Context menu → "Sil" | Onay dialog'u → `DeleteGroup(groupId:)` | Grup ve tüm ilişkili instance/exception kayıtları cascade silinir (SwiftData `deleteRule: .cascade`) |
-| "Bu Hafta Pas Geç" onay dialog'u | — | "Pzt 8 - Cum 12 arası, toplam 40 alarm etkilenecek. Onaylıyor musun?" [Vazgeç] [Onayla] |
-
-### Veri Bağımlılıkları
-- `@Query(sort: \AlarmGroup.nextFireDate)` — SwiftData'dan canlı, reaktif liste
-- Watch bağlantı durumu: `WatchConnectivityService.connectionState` (`@Observable` published property)
-
-### Kenar Durumları / Çıkış Noktaları
-- Aynı gün içinde bir grup için hem "Bugün Kapat" hem sonradan yeni bir alarm eklenirse (grup düzenlenirse): "Bugün kapat" durumu o günün **mevcut** instance'larını etkiler, yeni eklenen instance'lar etkilenmez — kullanıcıya bunu netleştiren bir uyarı gösterilir.
-- Çıkış noktaları: S2 (yeni/düzenle), S3 (detay), S4 (takvim, tab bar), S7 (ayarlar, tab bar)
+### Not
+Eski S2/S3 grup-aralık metinleri alarm-first ile üstünlendi. S5+ istisna düzenleme sonraki iterasyonda.
 
 ---
 
-## S2 — Grup Oluştur / Düzenle
+## S5 — Gün Detay (Bottom Sheet) — v1.1+
 
 ### Amaç
-Kullanıcının bir zaman aralığı, sıklık, tekrar günleri ve ses seçerek alarm grubu tanımlaması.
-
-### Giriş Noktaları
-- S1 "+" butonu (yeni grup, boş form)
-- S1 context menu "Düzenle" (mevcut grup, dolu form)
-- S3 "Düzenle" butonu
-
-### Bileşen Haritası
-```
-NavigationStack (modal, .sheet olarak açılır)
-├── NavigationBar
-│   ├── Leading: "Vazgeç"
-│   ├── Title: "Yeni Grup" / "Grubu Düzenle"
-│   └── Trailing: "Kaydet" (validasyon geçmeden disabled)
-├── Form
-│   ├── Section("Ad")
-│   │   └── TextField (placeholder: "ör. Sabah Grubu")
-│   ├── Section("Zaman Aralığı")
-│   │   ├── DatePicker (.hourAndMinute) — Başlangıç
-│   │   ├── DatePicker (.hourAndMinute) — Bitiş
-│   │   └── Stepper — Aralık (dakika), 1-60 arası
-│   │   └── Canlı önizleme metni: "13 alarm oluşturulacak (06:00, 06:05, ..., 07:00)"
-│   ├── Section("Tekrar Günleri")
-│   │   └── 7 günlük toggle chip'leri (Pzt-Paz), çoklu seçim
-│   ├── Section("Ses")
-│   │   └── NavigationLink → Ses seçim listesi (önizleme çalma özellikli)
-│   └── Section("Uyarılar") — koşullu, sadece çakışma varsa görünür
-│       └── "Bu grup, 'Öğle Molası' grubuyla 06:30'da çakışıyor" (kırmızı metin)
-```
-
-### Durumlar
-| Durum | Görünüm |
-|---|---|
-| **Yeni grup (boş form)** | Tüm alanlar varsayılan (06:00-07:00, 5dk, hiç gün seçili değil) |
-| **Düzenleme (dolu form)** | Mevcut `AlarmGroup` değerleriyle önyüklenmiş |
-| **Validasyon hatası** | "Kaydet" disabled + ilgili alan altında kırmızı hata metni (ör. "Bitiş saati başlangıçtan önce olamaz") |
-| **Çakışma uyarısı** | Kaydetmeyi engellemez, sadece bilgilendirir (sarı/turuncu uyarı kutusu) |
-
-### Fonksiyonlar
-| Eylem | Tetiklenen Use Case | Sonuç |
-|---|---|---|
-| Alan değişikliği (her keystroke/picker) | Local form state güncellenir, **canlı önizleme** yeniden hesaplanır (debounce 200ms) | "N alarm oluşturulacak" metni güncellenir |
-| "Kaydet" (yeni) | `CreateAlarmGroup(params)` | Grup + tüm `AlarmInstance`'lar oluşturulur, `UNNotificationRequest`ler zamanlanır, S1'e dönülür |
-| "Kaydet" (düzenleme) | `UpdateAlarmGroup(groupId:, params)` | Mevcut pending instance'lar silinip yeniden oluşturulur; **zaten `fired`/`cancelled` olan geçmiş instance'lara dokunulmaz |
-| "Vazgeç" | — | Kaydedilmeden kapatılır, değişiklik varsa onay dialog'u ("Değişiklikleri kaydetmeden çık?") |
-
-### Veri Bağımlılıkları
-- `AlarmGroupFormViewModel` (`@Observable`) — form state + canlı validasyon + önizleme hesaplama
-- Çakışma kontrolü için diğer aktif grupların zaman aralıklarını okur (`AlarmRepository.activeGroups()`)
-
-### Kenar Durumları / Çıkış Noktaları
-- Aralık, toplam süreyi aşarsa (ör. 65 dakikalık aralık, 60 dakikalık pencere) → sadece 1 alarm oluşur, kullanıcı bilgilendirilir.
-- Hiç gün seçilmezse → "Kaydet" disabled, "En az bir gün seçmelisin" uyarısı.
-- Çıkış: Kaydet → S1; Vazgeç → önceki ekran (S1 veya S3).
-
----
-
-## S3 — Grup Detay
-
-### Amaç
-Bir grubun içindeki tüm tekil alarmları ve durumlarını (pending/fired/cancelled) şeffaf şekilde göstermek.
-
-### Giriş Noktaları
-- S1 kart dokunma
-
-### Bileşen Haritası
-```
-NavigationStack
-├── NavigationBar: Title (grup adı), Trailing: "Düzenle" (→ S2)
-├── Header — grup özeti (saat aralığı, gün, ses)
-├── Segmented Control: [Bugün] [Bu Hafta] [Tüm Zamanlar]
-├── List — AlarmInstance satırları
-│   └── Her satır: saat + durum ikonu (● pending, ✓ fired, ✕ cancelled) + iptal nedeni (varsa, küçük gri metin)
-└── Alt aksiyon barı: [Bugün Kapat] [Bu Hafta Pas Geç] [Kalıcı Durdur]
-```
-
-### Durumlar
-| Durum | Görünüm |
-|---|---|
-| **"Bugün" sekmesi, grup bugün aktif değil (istisna var)** | Liste yerine bilgi kutusu: "Bugün bu grup için istisna tanımlı: [nedeni]" + "İstisnayı Kaldır" butonu |
-| **"Tüm Zamanlar", çok uzun liste** | Sayfalama/lazy loading (SwiftData `@Query` + `fetchLimit`) |
-
-### Fonksiyonlar
-| Eylem | Tetiklenen Use Case | Sonuç |
-|---|---|---|
-| Segment değişimi | — (yerel filtre) | Liste yeniden filtrelenir |
-| Alt bar "Bugün Kapat" | `CancelGroupForToday` | S1'deki aynı davranış |
-| "İstisnayı Kaldır" | `RemoveException(exceptionId:)` | İlgili `AlarmException` silinir, o günün alarmları normale döner |
-| Bir instance satırına dokun | — | Detay bottom sheet: saat, durum, iptal nedeni, (varsa) hangi cihazdan iptal edildiği ("Watch'tan iptal edildi, 06:22") |
-
-### Veri Bağımlılıkları
-- `@Query` — seçili gruba ait `AlarmInstance`'lar, segment'e göre tarih filtreli
-
-### Kenar Durumları / Çıkış Noktaları
-- Grup silinmişse (başka bir ekrandan) ve kullanıcı hâlâ bu ekrandaysa → otomatik S1'e yönlendirme + toast "Bu grup silindi".
-
----
-
-## S4 — Takvim / Yıllık Planlama
-
-### Amaç
-Yıl içindeki herhangi bir güne gidip o gün için grup atama/iptal etme.
-
-### Giriş Noktaları
-- TabBar "Takvim"
-
-### Bileşen Haritası
-```
-NavigationStack
-├── NavigationBar: Title "Takvim", ay ileri/geri okları
-├── Ay Görünümü (CalendarGrid, native `Calendar`/`DateComponents` tabanlı custom view)
-│   └── Her gün hücresi: rakam + renk noktası
-│       (yeşil: normal aktif · turuncu: istisna var · gri: tüm gruplar pasif · nokta yok: alarm yok)
-├── Alt Legend: renk açıklamaları (erişilebilirlik: renk + ikon birlikte, bkz. UX dokümanı Bölüm 7)
-└── Gün seçilince → S5 bottom sheet olarak açılır
-```
-
-### Durumlar
-| Durum | Görünüm |
-|---|---|
-| **Geçmiş ay** | Günler salt-okunur (dokunulabilir ama S5'te "Geçmiş tarih düzenlenemez" mesajı) |
-| **Bugünden 1 yıl sonrası** | Ay ileri oku disabled, "İstisnalar en fazla 1 yıl ileriye tanımlanabilir" tooltip |
-
-### Fonksiyonlar
-| Eylem | Tetiklenen Use Case | Sonuç |
-|---|---|---|
-| Gün hücresine dokun | — (navigasyon) | S5 bottom sheet açılır, o güne ait veri yüklenir |
-| Ay ileri/geri ok | — | `CalendarGrid` yeniden render, `@Query` tarih aralığı güncellenir |
-
-### Veri Bağımlılıkları
-- Görünen ay aralığındaki tüm `AlarmException` kayıtları + hangi günlerde hangi gruplar aktif (hesaplanmış, cache'lenmiş `MonthSummary`)
-
-### Kenar Durumları / Çıkış Noktaları
-- Performans: 1 yıllık görünümde her gün için canlı hesaplama yapmak yerine, ay değiştikçe lazy hesaplanan `MonthSummary` cache'i kullanılır (bkz. Test Planı, performans testi < 300ms hedefi).
-
----
-
-## S5 — Gün Detay (Bottom Sheet)
-
-### Amaç
-Seçili bir günün alarm durumunu gösterip değiştirme imkânı sunmak.
-
-### Giriş Noktaları
-- S4 gün hücresine dokunma
-
-### Bileşen Haritası
-```
-.sheet (medium/large detent)
-├── Header: Tarih ("6 Ağustos 2026, Perşembe")
-├── "Bu gün aktif gruplar" listesi
-│   └── Her grup: ad, saat aralığı, toggle (aktif/pasif bu gün için)
-├── "Özel tek seferlik alarm ekle" butonu (→ mini form, aynı sheet içinde genişler)
-└── Alt bar: [Vazgeç] [Kaydet]
-```
-
-### Durumlar
-| Durum | Görünüm |
-|---|---|
-| **Hiç grup yok bu gün için normalde** | "Bu gün için tanımlı alarm grubu yok" + "Özel alarm ekle" CTA |
-| **Geçmiş tarih** | Tüm kontroller disabled, "Geçmiş tarihler düzenlenemez" mesajı |
-
-### Fonksiyonlar
-| Eylem | Tetiklenen Use Case | Sonuç |
-|---|---|---|
-| Grup toggle kapatma | Yerel state, henüz kaydedilmez | Toggle görsel olarak kapanır |
-| "Kaydet" | `ScheduleException(type: .singleDay, groupId:, action: .skip)` (kapatılan her grup için) | İlgili `AlarmException` kayıtları oluşur, S4'e dönülür, gün turuncu işaretlenir |
-| "Özel alarm ekle" | Mini form açılır → "Kaydet" | `ScheduleException(type: .singleDay, action: .replace, replacementGroupId: <yeni tek seferlik grup>)` |
-
-### Veri Bağımlılıkları
-- Seçili tarih için `AlarmRepository.dayDetail(date:)` — o gün aktif olması gereken gruplar + mevcut istisnalar
-
-### Kenar Durumları / Çıkış Noktaları
-- Aynı gün için hem "grup kapat" hem "özel alarm ekle" yapılırsa, ikisi de ayrı `AlarmException` kayıtları olarak saklanır — çakışma yoksa sorun değil, çakışma varsa S2'deki gibi uyarı gösterilir.
+Seçili gün için istisna / özel alarm (şimdilik S4 liste salt okunur iskelet yeterli).
 
 ---
 
@@ -374,7 +222,7 @@ TabView (paging, sayfa göstergeli)
 |---|---|---|
 | "İzin Ver" (bildirim) | `UNUserNotificationCenter.requestAuthorization` | Sistem dialog'u, sonuç kaydedilir |
 | "İzin Ver" (HealthKit) | `HKHealthStore.requestAuthorization` | Sistem dialog'u |
-| Sihirbaz "Bitir" | `CreateAlarmGroup` + `AppStorage.hasCompletedOnboarding = true` | S1'e geçiş |
+| Sihirbaz "Bitir" | `CreateAlarm` + `AppStorage.hasCompletedOnboarding = true` | S1'e geçiş |
 | "Bu adımı atla" (sihirbaz) | `AppStorage.hasCompletedOnboarding = true` | S1'e boş listeyle geçiş (S1'deki boş durum devreye girer) |
 
 ### Veri Bağımlılıkları
@@ -509,7 +357,7 @@ Bu tablo, hangi ekran fonksiyonlarının hangi ortak `AlarmAppCore` use case'ini
 
 | Use Case | Kullanıldığı Ekranlar |
 |---|---|
-| `CreateAlarmGroup` | S2, S8 |
+| `CreateAlarm` | S2, S8 |
 | `UpdateAlarmGroup` | S2 |
 | `DeleteGroup` | S1 |
 | `CancelGroupForToday` | S1, S3 |
