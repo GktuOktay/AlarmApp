@@ -18,6 +18,11 @@ targets:
       - path: AlarmApp-iOS
         excludes:
           - Info.plist
+          - Sounds
+      - path: AlarmApp-iOS/Sounds
+        buildPhase: resources
+        excludes:
+          - SOUNDS.md
     info:
       path: AlarmApp-iOS/Info.plist
       properties:
