@@ -32,6 +32,10 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Erken uyanma sorusu için uyku analizine ihtiyaç duyulur. Veri cihazda kalır.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>AlarmApp sağlık verisi yazmaz; sistem formu için açıklama gereklidir.</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>

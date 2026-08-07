@@ -6225,6 +6225,190 @@
           }
         }
       }
+    },
+    "settings.title": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réglages"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设置"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإعدادات"
+          }
+        }
+      }
+    },
+    "settings.autoWakePrompt": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otomatik uyanma sorusu"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic wake prompt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pregunta automática de despertar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Question de réveil automatique"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Автовопрос о пробуждении"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自动醒来询问"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سؤال الاستيقاظ التلقائي"
+          }
+        }
+      }
+    },
+    "settings.autoWakePrompt.footer": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uyanma penceresinde sensörler uyanmış olabileceğini düşünürse Watch’ta sorar. Onaylamadan alarm kapanmaz."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "During the wake window, Watch asks if sensors think you may be awake. Alarms stay until you confirm."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En la ventana de despertar, el Watch pregunta si los sensores creen que estás despierto. Las alarmas siguen hasta que confirmes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pendant la fenêtre de réveil, la Watch demande si les capteurs pensent que vous êtes réveillé. Les alarmes restent jusqu’à confirmation."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "В окне пробуждения часы спросят, если датчики считают, что вы проснулись. Будильники не отключатся без подтверждения."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在醒来时段，若传感器认为你可能已醒，手表会询问。未确认前闹钟不会关闭。"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خلال نافذة الاستيقاظ، يسأل الـ Watch إذا اعتقدت المستشعرات أنك قد استيقظت. تبقى المنبهات حتى التأكيد."
+          }
+        }
+      }
+    },
+    "settings.autoWakePrompt.healthKitRequired": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HealthKit izni gerekli. Otomatik uyanma sorusu kullanılamıyor."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HealthKit permission required. Automatic wake prompt is unavailable."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se requiere permiso de HealthKit. La pregunta automática no está disponible."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autorisation HealthKit requise. La question automatique est indisponible."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Требуется доступ HealthKit. Автовопрос недоступен."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需要 HealthKit 权限。无法使用自动醒来询问。"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مطلوب إذن HealthKit. سؤال الاستيقاظ التلقائي غير متاح."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

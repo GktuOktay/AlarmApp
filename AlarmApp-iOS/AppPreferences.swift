@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import HealthKit
 
 enum AppLanguageCode: String, CaseIterable, Identifiable {
     case system
@@ -63,6 +64,8 @@ enum AppAppearanceMode: String, CaseIterable, Identifiable {
 final class AppPreferences {
     private static let languageKey = "app.language"
     private static let appearanceKey = "app.colorScheme"
+    /// Shared with Watch via App Group would be ideal; for MVP both read the same key name from defaults.
+    static let autoWakePromptEnabledKey = "app.autoWakePromptEnabled"
 
     var languageRaw: String {
         didSet { UserDefaults.standard.set(languageRaw, forKey: Self.languageKey) }
@@ -72,9 +75,23 @@ final class AppPreferences {
         didSet { UserDefaults.standard.set(appearanceRaw, forKey: Self.appearanceKey) }
     }
 
+    /// S7 “Otomatik uyanma sorusu” — default on; HealthKit denial disables effective detection.
+    var autoWakePromptEnabled: Bool {
+        didSet { UserDefaults.standard.set(autoWakePromptEnabled, forKey: Self.autoWakePromptEnabledKey) }
+    }
+
+    /// `true` when HealthKit sleep read is explicitly denied (or unavailable).
+    var healthKitSleepDenied: Bool = false
+
     init() {
         languageRaw = UserDefaults.standard.string(forKey: Self.languageKey) ?? AppLanguageCode.system.rawValue
         appearanceRaw = UserDefaults.standard.string(forKey: Self.appearanceKey) ?? AppAppearanceMode.system.rawValue
+        if UserDefaults.standard.object(forKey: Self.autoWakePromptEnabledKey) == nil {
+            autoWakePromptEnabled = true
+        } else {
+            autoWakePromptEnabled = UserDefaults.standard.bool(forKey: Self.autoWakePromptEnabledKey)
+        }
+        refreshHealthKitStatus()
     }
 
     var language: AppLanguageCode {
@@ -92,5 +109,38 @@ final class AppPreferences {
             return Locale(identifier: id)
         }
         return .autoupdatingCurrent
+    }
+
+    /// Effective toggle: user preference AND HealthKit not denied.
+    var isAutoWakePromptEffectivelyEnabled: Bool {
+        autoWakePromptEnabled && !healthKitSleepDenied
+    }
+
+    func refreshHealthKitStatus() {
+        guard HKHealthStore.isHealthDataAvailable(),
+              let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else {
+            healthKitSleepDenied = true
+            return
+        }
+        let status = HKHealthStore().authorizationStatus(for: sleepType)
+        // `.sharingDenied` means user denied; `.notDetermined` is OK until request.
+        healthKitSleepDenied = (status == .sharingDenied)
+    }
+
+    @MainActor
+    func requestHealthKitSleepAccessIfNeeded() async {
+        guard HKHealthStore.isHealthDataAvailable(),
+              let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else {
+            healthKitSleepDenied = true
+            return
+        }
+        let store = HKHealthStore()
+        do {
+            try await store.requestAuthorization(toShare: [], read: [sleepType])
+        } catch {
+            healthKitSleepDenied = true
+            return
+        }
+        refreshHealthKitStatus()
     }
 }

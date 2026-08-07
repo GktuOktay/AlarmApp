@@ -25,8 +25,44 @@ struct SettingsView: View {
                     }
                     .pickerStyle(.navigationLink)
                 }
+
+                Section {
+                    Toggle(isOn: autoWakeBinding) {
+                        Text("settings.autoWakePrompt")
+                    }
+                    .disabled(preferences.healthKitSleepDenied)
+
+                    if preferences.healthKitSleepDenied {
+                        Text("settings.autoWakePrompt.healthKitRequired")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                } footer: {
+                    Text("settings.autoWakePrompt.footer")
+                }
+            }
+            .navigationTitle("settings.title")
+            .task {
+                preferences.refreshHealthKitStatus()
             }
         }
+    }
+
+    private var autoWakeBinding: Binding<Bool> {
+        Binding(
+            get: { preferences.autoWakePromptEnabled },
+            set: { newValue in
+                preferences.autoWakePromptEnabled = newValue
+                if newValue {
+                    Task {
+                        await preferences.requestHealthKitSleepAccessIfNeeded()
+                        if preferences.healthKitSleepDenied {
+                            preferences.autoWakePromptEnabled = false
+                        }
+                    }
+                }
+            }
+        )
     }
 }
 

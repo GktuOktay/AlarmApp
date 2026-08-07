@@ -51,6 +51,8 @@ targets:
           - zh-Hans
           - ar
         LSRequiresIPhoneOS: true
+        NSHealthShareUsageDescription: Erken uyanma sorusu için uyku analizine ihtiyaç duyulur. Veri cihazda kalır.
+        NSHealthUpdateUsageDescription: AlarmApp sağlık verisi yazmaz; sistem formu için açıklama gereklidir.
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
@@ -60,6 +62,8 @@ targets:
       - package: AlarmAppCore
       - target: AlarmApp-Watch
         embed: true
+    entitlements:
+      path: AlarmApp-iOS/AlarmApp-iOS.entitlements
   AlarmApp-Watch:
     type: application
     platform: watchOS
@@ -88,6 +92,8 @@ targets:
         WKApplication: true
         WKCompanionAppBundleIdentifier: com.gktuoktay.AlarmApp
         WKRunsIndependentlyOfCompanionApp: true
+        NSHealthShareUsageDescription: Erken uyanma sorusu için uyku analizine ihtiyaç duyulur. Veri cihazda kalır.
+        NSHealthUpdateUsageDescription: AlarmApp sağlık verisi yazmaz; sistem formu için açıklama gereklidir.
     dependencies:
       - package: AlarmAppCore
     settings:
@@ -101,3 +107,5 @@ targets:
       TARGETED_DEVICE_FAMILY: "4"
       SKIP_INSTALL: NO
       SWIFT_EMIT_LOC_STRINGS: YES
+    entitlements:
+      path: AlarmApp-Watch/AlarmApp-Watch.entitlements

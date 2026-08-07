@@ -6,6 +6,7 @@ import AlarmAppCore
 struct AlarmApp_WatchApp: App {
     private let container: ModelContainer
     @StateObject private var ringing = WatchRingingPresenter.shared
+    @StateObject private var wakeDetection = WakeDetectionCoordinator.shared
 
     init() {
         do {
@@ -23,6 +24,10 @@ struct AlarmApp_WatchApp: App {
                         AlarmRingingView(session: session) {
                             ringing.dismiss()
                         }
+                    } else if let prompt = wakeDetection.promptContext {
+                        WakePromptView(context: prompt) {
+                            wakeDetection.clearPrompt()
+                        }
                     } else {
                         WatchHomeView()
                     }
@@ -30,8 +35,11 @@ struct AlarmApp_WatchApp: App {
             }
             .modelContainer(container)
             .environmentObject(ringing)
+            .environmentObject(wakeDetection)
             .task {
                 WatchSyncBootstrap.shared.start(container: container)
+                let enabled = UserDefaults.standard.object(forKey: "app.autoWakePromptEnabled") as? Bool ?? true
+                wakeDetection.start(container: container, isEnabled: enabled)
             }
         }
     }
