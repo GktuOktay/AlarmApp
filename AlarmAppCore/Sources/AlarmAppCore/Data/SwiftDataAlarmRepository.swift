@@ -23,6 +23,9 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
             daysOfWeek: prepared.daysOfWeek,
             soundId: prepared.soundId,
             soundVolume: prepared.soundVolume,
+            snoozeEnabled: prepared.snoozeEnabled,
+            snoozeMinutes: prepared.snoozeMinutes,
+            isWakeSchedule: prepared.isWakeSchedule,
             endsOn: prepared.endsOn,
             group: group,
             createdAt: prepared.createdAt,
@@ -399,6 +402,9 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
                 soundId: alarm.soundId,
                 soundVolume: alarm.soundVolume,
                 isActive: alarm.isActive,
+                snoozeEnabled: alarm.snoozeEnabled,
+                snoozeMinutes: alarm.snoozeMinutes,
+                isWakeSchedule: alarm.isWakeSchedule,
                 groupId: alarm.group?.id,
                 groupName: alarm.group?.name
             )

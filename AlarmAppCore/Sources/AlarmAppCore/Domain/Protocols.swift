@@ -40,6 +40,9 @@ public struct AlarmSummary: Sendable, Identifiable, Equatable {
     public var soundId: String
     public var soundVolume: Double
     public var isActive: Bool
+    public var snoozeEnabled: Bool
+    public var snoozeMinutes: Int
+    public var isWakeSchedule: Bool
     public var groupId: UUID?
     public var groupName: String?
 
@@ -51,6 +54,9 @@ public struct AlarmSummary: Sendable, Identifiable, Equatable {
         soundId: String,
         soundVolume: Double = 1.0,
         isActive: Bool,
+        snoozeEnabled: Bool = true,
+        snoozeMinutes: Int = SnoozePolicy.defaultMinutes,
+        isWakeSchedule: Bool = false,
         groupId: UUID? = nil,
         groupName: String? = nil
     ) {
@@ -61,6 +67,9 @@ public struct AlarmSummary: Sendable, Identifiable, Equatable {
         self.soundId = soundId
         self.soundVolume = soundVolume
         self.isActive = isActive
+        self.snoozeEnabled = snoozeEnabled
+        self.snoozeMinutes = snoozeMinutes
+        self.isWakeSchedule = isWakeSchedule
         self.groupId = groupId
         self.groupName = groupName
     }

@@ -13,6 +13,9 @@ public struct CreateAlarmRequest: Sendable {
     public var horizonDays: Int
     /// Optional inclusive last calendar day for the pattern. When nil and repeating → open-ended.
     public var endDate: Date?
+    public var snoozeEnabled: Bool
+    public var snoozeMinutes: Int
+    public var isWakeSchedule: Bool
     public var fromDate: Date
     public var calendar: Calendar
     public var now: Date
@@ -27,6 +30,9 @@ public struct CreateAlarmRequest: Sendable {
         repeats: Bool = true,
         horizonDays: Int = AlarmHorizon.notificationDays,
         endDate: Date? = nil,
+        snoozeEnabled: Bool = true,
+        snoozeMinutes: Int = SnoozePolicy.defaultMinutes,
+        isWakeSchedule: Bool = false,
         fromDate: Date = Date(),
         calendar: Calendar = .autoupdatingCurrent,
         now: Date = Date()
@@ -40,6 +46,9 @@ public struct CreateAlarmRequest: Sendable {
         self.repeats = repeats
         self.horizonDays = horizonDays
         self.endDate = endDate
+        self.snoozeEnabled = snoozeEnabled
+        self.snoozeMinutes = snoozeMinutes
+        self.isWakeSchedule = isWakeSchedule
         self.fromDate = fromDate
         self.calendar = calendar
         self.now = now
@@ -115,6 +124,9 @@ public struct PreparedAlarm: Sendable {
     public let soundVolume: Double
     public let groupId: UUID?
     public let endsOn: Date?
+    public let snoozeEnabled: Bool
+    public let snoozeMinutes: Int
+    public let isWakeSchedule: Bool
     public let createdAt: Date
     public let updatedAt: Date
     /// Only one-shot alarms carry a concrete instance here. Repeating alarms are pattern-only.
@@ -129,6 +141,9 @@ public struct PreparedAlarm: Sendable {
         soundVolume: Double,
         groupId: UUID?,
         endsOn: Date?,
+        snoozeEnabled: Bool = true,
+        snoozeMinutes: Int = SnoozePolicy.defaultMinutes,
+        isWakeSchedule: Bool = false,
         createdAt: Date,
         updatedAt: Date,
         instances: [PreparedInstanceSpec]
@@ -141,6 +156,9 @@ public struct PreparedAlarm: Sendable {
         self.soundVolume = soundVolume
         self.groupId = groupId
         self.endsOn = endsOn
+        self.snoozeEnabled = snoozeEnabled
+        self.snoozeMinutes = SnoozePolicy.clampMinutes(snoozeMinutes)
+        self.isWakeSchedule = isWakeSchedule
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.instances = instances
@@ -175,6 +193,9 @@ public struct CreateAlarm {
                 soundVolume: soundVolume,
                 groupId: request.groupId,
                 endsOn: startOfFrom,
+                snoozeEnabled: request.snoozeEnabled,
+                snoozeMinutes: request.snoozeMinutes,
+                isWakeSchedule: request.isWakeSchedule,
                 createdAt: now,
                 updatedAt: now,
                 instances: [PreparedInstanceSpec(scheduledDate: startOfFrom, scheduledTime: request.time)]
@@ -201,6 +222,9 @@ public struct CreateAlarm {
             soundVolume: soundVolume,
             groupId: request.groupId,
             endsOn: endsOn,
+            snoozeEnabled: request.snoozeEnabled,
+            snoozeMinutes: request.snoozeMinutes,
+            isWakeSchedule: request.isWakeSchedule,
             createdAt: now,
             updatedAt: now,
             instances: []
