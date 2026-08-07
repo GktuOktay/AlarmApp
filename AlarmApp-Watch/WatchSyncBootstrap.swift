@@ -35,11 +35,23 @@ final class WatchSyncBootstrap {
         }
     }
 
+    private static let autoWakePromptEnabledKey = "app.autoWakePromptEnabled"
+
     private static func applyIncoming(
         _ message: WatchMessage,
         repository: SwiftDataAlarmRepository,
         scheduler: LocalNotificationScheduler
     ) async {
+        if case .todayContextUpdate(let context) = message {
+            UserDefaults.standard.set(
+                context.autoWakeDetectionEnabled,
+                forKey: autoWakePromptEnabledKey
+            )
+            await MainActor.run {
+                WakeDetectionCoordinator.shared.updateEnabled(context.autoWakeDetectionEnabled)
+            }
+        }
+
         do {
             let effects = try await WatchMessageSyncApplier.apply(
                 message,

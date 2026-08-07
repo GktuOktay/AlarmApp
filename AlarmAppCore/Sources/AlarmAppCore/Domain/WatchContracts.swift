@@ -3,10 +3,31 @@ import Foundation
 public struct TodayContext: Codable, Equatable, Sendable {
     public var date: Date
     public var activeGroups: [ActiveGroupSummary]
+    /// S7 phone preference mirrored to Watch (default `true` for older payloads).
+    public var autoWakeDetectionEnabled: Bool
 
-    public init(date: Date, activeGroups: [ActiveGroupSummary]) {
+    public init(
+        date: Date,
+        activeGroups: [ActiveGroupSummary],
+        autoWakeDetectionEnabled: Bool = true
+    ) {
         self.date = date
         self.activeGroups = activeGroups
+        self.autoWakeDetectionEnabled = autoWakeDetectionEnabled
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case date
+        case activeGroups
+        case autoWakeDetectionEnabled
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        date = try container.decode(Date.self, forKey: .date)
+        activeGroups = try container.decode([ActiveGroupSummary].self, forKey: .activeGroups)
+        autoWakeDetectionEnabled =
+            try container.decodeIfPresent(Bool.self, forKey: .autoWakeDetectionEnabled) ?? true
     }
 }
 

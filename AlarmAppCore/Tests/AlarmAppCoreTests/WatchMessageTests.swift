@@ -20,9 +20,19 @@ final class WatchMessageTests: XCTestCase {
                         )
                     ]
                 )
-            ]
+            ],
+            autoWakeDetectionEnabled: false
         )
         try assertRoundTrip(.todayContextUpdate(context))
+    }
+
+    func testTodayContextDecodesMissingAutoWakeAsTrue() throws {
+        let legacy = """
+        {"date":-978307200,"activeGroups":[]}
+        """.data(using: .utf8)!
+        let decoded = try decoder.decode(TodayContext.self, from: legacy)
+        XCTAssertTrue(decoded.autoWakeDetectionEnabled)
+        XCTAssertTrue(decoded.activeGroups.isEmpty)
     }
 
     func testWakeConfirmedRoundTrip() throws {

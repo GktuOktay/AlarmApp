@@ -34,7 +34,7 @@ Son güncelleme: 2026-08-07
 - [ ] Uyanma / ertele / Saat-UI + Watch prompt — spec `2026-08-07-uyanma-ertele-ve-saat-ui-design.md`, plan `2026-08-07-uyanma-ertele-ve-saat-ui.md`
   - Core dismiss/snooze/bulk + Saat list/form + çalma UI + bildirim Ertele + WCSession köprü / sync apply + **WakeDetectionEngine + Watch prompt + S7 toggle** hazır
   - WC: reachable→sendMessage else transferUserInfo; today→applicationContext; gerçek cihaz E2E henüz doğrulanmadı
-  - Auto-wake tercih iPhone↔Watch App Group sync yok (Watch kendi UserDefaults; varsayılan açık)
+  - Auto-wake tercih: `TodayContext.autoWakeDetectionEnabled` ile iPhone→Watch applicationContext senkronu (S7 toggle → pushTodayContext)
 - [ ] SkipWeek UI
 
 ## Tasarım kilidi (2026-08-07)

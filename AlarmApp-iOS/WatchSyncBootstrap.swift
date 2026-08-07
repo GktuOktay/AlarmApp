@@ -32,8 +32,17 @@ final class WatchSyncBootstrap {
     func pushTodayContext() async {
         guard let container else { return }
         let repo = SwiftDataAlarmRepository(modelContainer: container)
-        guard let context = try? await repo.todayContext() else { return }
+        guard var context = try? await repo.todayContext() else { return }
+        context.autoWakeDetectionEnabled = Self.autoWakeDetectionEnabledFromDefaults()
         try? await WCSessionWatchConnectivityService.shared.send(.todayContextUpdate(context))
+    }
+
+    private static func autoWakeDetectionEnabledFromDefaults() -> Bool {
+        let key = AppPreferences.autoWakePromptEnabledKey
+        if UserDefaults.standard.object(forKey: key) == nil {
+            return true
+        }
+        return UserDefaults.standard.bool(forKey: key)
     }
 
     func send(_ message: WatchMessage) {

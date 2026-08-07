@@ -53,13 +53,15 @@ struct SettingsView: View {
             get: { preferences.autoWakePromptEnabled },
             set: { newValue in
                 preferences.autoWakePromptEnabled = newValue
-                if newValue {
-                    Task {
+                Task {
+                    if newValue {
                         await preferences.requestHealthKitSleepAccessIfNeeded()
                         if preferences.healthKitSleepDenied {
                             preferences.autoWakePromptEnabled = false
                         }
                     }
+                    // Mirror S7 toggle to Watch via application context (TodayContext).
+                    await WatchSyncBootstrap.shared.pushTodayContext()
                 }
             }
         )

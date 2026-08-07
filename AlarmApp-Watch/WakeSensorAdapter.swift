@@ -10,6 +10,8 @@ import Combine
 final class WakeSensorAdapter: ObservableObject {
     @Published private(set) var sleepBecameAwake = false
     @Published private(set) var motionAboveThreshold = false
+    /// `true` after HealthKit auth request completed (or HK unavailable path settled).
+    /// Not tied to `sharingAuthorized` — that flag is write-only and does not reflect sleep read access.
     @Published private(set) var isHealthKitAuthorized = false
 
     private let healthStore = HKHealthStore.isHealthDataAvailable() ? HKHealthStore() : nil
@@ -18,10 +20,10 @@ final class WakeSensorAdapter: ObservableObject {
     private var lastSleepSampleEnd: Date?
 
     func start() {
-        refreshHealthKitAuthorization()
         startMotionUpdatesIfAvailable()
         pollTask?.cancel()
         pollTask = Task { [weak self] in
+            await self?.requestHealthKitAuthorizationIfNeeded()
             while !Task.isCancelled {
                 await self?.pollSleepTransition()
                 try? await Task.sleep(nanoseconds: 30_000_000_000) // 30s
@@ -37,16 +39,6 @@ final class WakeSensorAdapter: ObservableObject {
         }
     }
 
-    func refreshHealthKitAuthorization() {
-        guard let healthStore,
-              let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else {
-            isHealthKitAuthorized = false
-            return
-        }
-        let status = healthStore.authorizationStatus(for: sleepType)
-        isHealthKitAuthorized = (status == .sharingAuthorized)
-    }
-
     func requestHealthKitAuthorizationIfNeeded() async {
         guard let healthStore,
               let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else {
@@ -56,9 +48,11 @@ final class WakeSensorAdapter: ObservableObject {
         do {
             try await healthStore.requestAuthorization(toShare: [], read: [sleepType])
         } catch {
-            // Denied or unavailable — leave unauthorized; engine stays quiet.
+            // Denied or unavailable — still attempt queries; empty results keep the engine quiet.
         }
-        refreshHealthKitAuthorization()
+        // Read access is not exposed via `authorizationStatus` / `sharingAuthorized`.
+        // After the request finishes, treat as ready-to-query.
+        isHealthKitAuthorized = true
     }
 
     /// Injects signals for simulator / previews / tests without real sensors.
@@ -78,6 +72,7 @@ final class WakeSensorAdapter: ObservableObject {
     }
 
     private func pollSleepTransition() async {
+        // Prefer querying after auth request; empty samples are fine. Do not gate on write status.
         guard isHealthKitAuthorized,
               let healthStore,
               let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else {

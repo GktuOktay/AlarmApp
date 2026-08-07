@@ -28,7 +28,7 @@ final class WakeDetectionCoordinator: ObservableObject {
     func start(container: ModelContainer, isEnabled: Bool = true) {
         self.container = container
         self.isEnabled = isEnabled
-        sensors.start()
+        sensors.start() // requests HealthKit read auth, then polls sleep
         tickTask?.cancel()
         tickTask = Task { [weak self] in
             while !Task.isCancelled {
@@ -48,6 +48,8 @@ final class WakeDetectionCoordinator: ObservableObject {
         isEnabled = enabled
         if !enabled {
             promptContext = nil
+        } else {
+            Task { await sensors.requestHealthKitAuthorizationIfNeeded() }
         }
     }
 
