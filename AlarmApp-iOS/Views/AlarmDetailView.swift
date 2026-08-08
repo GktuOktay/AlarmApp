@@ -5,6 +5,7 @@ import AlarmAppCore
 struct AlarmDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Bindable var alarm: Alarm
+    @Query(sort: \AlarmGroup.name) private var groups: [AlarmGroup]
     @Query private var exceptions: [AlarmException]
 
     @State private var bypassStart = Date()
@@ -13,50 +14,53 @@ struct AlarmDetailView: View {
     @State private var toastMessage: String?
     @State private var errorMessage: String?
 
+    @State private var title = ""
+    @State private var timeDate = Date()
+    @State private var selectedDays: Set<Weekday> = []
+    @State private var repeats = false
+    @State private var hasEndDate = false
+    @State private var endDate = Date()
+    @State private var groupSelection: CreateAlarmView.GroupSelection = .none
+    @State private var newGroupName = ""
+    @State private var soundId = "default"
+    @State private var soundVolumePercent: Double = 100
+    @State private var soundPreview = AlarmSoundPreview()
+    @State private var didLoadEditableFields = false
+    @FocusState private var isNameFieldFocused: Bool
+
     private var calendar: Calendar { .autoupdatingCurrent }
 
-    private var daysText: String {
-        alarm.daysOfWeek
+    private var repeatsSummary: String {
+        guard repeats else { return String(localized: "create.off") }
+        if selectedDays.isEmpty { return String(localized: "create.off") }
+        return selectedDays
             .sorted { $0.rawValue < $1.rawValue }
             .map(\.shortLabel)
             .joined(separator: " ")
     }
 
-    private var isOneShot: Bool {
-        if let endsOn = alarm.endsOn,
-           calendar.isDate(endsOn, inSameDayAs: alarm.createdAt),
-           alarm.daysOfWeek.count == 1
-        {
-            return true
-        }
-        return false
+    private var endDateSummary: String {
+        guard repeats, hasEndDate else { return String(localized: "detail.ends_none") }
+        return endDate.formatted(date: .abbreviated, time: .omitted)
     }
 
-    private var patternSummary: String {
-        if isOneShot {
-            return String(localized: "detail.pattern_once")
+    private var groupSummary: String {
+        switch groupSelection {
+        case .none:
+            return String(localized: "create.group_none")
+        case .existing(let id):
+            return groups.first(where: { $0.id == id })?.name ?? String(localized: "create.group_none")
+        case .createNew:
+            return newGroupName.isEmpty ? String(localized: "create.group_new") : newGroupName
         }
-        let days = daysText
-        if let endsOn = alarm.endsOn {
-            return String(
-                format: String(localized: "detail.pattern_until"),
-                days,
-                endsOn.formatted(date: .abbreviated, time: .omitted)
-            )
-        }
-        return String(format: String(localized: "detail.pattern_weekly"), days)
     }
 
-    private var soundDisplayName: String {
-        String(
-            localized: String.LocalizationValue(
-                AlarmSoundCatalog.resolve(alarm.soundId).displayNameKey
-            )
-        )
+    private var editableSoundSummary: String {
+        String(localized: String.LocalizationValue(AlarmSoundCatalog.resolve(soundId).displayNameKey))
     }
 
     private var soundVolumePercentText: String {
-        "\(Int((alarm.soundVolume * 100).rounded()))%"
+        "\(Int(soundVolumePercent.rounded()))%"
     }
 
     private var nextOccurrences: [AlarmOccurrence] {
@@ -93,27 +97,53 @@ struct AlarmDetailView: View {
     var body: some View {
         List {
             Section {
-                LabeledContent("detail.time", value: format(alarm.time))
-                LabeledContent("detail.days", value: daysText)
-                LabeledContent("detail.pattern", value: patternSummary)
+                TextField("create.name", text: $title)
+                    .focused($isNameFieldFocused)
+                    .onChange(of: title) { _, _ in scheduleSave() }
+
+                DatePicker(
+                    "create.time",
+                    selection: $timeDate,
+                    displayedComponents: .hourAndMinute
+                )
+                .onChange(of: timeDate) { _, _ in scheduleSave() }
+
                 LabeledContent(
                     "detail.status",
                     value: String(localized: alarm.isActive ? "status.active" : "status.inactive")
                 )
-                if let groupName = alarm.group?.name {
-                    LabeledContent("detail.group", value: groupName)
-                } else {
-                    LabeledContent("detail.group", value: String(localized: "detail.group_none"))
+            }
+
+            Section {
+                NavigationLink {
+                    RepeatsPickerView(repeats: $repeats, selectedDays: $selectedDays)
+                        .onDisappear { scheduleSave() }
+                } label: {
+                    LabeledContent("create.repeats", value: repeatsSummary)
                 }
-                if let endsOn = alarm.endsOn {
-                    LabeledContent(
-                        "detail.ends",
-                        value: endsOn.formatted(date: .abbreviated, time: .omitted)
-                    )
-                } else {
-                    LabeledContent("detail.ends", value: String(localized: "detail.ends_none"))
+
+                if repeats {
+                    NavigationLink {
+                        EndDatePickerView(hasEndDate: $hasEndDate, endDate: $endDate)
+                            .onDisappear { scheduleSave() }
+                    } label: {
+                        LabeledContent("create.end_toggle", value: endDateSummary)
+                    }
                 }
-                LabeledContent("detail.sound", value: soundDisplayName)
+
+                NavigationLink {
+                    GroupPickerView(groupSelection: $groupSelection, newGroupName: $newGroupName, groups: groups)
+                        .onDisappear { scheduleSave() }
+                } label: {
+                    LabeledContent("create.group_section", value: groupSummary)
+                }
+
+                NavigationLink {
+                    SoundPickerView(soundId: $soundId, soundVolumePercent: $soundVolumePercent, soundPreview: soundPreview)
+                        .onDisappear { scheduleSave() }
+                } label: {
+                    LabeledContent("create.sound_section", value: editableSoundSummary)
+                }
                 LabeledContent("detail.sound_volume", value: soundVolumePercentText)
             }
 
@@ -210,6 +240,13 @@ struct AlarmDetailView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .scrollDismissesKeyboard(.interactively)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("action.done") { isNameFieldFocused = false }
+            }
+        }
         .confirmationDialog("bypass.confirm_alarm", isPresented: $showBypassConfirm, titleVisibility: .visible) {
             Button("bypass.confirm_action", role: .destructive) {
                 Task { await performBypass() }
@@ -233,6 +270,101 @@ struct AlarmDetailView: View {
             Button("action.done", role: .cancel) { errorMessage = nil }
         } message: {
             Text(errorMessage ?? "")
+        }
+        .onAppear { loadEditableFields() }
+        .onDisappear {
+            soundPreview.stop()
+            scheduleSave()
+        }
+    }
+
+    private func loadEditableFields() {
+        guard !didLoadEditableFields else { return }
+        title = alarm.title
+        timeDate = Calendar.current.date(
+            bySettingHour: alarm.time.hour, minute: alarm.time.minute, second: 0, of: Date()
+        ) ?? Date()
+        selectedDays = Set(alarm.daysOfWeek)
+        repeats = alarm.daysOfWeek.count > 1 || alarm.endsOn == nil
+        hasEndDate = alarm.endsOn != nil
+        endDate = alarm.endsOn ?? Calendar.current.date(byAdding: .month, value: 1, to: Date()) ?? Date()
+        groupSelection = alarm.group.map { .existing($0.id) } ?? .none
+        soundId = alarm.soundId
+        soundVolumePercent = alarm.soundVolume * 100
+        didLoadEditableFields = true
+    }
+
+    private func scheduleSave() {
+        guard didLoadEditableFields else { return }
+        Task { await saveScheduleChanges() }
+    }
+
+    private func saveScheduleChanges() async {
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedTitle.isEmpty else { return }
+        guard !repeats || !selectedDays.isEmpty else { return }
+
+        do {
+            let repo = SwiftDataAlarmRepository(modelContainer: modelContext.container)
+            var groupId: UUID?
+            switch groupSelection {
+            case .none:
+                groupId = nil
+            case .existing(let id):
+                groupId = id
+            case .createNew:
+                let trimmedGroupName = newGroupName.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmedGroupName.isEmpty else { return }
+                groupId = try await repo.createGroup(name: trimmedGroupName)
+                await MainActor.run { groupSelection = .existing(groupId!) }
+            }
+
+            let staleInstanceIds = alarm.instances.filter { $0.status == .pending }.map(\.id)
+            let time = clockTime(from: timeDate)
+            let todayWeekday = Weekday.from(calendarWeekday: calendar.component(.weekday, from: Date())) ?? .monday
+            let days = repeats ? Array(selectedDays) : [todayWeekday]
+            let endsOn: Date? = repeats ? (hasEndDate ? endDate : nil) : calendar.startOfDay(for: Date())
+
+            let result = try await repo.updateAlarmPattern(
+                alarmId: alarm.id,
+                title: trimmedTitle,
+                time: time,
+                daysOfWeek: days,
+                endsOn: endsOn,
+                soundId: soundId,
+                soundVolume: soundVolumePercent / 100.0,
+                groupId: groupId
+            )
+
+            await HybridAlarmScheduler().cancelPending(instanceIds: staleInstanceIds)
+
+            let scheduler = HybridAlarmScheduler()
+            let authorized = try await scheduler.requestAuthorization()
+            if authorized {
+                let now = Date()
+                for schedule in result.schedules where schedule.fireDate > now {
+                    let timeText = String(
+                        format: "%02d:%02d",
+                        Calendar.autoupdatingCurrent.component(.hour, from: schedule.fireDate),
+                        Calendar.autoupdatingCurrent.component(.minute, from: schedule.fireDate)
+                    )
+                    try await scheduler.schedule(
+                        instanceId: schedule.instanceId,
+                        alarmId: schedule.alarmId,
+                        fireDate: schedule.fireDate,
+                        title: result.title,
+                        body: String(format: String(localized: "notif.alarm_body"), timeText),
+                        soundId: schedule.soundId,
+                        soundVolume: schedule.soundVolume
+                    )
+                }
+            }
+            await WatchSyncBootstrap.shared.pushTodayContext()
+        } catch {
+            AppLog.error(.swiftdata, "updateAlarmPattern save failed", error: error)
+            await MainActor.run {
+                errorMessage = String(localized: "create.save_failed")
+            }
         }
     }
 
@@ -259,6 +391,11 @@ struct AlarmDetailView: View {
 
     private func format(_ time: ClockTime) -> String {
         String(format: "%02d:%02d", time.hour, time.minute)
+    }
+
+    private func clockTime(from date: Date) -> ClockTime {
+        let comps = calendar.dateComponents([.hour, .minute], from: date)
+        return ClockTime(hour: comps.hour ?? 0, minute: comps.minute ?? 0)
     }
 
     private func dayLabel(_ date: Date) -> String {
