@@ -4984,6 +4984,294 @@
         }
       }
     },
+    "sound.beep_fast_high": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hızlı Tiz Bip"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fast High Beep"
+          }
+        }
+      }
+    },
+    "sound.beep_slow_low": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yavaş Kalın Bip"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slow Low Beep"
+          }
+        }
+      }
+    },
+    "sound.siren_sweep": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siren Taraması"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siren Sweep"
+          }
+        }
+      }
+    },
+    "sound.double_beep": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çift Bip"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double Beep"
+          }
+        }
+      }
+    },
+    "sound.triple_pulse": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Üçlü Nabız"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Triple Pulse"
+          }
+        }
+      }
+    },
+    "sound.alarm_classic_urgent": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klasik Acil Alarm"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Classic Urgent Alarm"
+          }
+        }
+      }
+    },
+    "sound.gentle_wake": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nazik Uyanış"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gentle Wake"
+          }
+        }
+      }
+    },
+    "sound.rising_tone": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yükselen Ton"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rising Tone"
+          }
+        }
+      }
+    },
+    "sound.digital_alarm": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dijital Alarm"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Digital Alarm"
+          }
+        }
+      }
+    },
+    "sound.old_clock": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eski Saat"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Old Clock"
+          }
+        }
+      }
+    },
+    "sound.buzzer_short": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kısa Vızıltı"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Short Buzzer"
+          }
+        }
+      }
+    },
+    "sound.buzzer_long": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uzun Vızıltı"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Long Buzzer"
+          }
+        }
+      }
+    },
+    "sound.chime_bells": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çan Sesi"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chime Bells"
+          }
+        }
+      }
+    },
+    "sound.morse_like": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mors Deseni"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morse Pattern"
+          }
+        }
+      }
+    },
+    "sound.police_siren": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Polis Sireni"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Police Siren"
+          }
+        }
+      }
+    },
+    "sound.ambulance_siren": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ambulans Sireni"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ambulance Siren"
+          }
+        }
+      }
+    },
+    "sound.soft_piano_like": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yumuşak Piyano"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soft Piano"
+          }
+        }
+      }
+    },
+    "sound.space_alert": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uzay Uyarısı"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Space Alert"
+          }
+        }
+      }
+    },
     "create.sound_section": {
       "localizations": {
         "tr": {
