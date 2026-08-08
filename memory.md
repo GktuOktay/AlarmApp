@@ -1,6 +1,6 @@
 # memory.md — AlarmApp proje hafızası
 
-Son güncelleme: 2026-08-07 · VERSION `0.0.7`
+Son güncelleme: 2026-08-08 · VERSION `0.0.8`
 
 ---
 
@@ -31,19 +31,20 @@ Son güncelleme: 2026-08-07 · VERSION `0.0.7`
 - [x] Alarm-first modeller + CreateAlarm + repo + bildirim
 - [x] S1/S2/S3 alarm UI + S4 takvim iskeleti
 - [x] Alarm ses kataloğu + soundVolume + S2 önizleme
-- [x] Uyanma / ertele / Saat-UI + Watch prompt — `0.0.7` (spec `2026-08-07-uyanma-ertele-ve-saat-ui-design.md`)
-  - Core dismiss/snooze/bulk + Saat list/form + çalma UI + bildirim Ertele + WCSession köprü / sync apply + WakeDetectionEngine + Watch “Uyandın mı?” + S7 toggle
-  - **Kalan:** gerçek iPhone↔Watch E2E sync insan doğrulaması; F5 kalibrasyon / FP ölçümü (v2)
-  - WC: reachable→sendMessage else transferUserInfo; today→applicationContext (+ `autoWakeDetectionEnabled`)
+- [x] Uyanma / ertele / Saat-UI + Watch prompt — `0.0.7`
+- [x] Post-dismiss grup “Uyandın mı?” + kompakt create + AppLog — `0.0.8` (spec `2026-08-08-post-dismiss-wake-ve-form-design.md`)
+  - Watch: dismiss sonrası grupta kalan pending → soft offer; Evet = `groupToday` + `.wakePrompt`
+  - Create: Disclosure kapalı; `repeats` default `false`; ses `Picker` menu
+  - `AppLog` / `RecordingLogSink`; fail-safe catch’lerde log (analitik yok)
+  - **Kalan:** gerçek iPhone↔Watch E2E; F5 kalibrasyon / FP (v2)
 - [ ] SkipWeek UI
 
-## Tasarım kilidi (2026-08-07)
+## Tasarım kilidi (2026-08-08)
 
-- Çalma: Kapat / Ertele / Daha fazla → grup bugünü · 3s tümü · bugün tümü
-- Ertele alarm bazlı (`snoozeMinutes`, varsayılan 9)
-- Liste: Uyku \| Uyanma + Diğer (Saat hissi)
-- Algılama: HK Sleep + hareket (+ HR yedek, sahte workout yok); onaysız iptal yok
-- F5-style prompt bu milestone’a çekildi; tam F5 saha testi v2’de
+- Birincil uyanma sinyali: **kapat sonrası** grup önerisi (sensör erken prompt ikincil / S7)
+- Apple Saat Sleep Schedule **okunamaz**; `isWakeSchedule` uygulama içi Saat kartı
+- Algılama: onay olmadan iptal yok
+- F5-style erken prompt mevcut; tam F5 saha testi v2
 
 ## Kod notları
 
@@ -52,6 +53,9 @@ Son güncelleme: 2026-08-07 · VERSION `0.0.7`
 - `SkipWeek` haftanın Pzt startOfDay + 7 gün
 - Cihaz tabanı: iPhone 11+ · iOS 17+
 - Katalog `id` ↔ bundle `.caf` adı aynı; Critical path `criticalAlertsEnabled` (varsayılan `false`)
+- `CreateAlarmRequest.repeats` varsayılan **`false`**
+- `PostDismissWakeOfferPolicy` + `countPendingInGroupToday`
+- `AppLog` kategorileri: swiftdata / notifications / wcsession / wake
 - `TodayContext.autoWakeDetectionEnabled` (legacy decode → `true`); S7 → `pushTodayContext`
 - `TodayContext.wakeAlarmId` / `wakeGroupId` / `nextWakeFireDate` (legacy → nil); Watch wake detection uses context, not full local catalog
 - `InstanceSummary.alarmId` (legacy → zero UUID); ringing candidate can use context-only summaries

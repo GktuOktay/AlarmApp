@@ -30,6 +30,7 @@ targets:
       GENERATE_INFOPLIST_FILE: NO
       INFOPLIST_KEY_UILaunchScreen_Generation: YES
       ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+      ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
       MARKETING_VERSION: "0.0.6"
       CURRENT_PROJECT_VERSION: "1"
       TARGETED_DEVICE_FAMILY: "1,2"
@@ -53,6 +54,7 @@ targets:
         LSRequiresIPhoneOS: true
         NSHealthShareUsageDescription: Erken uyanma sorusu için uyku analizine ihtiyaç duyulur. Veri cihazda kalır.
         NSHealthUpdateUsageDescription: AlarmApp sağlık verisi yazmaz; sistem formu için açıklama gereklidir.
+        NSCalendarsFullAccessUsageDescription: Takviminizdeki tatil/izin günlerini tespit ederek alarm atlama önerisi sunmak için kullanılır.
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait

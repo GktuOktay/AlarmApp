@@ -107,19 +107,21 @@ Seçili gün için istisna / özel alarm (şimdilik S4 liste salt okunur iskelet
 Erken uyanma / Watch algılaması sonrası kullanıcıdan **açık onay** almak; onaysız iptal yok. (F5 tarzı prompt bu milestone’da; kalibrasyon v2’de.)
 
 ### Giriş Noktaları
-- Watch “Uyandın mı?” prompt’u (birincil)
+- Watch çalma ekranı “Alarmı kapat” sonrası grup önerisi (birincil)
+- Watch erken-algılama “Uyandın mı?” prompt’u (S7, ikincil)
 - Sistem bildirimi / in-app banner (telefon yedek yolu)
 - Çalma ekranı “Daha fazla” → toplu kapat seçenekleri (telefon + Watch)
 
 ### Bileşen Haritası
 ```
-Watch Prompt
+Watch Prompt (post-dismiss / erken algılama)
 ├── Başlık: "Uyandın mı?"
-├── Gövde: "Kalan alarmları kapatayım mı?"
-└── Aksiyonlar: [Evet] → toplu kapat seçenekleri · [Hayır] → no-op
+├── Gövde: "Bu gruptaki kalan alarmları kapatayım mı?"
+└── Aksiyonlar: [Evet] → grup bugünü (`.wakePrompt`) · [Hayır] → no-op
 
 Çalma ekranı (katman 1)
 ├── Alarmı kapat · Ertele · Daha fazla
+│   └── Alarmı kapat → grupta kalan pending varsa soft prompt
 Çalma ekranı (katman 2)
 ├── Bu grubun bugünkü alarmlarını kapat
 ├── 3 saat içerisindeki tüm alarmları kapat
@@ -130,7 +132,7 @@ Watch Prompt
 | Durum | Görünüm |
 |---|---|
 | **Manuel / çalma** | Katman 1–2 aksiyonları; Ertele kapalıysa Ertele gizli |
-| **Algılama prompt** | “Uyandın mı?”; Hayır / timeout → alarmlar devam |
+| **Post-dismiss / algılama prompt** | “Uyandın mı?”; Hayır / timeout → alarmlar devam |
 | **watch_manual senkron** | Watch kararı uygulandıysa telefonda bilgilendirme yeterli olabilir |
 
 ### Fonksiyonlar
