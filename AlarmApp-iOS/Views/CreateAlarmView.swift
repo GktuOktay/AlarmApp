@@ -283,7 +283,7 @@ struct CreateAlarmView: View {
                 try await repo.setWakeScheduleAlarm(alarmId: result.alarmId)
             }
 
-            let scheduler = LocalNotificationScheduler()
+            let scheduler = HybridAlarmScheduler()
             let authorized = try await scheduler.requestAuthorization()
             if authorized {
                 let now = Date()
