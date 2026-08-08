@@ -31,6 +31,7 @@ struct CreateAlarmView: View {
     @State private var snoozeEnabled = true
     @State private var snoozeMinutes = SnoozePolicy.defaultMinutes
     @State private var isWakeSchedule = false
+    @FocusState private var isNameFieldFocused: Bool
 
     private enum GroupSelection: Hashable {
         case none
@@ -58,6 +59,7 @@ struct CreateAlarmView: View {
 
             Section {
                 TextField("create.name", text: $title)
+                    .focused($isNameFieldFocused)
             }
 
             Section {
@@ -180,7 +182,12 @@ struct CreateAlarmView: View {
                 }
             }
         }
+        .scrollDismissesKeyboard(.interactively)
         .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("action.done") { isNameFieldFocused = false }
+            }
             ToolbarItem(placement: .cancellationAction) {
                 Button("action.cancel") { dismiss() }
             }
