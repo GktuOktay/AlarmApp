@@ -82,7 +82,11 @@ public final class WCSessionWatchConnectivityService: NSObject, WatchConnectivit
         guard let session, session.activationState == .activated else { return }
         let batch = takePending()
         for message in batch {
-            try? await deliver(message, session: session)
+            do {
+                try await deliver(message, session: session)
+            } catch {
+                AppLog.error(.wcsession, "flushPendingOutbound deliver failed", error: error)
+            }
         }
     }
 
@@ -100,7 +104,8 @@ public final class WCSessionWatchConnectivityService: NSObject, WatchConnectivit
                 session.sendMessage(
                     payload,
                     replyHandler: { _ in cont.resume() },
-                    errorHandler: { _ in
+                    errorHandler: { error in
+                        AppLog.error(.wcsession, "sendMessage failed; falling back to transferUserInfo", error: error)
                         session.transferUserInfo(payload)
                         cont.resume()
                     }
@@ -117,7 +122,10 @@ public final class WCSessionWatchConnectivityService: NSObject, WatchConnectivit
     }
 
     fileprivate func ingest(dictionary: [String: Any]) {
-        guard let message = try? WatchMessageCodec.message(from: dictionary) else { return }
+        guard let message = try? WatchMessageCodec.message(from: dictionary) else {
+            AppLog.error(.wcsession, "ingest dropped undecodable payload")
+            return
+        }
         if case .todayContextUpdate = message,
            let base64 = dictionary[WatchMessageCodec.payloadKey] as? String {
             lock.lock()
@@ -139,6 +147,9 @@ extension WCSessionWatchConnectivityService: WCSessionDelegate {
         #if os(iOS)
         _ = session.isWatchAppInstalled
         #endif
+        if let error {
+            AppLog.error(.wcsession, "activationDidComplete with error", error: error)
+        }
         if !session.receivedApplicationContext.isEmpty {
             ingest(dictionary: session.receivedApplicationContext)
         }

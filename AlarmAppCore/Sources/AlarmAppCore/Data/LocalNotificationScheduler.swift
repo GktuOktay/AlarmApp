@@ -44,6 +44,11 @@ public struct LocalNotificationScheduler: NotificationScheduling, @unchecked Sen
         try await center.requestAuthorization(options: [.alert, .sound, .badge])
     }
 
+    /// Current notification authorization status, for display in Settings.
+    public func currentAuthorizationStatus() async -> UNAuthorizationStatus {
+        await center.notificationSettings().authorizationStatus
+    }
+
     public func schedule(
         instanceId: UUID,
         alarmId: UUID,

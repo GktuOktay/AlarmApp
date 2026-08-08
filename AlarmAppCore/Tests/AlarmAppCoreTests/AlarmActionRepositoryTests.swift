@@ -259,6 +259,36 @@ final class AlarmActionRepositoryTests: XCTestCase {
         XCTAssertFalse(tomorrowBypassed)
     }
 
+    func testCountPendingInGroupTodayAfterDismiss() async throws {
+        let (repo, _) = try makeRepo()
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let groupId = try await repo.createGroup(name: "Sabah")
+        let first = try await seedPendingInstance(
+            repo: repo,
+            at: now.addingTimeInterval(60 * 60),
+            title: "First",
+            groupId: groupId
+        )
+        _ = try await seedPendingInstance(
+            repo: repo,
+            at: now.addingTimeInterval(90 * 60),
+            title: "Second",
+            groupId: groupId
+        )
+
+        let before = try await repo.countPendingInGroupToday(groupId: groupId, now: now)
+        XCTAssertEqual(before, 2)
+        _ = try await repo.dismissAlarm(alarmId: first.alarmId, instanceId: first.instanceId, now: now)
+        let remaining = try await repo.countPendingInGroupToday(groupId: groupId, now: now)
+        XCTAssertEqual(remaining, 1)
+        XCTAssertTrue(
+            PostDismissWakeOfferPolicy.shouldOffer(
+                groupId: groupId,
+                remainingPendingInGroupToday: remaining
+            )
+        )
+    }
+
     // MARK: - Helpers
 
     private struct SeededInstance {

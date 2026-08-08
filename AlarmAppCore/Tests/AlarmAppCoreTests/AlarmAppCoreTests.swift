@@ -12,6 +12,7 @@ final class CreateAlarmTests: XCTestCase {
                 title: "Sabah",
                 time: ClockTime(hour: 6, minute: 0),
                 daysOfWeek: [.monday],
+                repeats: true,
                 horizonDays: 7,
                 fromDate: monday,
                 calendar: calendar,
@@ -36,6 +37,7 @@ final class CreateAlarmTests: XCTestCase {
                 title: "Sabah",
                 time: ClockTime(hour: 6, minute: 30),
                 daysOfWeek: [.monday, .wednesday],
+                repeats: true,
                 horizonDays: 7,
                 fromDate: monday,
                 calendar: calendar,
@@ -53,7 +55,8 @@ final class CreateAlarmTests: XCTestCase {
                 CreateAlarmRequest(
                     title: "  ",
                     time: ClockTime(hour: 6, minute: 0),
-                    daysOfWeek: [.monday]
+                    daysOfWeek: [.monday],
+                    repeats: true
                 )
             )
         ) { error in
@@ -72,6 +75,7 @@ final class CreateAlarmTests: XCTestCase {
                 title: "Hafta",
                 time: ClockTime(hour: 7, minute: 0),
                 daysOfWeek: [.monday, .wednesday, .friday],
+                repeats: true,
                 endDate: friday,
                 fromDate: monday,
                 calendar: calendar,
@@ -96,6 +100,7 @@ final class CreateAlarmTests: XCTestCase {
                     title: "X",
                     time: ClockTime(hour: 6, minute: 0),
                     daysOfWeek: [.monday],
+                    repeats: true,
                     endDate: sunday,
                     fromDate: monday,
                     calendar: calendar,
@@ -151,11 +156,23 @@ final class CreateAlarmTests: XCTestCase {
                 time: ClockTime(hour: 6, minute: 0),
                 daysOfWeek: [.monday],
                 soundId: "nope",
-                soundVolume: 0.3
+                soundVolume: 0.3,
+                repeats: true
             )
         )
         XCTAssertEqual(prepared.soundId, "default")
         XCTAssertEqual(prepared.soundVolume, 0.3)
+    }
+
+    func testRequestDefaultsToRepeatsOff() throws {
+        let request = CreateAlarmRequest(
+            title: "Tek",
+            time: ClockTime(hour: 8, minute: 0),
+            daysOfWeek: []
+        )
+        XCTAssertFalse(request.repeats)
+        let prepared = try CreateAlarm().prepare(request)
+        XCTAssertEqual(prepared.instances.count, 1)
     }
 }
 

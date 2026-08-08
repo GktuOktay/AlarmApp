@@ -168,6 +168,8 @@ public protocol AlarmRepository: Sendable {
     /// Bulk-cancels pending instances matching `scope`. Wake UI may pass `.wakePrompt`.
     @discardableResult
     func cancel(scope: BulkCancelScope, reason: CancelReason, now: Date) async throws -> [UUID]
+    /// Count of pending instances for `groupId` scheduled on `now`'s calendar day.
+    func countPendingInGroupToday(groupId: UUID, now: Date) async throws -> Int
     /// Marks at most one alarm as the wake schedule (`nil` clears).
     func setWakeScheduleAlarm(alarmId: UUID?) async throws
     func todayContext() async throws -> TodayContext

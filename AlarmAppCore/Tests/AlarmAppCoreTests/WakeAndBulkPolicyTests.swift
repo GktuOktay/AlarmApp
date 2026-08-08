@@ -15,4 +15,16 @@ final class WakeAndBulkPolicyTests: XCTestCase {
         XCTAssertTrue(scope.includesFireDate(inside, now: now))
         XCTAssertFalse(scope.includesFireDate(outside, now: now))
     }
+
+    func testPostDismissOfferRequiresGroupAndRemaining() {
+        XCTAssertFalse(
+            PostDismissWakeOfferPolicy.shouldOffer(groupId: nil, remainingPendingInGroupToday: 3)
+        )
+        XCTAssertFalse(
+            PostDismissWakeOfferPolicy.shouldOffer(groupId: UUID(), remainingPendingInGroupToday: 0)
+        )
+        XCTAssertTrue(
+            PostDismissWakeOfferPolicy.shouldOffer(groupId: UUID(), remainingPendingInGroupToday: 1)
+        )
+    }
 }
