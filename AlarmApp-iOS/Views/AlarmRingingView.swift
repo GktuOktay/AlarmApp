@@ -18,22 +18,20 @@ struct AlarmRingingView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.black.ignoresSafeArea()
+                AlarmColors.ringingBackground.ignoresSafeArea()
 
                 VStack(spacing: 28) {
                     Spacer(minLength: 24)
 
                     VStack(spacing: 8) {
-                        Text(session.timeText)
-                            .font(.system(size: 72, weight: .ultraLight, design: .default))
-                            .monospacedDigit()
-                            .foregroundStyle(.white)
+                        AlarmTimeText(session.timeText, style: .ringing)
+                            .foregroundStyle(AlarmColors.ringingForeground)
                             .minimumScaleFactor(0.5)
                             .lineLimit(1)
 
                         Text(session.title)
                             .font(.title3.weight(.medium))
-                            .foregroundStyle(.white.opacity(0.85))
+                            .foregroundStyle(AlarmColors.ringingForeground.opacity(0.85))
                             .multilineTextAlignment(.center)
                     }
                     .padding(.horizontal)
@@ -53,7 +51,7 @@ struct AlarmRingingView: View {
                         onFinished()
                     }
                     .font(.body.weight(.medium))
-                    .foregroundStyle(.white.opacity(0.7))
+                    .foregroundStyle(AlarmColors.ringingForeground.opacity(0.7))
                     .disabled(isBusy)
                     .padding(.bottom, 12)
                 }
@@ -69,7 +67,7 @@ struct AlarmRingingView: View {
                         Button("ringing.back") {
                             showsMore = false
                         }
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(AlarmColors.warn)
                         .disabled(isBusy)
                     }
                 }
@@ -98,8 +96,8 @@ struct AlarmRingingView: View {
             ringingButton(
                 titleKey: "ringing.dismiss",
                 systemImage: "stop.circle.fill",
-                tint: .white,
-                foreground: .black
+                tint: AlarmColors.ringingForeground,
+                foreground: AlarmColors.ringingBackground
             ) {
                 await perform(.dismiss)
             }
@@ -108,8 +106,8 @@ struct AlarmRingingView: View {
                 ringingButton(
                     titleKey: "ringing.snooze",
                     systemImage: "zzz",
-                    tint: .orange,
-                    foreground: .white
+                    tint: AlarmColors.warn,
+                    foreground: AlarmColors.ringingForeground
                 ) {
                     await perform(.snooze)
                 }
@@ -118,8 +116,8 @@ struct AlarmRingingView: View {
             ringingButton(
                 titleKey: "ringing.more",
                 systemImage: "ellipsis.circle.fill",
-                tint: .white.opacity(0.18),
-                foreground: .white
+                tint: AlarmColors.ringingSecondaryFill,
+                foreground: AlarmColors.ringingForeground
             ) {
                 showsMore = true
             }
@@ -132,8 +130,8 @@ struct AlarmRingingView: View {
                 ringingButton(
                     titleKey: "ringing.group_today",
                     systemImage: "rectangle.3.group.fill",
-                    tint: .white.opacity(0.18),
-                    foreground: .white
+                    tint: AlarmColors.ringingSecondaryFill,
+                    foreground: AlarmColors.ringingForeground
                 ) {
                     await performBulk(.groupToday)
                 }
@@ -142,8 +140,8 @@ struct AlarmRingingView: View {
             ringingButton(
                 titleKey: "ringing.next_three_hours",
                 systemImage: "clock.badge.xmark",
-                tint: .white.opacity(0.18),
-                foreground: .white
+                tint: AlarmColors.ringingSecondaryFill,
+                foreground: AlarmColors.ringingForeground
             ) {
                 await performBulk(.nextThreeHours)
             }
@@ -151,8 +149,8 @@ struct AlarmRingingView: View {
             ringingButton(
                 titleKey: "ringing.all_today",
                 systemImage: "calendar.badge.minus",
-                tint: .white.opacity(0.18),
-                foreground: .white
+                tint: AlarmColors.ringingSecondaryFill,
+                foreground: AlarmColors.ringingForeground
             ) {
                 await performBulk(.allToday)
             }
@@ -171,13 +169,8 @@ struct AlarmRingingView: View {
         } label: {
             Label(titleKey, systemImage: systemImage)
                 .font(.headline)
-                .frame(maxWidth: .infinity)
-                .frame(minHeight: 52)
-                .padding(.horizontal, 12)
-                .background(tint, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .foregroundStyle(foreground)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pill(tint: tint, foreground: foreground))
         .disabled(isBusy)
         .opacity(isBusy ? 0.55 : 1)
     }

@@ -32,14 +32,20 @@ final class WatchSyncBootstrap {
     func pushTodayContext() async {
         guard let container else { return }
         let repo = SwiftDataAlarmRepository(modelContainer: container)
-        guard var context = try? await repo.todayContext() else { return }
+        guard var context = try? await repo.todayContext() else {
+            AppLog.error(.wcsession, "pushTodayContext: todayContext failed")
+            return
+        }
         context.autoWakeDetectionEnabled = Self.autoWakeDetectionEnabledFromDefaults()
+        SharedTodayContextStore.write(context, appGroupId: AppGroup.identifier)
+        // TODO: once a WidgetKit extension target exists (Phase 6b), call
+        // WidgetCenter.shared.reloadAllTimelines() here to refresh its timeline.
         do {
             try await WCSessionWatchConnectivityService.shared.send(.todayContextUpdate(context))
         } catch WatchConnectivityError.unsupported {
             // Host without WCSession.
         } catch {
-            // Queued-until-activated path should not throw; other errors leave next push to retry.
+            AppLog.error(.wcsession, "pushTodayContext send failed", error: error)
         }
     }
 
@@ -58,7 +64,7 @@ final class WatchSyncBootstrap {
             } catch WatchConnectivityError.unsupported {
                 // Host without WCSession.
             } catch {
-                // Fail-safe: local phone state already updated.
+                AppLog.error(.wcsession, "iOS WatchSyncBootstrap send failed", error: error)
             }
         }
     }
@@ -99,7 +105,7 @@ final class WatchSyncBootstrap {
                 }
             }
         } catch {
-            // Fail-safe: leave local alarms firing if apply fails.
+            AppLog.error(.wcsession, "iOS applyIncoming failed", error: error)
         }
     }
 }

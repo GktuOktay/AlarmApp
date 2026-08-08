@@ -10,6 +10,7 @@ struct AlarmListView: View {
     @State private var errorMessage: String?
     @State private var toastMessage: String?
     @State private var wakeDetailId: UUID?
+    @State private var stopTodayPulse = false
 
     private var wakeAlarm: Alarm? {
         alarms.first(where: \.isWakeSchedule)
@@ -33,9 +34,11 @@ struct AlarmListView: View {
 
                 Section {
                     if otherAlarms.isEmpty {
-                        Text("alarms.other_empty")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                        ContentUnavailableView(
+                            String(localized: "alarms.empty.title"),
+                            systemImage: "alarm",
+                            description: Text("alarms.empty.subtitle")
+                        )
                     } else {
                         ForEach(otherAlarms, id: \.id) { alarm in
                             otherAlarmRow(alarm)
@@ -82,18 +85,8 @@ struct AlarmListView: View {
             } message: {
                 Text(errorMessage ?? "")
             }
-            .overlay(alignment: .bottom) {
-                if let toastMessage {
-                    Text(toastMessage)
-                        .font(.subheadline.weight(.medium))
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(.ultraThinMaterial, in: Capsule())
-                        .padding(.bottom, 24)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                }
-            }
-            .animation(.spring(response: 0.35, dampingFraction: 1), value: toastMessage)
+            .toast($toastMessage, duration: 8)
+            .sensoryFeedback(.success, trigger: stopTodayPulse)
         }
     }
 
@@ -102,9 +95,7 @@ struct AlarmListView: View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 if let wakeAlarm {
-                    Text(formatTime(wakeAlarm.time))
-                        .font(.system(size: 44, weight: .light))
-                        .monospacedDigit()
+                    AlarmTimeText(formatTime(wakeAlarm.time), style: .listRow)
                         .foregroundStyle(wakeAlarm.isActive ? .primary : .secondary)
                     Text(alarmMeta(wakeAlarm))
                         .font(.subheadline)
@@ -119,22 +110,22 @@ struct AlarmListView: View {
                         .foregroundStyle(.tertiary)
                 }
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(wakeAlarm != nil ? .isButton : [])
 
             Spacer(minLength: 8)
 
-            Button {
+            Button("alarms.change") {
                 if let wakeAlarm {
                     wakeDetailId = wakeAlarm.id
                 } else {
                     createAsWakeSchedule = true
                     isCreating = true
                 }
-            } label: {
-                Text("alarms.change")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.orange)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.borderless)
+            .tint(AlarmColors.warn)
+            .font(.subheadline.weight(.semibold))
             .accessibilityLabel(Text("alarms.change"))
         }
         .padding(.vertical, 6)
@@ -153,9 +144,7 @@ struct AlarmListView: View {
                 AlarmDetailView(alarm: alarm)
             } label: {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(formatTime(alarm.time))
-                        .font(.system(size: 40, weight: .light))
-                        .monospacedDigit()
+                    AlarmTimeText(formatTime(alarm.time), style: .listRowSecondary)
                         .foregroundStyle(alarm.isActive ? .primary : .secondary)
                     Text(alarmMeta(alarm))
                         .font(.subheadline)
@@ -169,14 +158,17 @@ struct AlarmListView: View {
                 isOn: Binding(
                     get: { alarm.isActive },
                     set: { newValue in
-                        alarm.isActive = newValue
+                        withAnimation(.spring(response: 0.3, dampingFraction: 1)) {
+                            alarm.isActive = newValue
+                        }
                         alarm.updatedAt = Date()
                         try? modelContext.save()
                     }
                 )
             )
             .labelsHidden()
-            .tint(.green)
+            .tint(AlarmColors.success)
+            .accessibilityLabel(Text("\(alarm.title) \(formatTime(alarm.time))"))
             .sensoryFeedback(.selection, trigger: alarm.isActive)
         }
         .padding(.vertical, 4)
@@ -184,7 +176,7 @@ struct AlarmListView: View {
             Button("action.stop_today") {
                 Task { await cancelToday(alarm: alarm) }
             }
-            .tint(.orange)
+            .tint(AlarmColors.warn)
         }
     }
 
@@ -220,12 +212,7 @@ struct AlarmListView: View {
             let name = alarm.title
             await MainActor.run {
                 toastMessage = String(format: String(localized: "toast.stopped_today"), name)
-                Task {
-                    try? await Task.sleep(for: .seconds(8))
-                    if toastMessage?.contains(name) == true {
-                        toastMessage = nil
-                    }
-                }
+                stopTodayPulse.toggle()
             }
         } catch {
             await MainActor.run {

@@ -4,6 +4,8 @@ import AlarmAppCore
 
 struct CalendarView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(AppPreferences.self) private var preferences
     @Query(sort: \Alarm.timeMinutes) private var alarms: [Alarm]
     @Query private var exceptions: [AlarmException]
     @Query private var instances: [AlarmInstance]
@@ -11,6 +13,9 @@ struct CalendarView: View {
     @State private var selectedDay: Date?
     @State private var toastMessage: String?
     @State private var errorMessage: String?
+    // Phase 7 — opt-in EventKit bypass day suggestions.
+    @State private var calendarSuggestionService = CalendarBypassSuggestionService()
+    @State private var nonWorkDaySuggestions: Set<Date> = []
 
     private var calendar: Calendar { .autoupdatingCurrent }
 
@@ -104,6 +109,26 @@ struct CalendarView: View {
         return monthOccurrences.filter { calendar.isDate($0.dayStart, inSameDayAs: day) }
     }
 
+    /// Phase 7 — pending occurrences on the selected day that a calendar-detected
+    /// non-work day (e.g. "izin"/"tatil"/vacation) suggests bypassing.
+    private var calendarSuggestionForSelectedDay: [AlarmOccurrence] {
+        guard preferences.calendarSuggestionsEnabled, let selectedDay else { return [] }
+        let day = calendar.startOfDay(for: selectedDay)
+        guard nonWorkDaySuggestions.contains(day) else { return [] }
+        return selectedDayItems.filter { $0.status == .pending }
+    }
+
+    private func refreshCalendarSuggestions() async {
+        guard preferences.calendarSuggestionsEnabled,
+              let monthInterval = calendar.dateInterval(of: .month, for: visibleMonth)
+        else {
+            nonWorkDaySuggestions = []
+            return
+        }
+        let days = await calendarSuggestionService.likelyNonWorkDays(in: monthInterval)
+        nonWorkDaySuggestions = Set(days.map { calendar.startOfDay(for: $0) })
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -126,6 +151,14 @@ struct CalendarView: View {
                             }
                         }
                     }
+
+                    if !calendarSuggestionForSelectedDay.isEmpty {
+                        Section("calendar.suggestion.section_title") {
+                            ForEach(calendarSuggestionForSelectedDay) { occurrence in
+                                calendarSuggestionRow(occurrence, on: selectedDay)
+                            }
+                        }
+                    }
                 } else {
                     Section {
                         Text("calendar.pick_day")
@@ -139,16 +172,13 @@ struct CalendarView: View {
                     selectedDay = calendar.startOfDay(for: Date())
                 }
             }
-            .overlay(alignment: .bottom) {
-                if let toastMessage {
-                    Text(toastMessage)
-                        .font(.subheadline.weight(.medium))
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(.ultraThinMaterial, in: Capsule())
-                        .padding(.bottom, 24)
-                }
+            .task(id: visibleMonth) {
+                await refreshCalendarSuggestions()
             }
+            .task(id: preferences.calendarSuggestionsEnabled) {
+                await refreshCalendarSuggestions()
+            }
+            .toast($toastMessage, duration: 3)
             .alert("error.generic_title", isPresented: Binding(
                 get: { errorMessage != nil },
                 set: { if !$0 { errorMessage = nil } }
@@ -162,18 +192,20 @@ struct CalendarView: View {
 
     private var monthHeader: some View {
         HStack {
-            Button { shiftMonth(-1) } label: {
+            Button { animatedShiftMonth(-1) } label: {
                 Image(systemName: "chevron.left")
             }
             .buttonStyle(.borderless)
+            .accessibilityLabel(Text("calendar.previous_month"))
             Spacer()
             Text(monthTitle)
                 .font(.headline)
             Spacer()
-            Button { shiftMonth(1) } label: {
+            Button { animatedShiftMonth(1) } label: {
                 Image(systemName: "chevron.right")
             }
             .buttonStyle(.borderless)
+            .accessibilityLabel(Text("calendar.next_month"))
         }
     }
 
@@ -195,8 +227,11 @@ struct CalendarView: View {
                     let comps = calendar.dateComponents([.year, .month, .day], from: day)
                     let hasAlarm = daysWithAlarms.contains(comps)
                     let isSelected = selectedDay.map { calendar.isDate($0, inSameDayAs: day) } ?? false
+                    let isToday = calendar.isDateInToday(day)
                     Button {
-                        selectedDay = day
+                        withAnimation(.spring(response: 0.3, dampingFraction: 1)) {
+                            selectedDay = day
+                        }
                     } label: {
                         VStack(spacing: 4) {
                             Text("\(calendar.component(.day, from: day))")
@@ -211,13 +246,30 @@ struct CalendarView: View {
                             isSelected ? Color.accentColor : Color.clear,
                             in: RoundedRectangle(cornerRadius: 8)
                         )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .strokeBorder(Color.accentColor, lineWidth: isToday && !isSelected ? 1.5 : 0)
+                        )
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(Text(day.formatted(.dateTime.weekday(.wide).day().month())))
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
                 } else {
                     Color.clear.frame(minHeight: 44)
                 }
             }
         }
+        .gesture(
+            DragGesture(minimumDistance: 20)
+                .onEnded { value in
+                    if value.translation.width < -50 {
+                        animatedShiftMonth(1)
+                    } else if value.translation.width > 50 {
+                        animatedShiftMonth(-1)
+                    }
+                }
+        )
+        .sensoryFeedback(.selection, trigger: visibleMonth)
     }
 
     @ViewBuilder
@@ -247,14 +299,37 @@ struct CalendarView: View {
                 Button("bypass.skip_alarm") {
                     Task { await bypass(day: day, alarmId: occurrence.alarmId, groupId: nil) }
                 }
-                .tint(.orange)
+                .tint(AlarmColors.warn)
                 if let groupId = occurrence.groupId {
                     Button("bypass.skip_group") {
                         Task { await bypass(day: day, alarmId: nil, groupId: groupId) }
                     }
-                    .tint(.red)
+                    .tint(AlarmColors.danger)
                 }
             }
+        }
+    }
+
+    /// Phase 7 — lightweight suggestion row offering a one-tap bypass for a
+    /// calendar-detected non-work day. Calls the same `bypass(day:alarmId:groupId:)`
+    /// used by the swipe actions above; no new bypass-execution logic.
+    @ViewBuilder
+    private func calendarSuggestionRow(_ occurrence: AlarmOccurrence, on day: Date) -> some View {
+        HStack {
+            Image(systemName: "calendar.badge.exclamationmark")
+                .foregroundStyle(AlarmColors.warn)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(occurrence.title)
+                Text("calendar.suggestion.row_subtitle")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Button("calendar.suggestion.bypass_button") {
+                Task { await bypass(day: day, alarmId: occurrence.alarmId, groupId: nil) }
+            }
+            .buttonStyle(.bordered)
+            .tint(AlarmColors.warn)
         }
     }
 
@@ -272,10 +347,6 @@ struct CalendarView: View {
             await HybridAlarmScheduler().cancelPending(instanceIds: cancelled)
             await MainActor.run {
                 toastMessage = String(localized: "bypass.done")
-                Task {
-                    try? await Task.sleep(for: .seconds(3))
-                    toastMessage = nil
-                }
             }
         } catch {
             await MainActor.run { errorMessage = String(localized: "bypass.failed") }
@@ -285,6 +356,12 @@ struct CalendarView: View {
     private func shiftMonth(_ delta: Int) {
         if let next = calendar.date(byAdding: .month, value: delta, to: visibleMonth) {
             visibleMonth = next
+        }
+    }
+
+    private func animatedShiftMonth(_ delta: Int) {
+        withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : .spring(response: 0.35, dampingFraction: 0.9)) {
+            shiftMonth(delta)
         }
     }
 
@@ -308,5 +385,6 @@ struct CalendarView: View {
 
 #Preview {
     CalendarView()
+        .environment(AppPreferences())
         .modelContainer(try! ModelContainerFactory.makeInMemory())
 }

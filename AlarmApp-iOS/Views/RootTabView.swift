@@ -16,6 +16,7 @@ struct RootTabView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             CalendarView()
+                .environment(preferences)
                 .tabItem { Label("tab.calendar", systemImage: "calendar") }
                 .tag(AppTab.calendar)
 
@@ -33,6 +34,16 @@ struct RootTabView: View {
         }
         .environment(\.locale, preferences.locale)
         .preferredColorScheme(preferences.appearance.preferredColorScheme)
+        .fullScreenCover(
+            isPresented: Binding(
+                get: { !preferences.hasCompletedOnboarding },
+                set: { newValue in preferences.hasCompletedOnboarding = !newValue }
+            )
+        ) {
+            OnboardingContainerView(onFinished: {
+                preferences.hasCompletedOnboarding = true
+            })
+        }
     }
 }
 

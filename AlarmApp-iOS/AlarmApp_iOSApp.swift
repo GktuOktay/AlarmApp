@@ -38,15 +38,29 @@ struct AlarmApp_iOSApp: App {
 
                     let scheduler = HybridAlarmScheduler()
                     await scheduler.prepareCategories()
-                    _ = try? await scheduler.requestAuthorization()
+                    do {
+                        _ = try await scheduler.requestAuthorization()
+                    } catch {
+                        AppLog.error(.notifications, "requestAuthorization failed", error: error)
+                    }
 
                     let repo = SwiftDataAlarmRepository(modelContainer: container)
-                    _ = try? await repo.purgeExpiredExceptions(asOf: Date())
-                    let newSchedules = (try? await repo.extendOpenEndedSchedules(
-                        horizonDays: AlarmHorizon.notificationDays,
-                        calendar: .autoupdatingCurrent,
-                        now: Date()
-                    )) ?? []
+                    do {
+                        _ = try await repo.purgeExpiredExceptions(asOf: Date())
+                    } catch {
+                        AppLog.error(.swiftdata, "purgeExpiredExceptions failed", error: error)
+                    }
+                    let newSchedules: [AlarmSchedule]
+                    do {
+                        newSchedules = try await repo.extendOpenEndedSchedules(
+                            horizonDays: AlarmHorizon.notificationDays,
+                            calendar: .autoupdatingCurrent,
+                            now: Date()
+                        )
+                    } catch {
+                        AppLog.error(.swiftdata, "extendOpenEndedSchedules failed", error: error)
+                        newSchedules = []
+                    }
                     let now = Date()
                     for schedule in newSchedules where schedule.fireDate > now {
                         let timeText = String(
@@ -54,15 +68,19 @@ struct AlarmApp_iOSApp: App {
                             Calendar.autoupdatingCurrent.component(.hour, from: schedule.fireDate),
                             Calendar.autoupdatingCurrent.component(.minute, from: schedule.fireDate)
                         )
-                        try? await scheduler.schedule(
-                            instanceId: schedule.instanceId,
-                            alarmId: schedule.alarmId,
-                            fireDate: schedule.fireDate,
-                            title: String(localized: "calendar.alarm_fallback"),
-                            body: String(format: String(localized: "notif.alarm_body"), timeText),
-                            soundId: schedule.soundId,
-                            soundVolume: schedule.soundVolume
-                        )
+                        do {
+                            try await scheduler.schedule(
+                                instanceId: schedule.instanceId,
+                                alarmId: schedule.alarmId,
+                                fireDate: schedule.fireDate,
+                                title: String(localized: "calendar.alarm_fallback"),
+                                body: String(format: String(localized: "notif.alarm_body"), timeText),
+                                soundId: schedule.soundId,
+                                soundVolume: schedule.soundVolume
+                            )
+                        } catch {
+                            AppLog.error(.notifications, "launch schedule failed", error: error)
+                        }
                     }
                     await WatchSyncBootstrap.shared.pushTodayContext()
                 }
@@ -84,7 +102,31 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification
     ) async -> UNNotificationPresentationOptions {
-        [.banner, .sound, .list]
+        // App is already in the foreground: present the full-screen ringing UI immediately
+        // instead of waiting for the user to tap the banner, so it feels like a real alarm.
+        let info = notification.request.content.userInfo
+        guard let instanceString = info["instanceId"] as? String,
+              let instanceId = UUID(uuidString: instanceString),
+              let alarmIdString = info["alarmId"] as? String,
+              let alarmId = UUID(uuidString: alarmIdString),
+              let container = AppModelStore.container
+        else {
+            return [.banner, .sound, .list]
+        }
+
+        let title = notification.request.content.title
+        let session = await MainActor.run {
+            RingingPresenter.makeSession(
+                container: container,
+                alarmId: alarmId,
+                instanceId: instanceId,
+                fallbackTitle: title
+            )
+        }
+        await MainActor.run {
+            RingingPresenter.shared.present(session)
+        }
+        return []
     }
 
     func userNotificationCenter(
@@ -136,7 +178,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
                     )
                 }
             } catch {
-                // Fail-safe: keep firing — do not invent a cancel.
+                AppLog.error(.wake, "notification dismiss failed", error: error)
             }
 
         case AlarmNotificationAction.snooze:
@@ -172,7 +214,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
                     )
                 }
             } catch {
-                // Fail-safe: snoozeDisabled or missing instance — leave alarm state alone.
+                AppLog.error(.wake, "notification snooze failed", error: error)
             }
 
         default:

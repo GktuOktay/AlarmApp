@@ -66,6 +66,8 @@ final class AppPreferences {
     private static let appearanceKey = "app.colorScheme"
     /// Shared with Watch via App Group would be ideal; for MVP both read the same key name from defaults.
     static let autoWakePromptEnabledKey = "app.autoWakePromptEnabled"
+    static let onboardingKey = "app.hasCompletedOnboarding"
+    static let calendarSuggestionsEnabledKey = "app.calendarSuggestionsEnabled"
 
     var languageRaw: String {
         didSet { UserDefaults.standard.set(languageRaw, forKey: Self.languageKey) }
@@ -83,6 +85,19 @@ final class AppPreferences {
     /// `true` when HealthKit sleep read is explicitly denied (or unavailable).
     var healthKitSleepDenied: Bool = false
 
+    /// Phase 7 — opt-in EventKit bypass day suggestions; default off.
+    var calendarSuggestionsEnabled: Bool {
+        didSet { UserDefaults.standard.set(calendarSuggestionsEnabled, forKey: Self.calendarSuggestionsEnabledKey) }
+    }
+
+    /// `true` when Calendar (EventKit) access is explicitly denied.
+    var calendarAccessDenied: Bool = false
+
+    /// `true` once the user has completed (or skipped) the first-launch onboarding flow.
+    var hasCompletedOnboarding: Bool {
+        didSet { UserDefaults.standard.set(hasCompletedOnboarding, forKey: Self.onboardingKey) }
+    }
+
     init() {
         languageRaw = UserDefaults.standard.string(forKey: Self.languageKey) ?? AppLanguageCode.system.rawValue
         appearanceRaw = UserDefaults.standard.string(forKey: Self.appearanceKey) ?? AppAppearanceMode.system.rawValue
@@ -91,6 +106,8 @@ final class AppPreferences {
         } else {
             autoWakePromptEnabled = UserDefaults.standard.bool(forKey: Self.autoWakePromptEnabledKey)
         }
+        hasCompletedOnboarding = UserDefaults.standard.bool(forKey: Self.onboardingKey)
+        calendarSuggestionsEnabled = UserDefaults.standard.bool(forKey: Self.calendarSuggestionsEnabledKey)
         refreshHealthKitStatus()
     }
 

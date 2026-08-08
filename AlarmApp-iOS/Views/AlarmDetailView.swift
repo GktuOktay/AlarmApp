@@ -26,6 +26,8 @@ struct AlarmDetailView: View {
     @State private var soundVolumePercent: Double = 100
     @State private var soundPreview = AlarmSoundPreview()
     @State private var didLoadEditableFields = false
+    @State private var showSavedIndicator = false
+    @State private var savedIndicatorTask: Task<Void, Never>?
     @FocusState private var isNameFieldFocused: Bool
 
     private var calendar: Calendar { .autoupdatingCurrent }
@@ -151,12 +153,14 @@ struct AlarmDetailView: View {
                 Toggle("detail.snooze", isOn: Binding(
                     get: { alarm.snoozeEnabled },
                     set: { newValue in
-                        alarm.snoozeEnabled = newValue
+                        withAnimation(.spring(response: 0.3, dampingFraction: 1)) {
+                            alarm.snoozeEnabled = newValue
+                        }
                         alarm.updatedAt = Date()
                         try? modelContext.save()
                     }
                 ))
-                .tint(.green)
+                .tint(AlarmColors.success)
 
                 if alarm.snoozeEnabled {
                     Picker("detail.snooze_duration", selection: Binding(
@@ -177,14 +181,16 @@ struct AlarmDetailView: View {
                             .tag(minutes)
                         }
                     }
-                    .tint(.orange)
+                    .tint(AlarmColors.warn)
                 }
 
                 Toggle("detail.wake_schedule", isOn: Binding(
                     get: { alarm.isWakeSchedule },
                     set: { newValue in
                         let previous = alarm.isWakeSchedule
-                        alarm.isWakeSchedule = newValue
+                        withAnimation(.spring(response: 0.3, dampingFraction: 1)) {
+                            alarm.isWakeSchedule = newValue
+                        }
                         alarm.updatedAt = Date()
                         Task {
                             do {
@@ -199,7 +205,7 @@ struct AlarmDetailView: View {
                         }
                     }
                 ))
-                .tint(.green)
+                .tint(AlarmColors.success)
             } footer: {
                 Text("detail.wake_schedule_footer")
             }
@@ -240,29 +246,31 @@ struct AlarmDetailView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .animation(.spring(response: 0.3, dampingFraction: 1), value: repeats)
+        .animation(.spring(response: 0.3, dampingFraction: 1), value: alarm.snoozeEnabled)
         .scrollDismissesKeyboard(.interactively)
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
                 Button("action.done") { isNameFieldFocused = false }
             }
+            ToolbarItem(placement: .topBarTrailing) {
+                if showSavedIndicator {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(AlarmColors.success)
+                        .transition(.opacity)
+                        .accessibilityLabel(Text("detail.saved"))
+                }
+            }
         }
+        .animation(.easeOut(duration: 0.2), value: showSavedIndicator)
         .confirmationDialog("bypass.confirm_alarm", isPresented: $showBypassConfirm, titleVisibility: .visible) {
             Button("bypass.confirm_action", role: .destructive) {
                 Task { await performBypass() }
             }
             Button("action.cancel", role: .cancel) {}
         }
-        .overlay(alignment: .bottom) {
-            if let toastMessage {
-                Text(toastMessage)
-                    .font(.subheadline.weight(.medium))
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .background(.ultraThinMaterial, in: Capsule())
-                    .padding(.bottom, 24)
-            }
-        }
+        .toast($toastMessage, duration: 3)
         .alert("error.generic_title", isPresented: Binding(
             get: { errorMessage != nil },
             set: { if !$0 { errorMessage = nil } }
@@ -360,11 +368,22 @@ struct AlarmDetailView: View {
                 }
             }
             await WatchSyncBootstrap.shared.pushTodayContext()
+            await MainActor.run { flashSavedIndicator() }
         } catch {
             AppLog.error(.swiftdata, "updateAlarmPattern save failed", error: error)
             await MainActor.run {
                 errorMessage = String(localized: "create.save_failed")
             }
+        }
+    }
+
+    private func flashSavedIndicator() {
+        savedIndicatorTask?.cancel()
+        showSavedIndicator = true
+        savedIndicatorTask = Task {
+            try? await Task.sleep(for: .seconds(1.2))
+            guard !Task.isCancelled else { return }
+            showSavedIndicator = false
         }
     }
 
@@ -379,10 +398,6 @@ struct AlarmDetailView: View {
             await HybridAlarmScheduler().cancelPending(instanceIds: cancelled)
             await MainActor.run {
                 toastMessage = String(localized: "bypass.done")
-                Task {
-                    try? await Task.sleep(for: .seconds(3))
-                    toastMessage = nil
-                }
             }
         } catch {
             await MainActor.run { errorMessage = String(localized: "bypass.failed") }
