@@ -376,7 +376,7 @@ struct AlarmDetailView: View {
                 from: bypassStart,
                 to: bypassEnd
             )
-            await LocalNotificationScheduler().cancelPending(instanceIds: cancelled)
+            await HybridAlarmScheduler().cancelPending(instanceIds: cancelled)
             await MainActor.run {
                 toastMessage = String(localized: "bypass.done")
                 Task {
