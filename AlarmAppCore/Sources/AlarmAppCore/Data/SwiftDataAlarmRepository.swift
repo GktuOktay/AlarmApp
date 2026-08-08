@@ -487,6 +487,20 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
         }
     }
 
+    public func countPendingInGroupToday(groupId: UUID, now: Date) async throws -> Int {
+        _ = try requireGroup(id: groupId)
+        let cal = Calendar.autoupdatingCurrent
+        let start = cal.startOfDay(for: now)
+        guard let end = cal.date(byAdding: .day, value: 1, to: start) else { return 0 }
+        let all = try modelContext.fetch(FetchDescriptor<AlarmInstance>())
+        return all.filter { instance in
+            instance.alarm?.group?.id == groupId
+                && instance.status == .pending
+                && instance.scheduledDate >= start
+                && instance.scheduledDate < end
+        }.count
+    }
+
     public func setWakeScheduleAlarm(alarmId: UUID?) async throws {
         let alarms = try modelContext.fetch(FetchDescriptor<Alarm>())
         let currentWakeId = alarms.first(where: \.isWakeSchedule)?.id

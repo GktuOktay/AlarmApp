@@ -27,7 +27,7 @@ public struct CreateAlarmRequest: Sendable {
         soundId: String = "default",
         soundVolume: Double = 1.0,
         groupId: UUID? = nil,
-        repeats: Bool = true,
+        repeats: Bool = false,
         horizonDays: Int = AlarmHorizon.notificationDays,
         endDate: Date? = nil,
         snoozeEnabled: Bool = true,
