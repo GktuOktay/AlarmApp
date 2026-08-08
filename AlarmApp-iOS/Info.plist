@@ -34,6 +34,8 @@
 	<true/>
 	<key>NSAlarmKitUsageDescription</key>
 	<string>Alarmlarınızın kilit ekranında da tam ekran çalması için kullanılır.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Takviminizdeki tatil/izin günlerini tespit ederek alarm atlama önerisi sunmak için kullanılır.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Erken uyanma sorusu için uyku analizine ihtiyaç duyulur. Veri cihazda kalır.</string>
 	<key>NSHealthUpdateUsageDescription</key>
