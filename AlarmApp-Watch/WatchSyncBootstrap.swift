@@ -37,7 +37,7 @@ final class WatchSyncBootstrap {
             } catch WatchConnectivityError.unsupported {
                 // Simulator / host without WCSession — nothing to deliver.
             } catch {
-                // Fail-safe: keep local state; peer may catch up on next context push.
+                AppLog.error(.wcsession, "Watch WatchSyncBootstrap send failed", error: error)
             }
         }
     }
@@ -103,7 +103,7 @@ final class WatchSyncBootstrap {
                 }
             }
         } catch {
-            // Fail-safe: leave local alarms firing if apply fails.
+            AppLog.error(.wcsession, "Watch applyIncoming failed", error: error)
         }
     }
 }

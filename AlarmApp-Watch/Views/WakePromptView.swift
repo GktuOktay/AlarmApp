@@ -26,21 +26,21 @@ struct WakePromptView: View {
             }
             .padding(.horizontal, 4)
         }
-        .navigationTitle(showsBulkOptions ? "Kapat" : "Uyanma")
+        .navigationTitle(showsBulkOptions ? String(localized: "watch.title_close") : String(localized: "watch.title_wake"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if showsBulkOptions {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Geri") { showsBulkOptions = false }
+                    Button("ringing.back") { showsBulkOptions = false }
                         .disabled(isBusy)
                 }
             }
         }
-        .alert("Hata", isPresented: Binding(
+        .alert("error.generic_title", isPresented: Binding(
             get: { errorMessage != nil },
             set: { if !$0 { errorMessage = nil } }
         )) {
-            Button("Tamam", role: .cancel) { errorMessage = nil }
+            Button("action.done", role: .cancel) { errorMessage = nil }
         } message: {
             Text(errorMessage ?? "")
         }
@@ -53,11 +53,11 @@ struct WakePromptView: View {
 
     private var promptContent: some View {
         VStack(spacing: 12) {
-            Text("Uyandın mı?")
+            Text("wake.prompt.title")
                 .font(.headline)
                 .multilineTextAlignment(.center)
 
-            Text("Kalan alarmları kapatayım mı?")
+            Text("wake.prompt.message")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -66,7 +66,7 @@ struct WakePromptView: View {
                 WakeDetectionCoordinator.shared.acknowledgePromptShowingOptions()
                 showsBulkOptions = true
             } label: {
-                Text("Evet")
+                Text("wake.prompt.yes")
                     .font(.caption.weight(.semibold))
                     .frame(maxWidth: .infinity)
                     .frame(minHeight: 44)
@@ -79,7 +79,7 @@ struct WakePromptView: View {
                 WakeDetectionCoordinator.shared.dismissPromptWithoutAction()
                 onFinished()
             } label: {
-                Text("Hayır")
+                Text("wake.prompt.no")
                     .font(.caption.weight(.semibold))
                     .frame(maxWidth: .infinity)
                     .frame(minHeight: 44)
@@ -93,21 +93,21 @@ struct WakePromptView: View {
     private var bulkOptions: some View {
         VStack(spacing: 8) {
             if context.groupId != nil {
-                watchButton(title: "Grup — bugün", systemImage: "rectangle.3.group") {
+                watchButton(title: String(localized: "ringing.group_today"), systemImage: "rectangle.3.group") {
                     await performDefaultOrBulk(.groupToday)
                 }
             } else {
-                watchButton(title: "Uyanma alarmı — bugün", systemImage: "alarm") {
+                watchButton(title: String(localized: "watch.wake_alarm_today"), systemImage: "alarm") {
                     await cancelWakeAlarmToday()
                 }
             }
-            watchButton(title: "3 saat içi", systemImage: "clock.badge.xmark") {
+            watchButton(title: String(localized: "ringing.next_three_hours"), systemImage: "clock.badge.xmark") {
                 await performDefaultOrBulk(.nextThreeHours)
             }
-            watchButton(title: "Bugün tümü", systemImage: "calendar.badge.minus") {
+            watchButton(title: String(localized: "ringing.all_today"), systemImage: "calendar.badge.minus") {
                 await performDefaultOrBulk(.allToday)
             }
-            Button("Vazgeç") {
+            Button("action.cancel") {
                 WakeDetectionCoordinator.shared.dismissPromptWithoutAction()
                 onFinished()
             }
@@ -189,6 +189,7 @@ struct WakePromptView: View {
             confirmTrigger.toggle()
             onFinished()
         } catch {
+            AppLog.error(.wake, "wake prompt action failed", error: error)
             errorMessage = error.localizedDescription
         }
     }
