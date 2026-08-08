@@ -18,7 +18,7 @@ final class WatchSyncBootstrap {
         listenTask?.cancel()
         listenTask = Task {
             let repo = SwiftDataAlarmRepository(modelContainer: container)
-            let scheduler = LocalNotificationScheduler()
+            let scheduler = HybridAlarmScheduler()
             for await message in connectivity.incomingMessages {
                 await Self.applyIncoming(
                     message,
@@ -66,7 +66,7 @@ final class WatchSyncBootstrap {
     private static func applyIncoming(
         _ message: WatchMessage,
         repository: SwiftDataAlarmRepository,
-        scheduler: LocalNotificationScheduler
+        scheduler: some NotificationScheduling
     ) async {
         do {
             let effects = try await WatchMessageSyncApplier.apply(

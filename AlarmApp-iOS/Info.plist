@@ -32,6 +32,8 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAlarmKitUsageDescription</key>
+	<string>Alarmlarınızın kilit ekranında da tam ekran çalması için kullanılır.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Erken uyanma sorusu için uyku analizine ihtiyaç duyulur. Veri cihazda kalır.</string>
 	<key>NSHealthUpdateUsageDescription</key>

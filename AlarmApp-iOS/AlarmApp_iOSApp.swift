@@ -36,7 +36,7 @@ struct AlarmApp_iOSApp: App {
                 .task {
                     WatchSyncBootstrap.shared.start(container: container)
 
-                    let scheduler = LocalNotificationScheduler()
+                    let scheduler = HybridAlarmScheduler()
                     await scheduler.prepareCategories()
                     _ = try? await scheduler.requestAuthorization()
 
@@ -103,7 +103,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
 
         guard let container = AppModelStore.container else { return }
         let repo = SwiftDataAlarmRepository(modelContainer: container)
-        let scheduler = LocalNotificationScheduler()
+        let scheduler = HybridAlarmScheduler()
         let title = response.notification.request.content.title
 
         switch response.actionIdentifier {

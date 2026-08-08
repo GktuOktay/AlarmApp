@@ -216,7 +216,7 @@ struct AlarmListView: View {
             } else {
                 cancelled = try await repo.cancelToday(alarmId: alarm.id)
             }
-            await LocalNotificationScheduler().cancelPending(instanceIds: cancelled)
+            await HybridAlarmScheduler().cancelPending(instanceIds: cancelled)
             let name = alarm.title
             await MainActor.run {
                 toastMessage = String(format: String(localized: "toast.stopped_today"), name)

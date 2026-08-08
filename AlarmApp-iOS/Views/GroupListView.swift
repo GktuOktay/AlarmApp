@@ -107,7 +107,7 @@ struct GroupListView: View {
         do {
             let repo = SwiftDataAlarmRepository(modelContainer: modelContext.container)
             let cancelled = try await repo.cancelToday(groupId: group.id)
-            await LocalNotificationScheduler().cancelPending(instanceIds: cancelled)
+            await HybridAlarmScheduler().cancelPending(instanceIds: cancelled)
             let name = group.name
             await MainActor.run {
                 toastMessage = String(format: String(localized: "toast.stopped_today"), name)
@@ -264,7 +264,7 @@ struct GroupDetailView: View {
                 from: bypassStart,
                 to: bypassEnd
             )
-            await LocalNotificationScheduler().cancelPending(instanceIds: cancelled)
+            await HybridAlarmScheduler().cancelPending(instanceIds: cancelled)
             await MainActor.run {
                 toastMessage = String(localized: "bypass.done")
                 Task {
