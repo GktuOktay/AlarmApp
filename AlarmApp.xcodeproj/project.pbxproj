@@ -7,23 +7,68 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		00DF3A2CE03B18581D62E7A4 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = E7432BA65BD472576D7F03F6 /* Localizable.xcstrings */; };
+		06056A3FFCB5685CE19BBFED /* chime_bells.caf in Resources */ = {isa = PBXBuildFile; fileRef = FB02E4788639E3006A2B1A68 /* chime_bells.caf */; };
+		07248856F22996E441115D18 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F321E4657CF0A13D438DB5A8 /* SettingsView.swift */; };
+		0D3C9CA8AED304A92E443655 /* space_alert.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9E8E7EDE57D66AA7DB0026BB /* space_alert.caf */; };
+		1583A1D375334287CBAEB46D /* buzzer_short.caf in Resources */ = {isa = PBXBuildFile; fileRef = 6F7135C483BEE1E593F12A62 /* buzzer_short.caf */; };
+		160BC94235455C9975F437AF /* SoundPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A14325E36D6622C0FDD227D1 /* SoundPickerView.swift */; };
+		19FA1DF81C8B893072C686C0 /* digital_alarm.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2DF13E13BB1254D61EE3D4F0 /* digital_alarm.caf */; };
 		23C8329E8672FA36E5908CE3 /* AlarmAppCore in Frameworks */ = {isa = PBXBuildFile; productRef = A976D6BEA0F5D3ABA581CD8B /* AlarmAppCore */; };
+		346349ECB4764339DD424AD1 /* OnboardingContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8BED995A1145D550B306520 /* OnboardingContainerView.swift */; };
+		37B1A5B067723702DA88F09B /* ambulance_siren.caf in Resources */ = {isa = PBXBuildFile; fileRef = E4CB61DEE27BD003E48BE45E /* ambulance_siren.caf */; };
+		3E4B866E8AAE05B0AD1CBDB9 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85C02A7B1D53B6400EB71DD1 /* CalendarView.swift */; };
+		413FEA5AD43774CADB867E80 /* AlarmKitScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8D0B43670B913DED75C7CF4 /* AlarmKitScheduler.swift */; };
+		42604FC922AC03BCBB807EF2 /* RepeatsPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9403E96035DC3A976390A5D2 /* RepeatsPickerView.swift */; };
+		44C55728CF18F7D588BD0AD3 /* ContinuousRingingPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF93774088258169B984247 /* ContinuousRingingPlayer.swift */; };
 		46CE26DFDCE92712FE30F466 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7D29428E22737B4C9B07BEEB /* Assets.xcassets */; };
+		4AC32760BA971887228ADEB3 /* double_beep.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1CB1614E9236A4FAA91D6450 /* double_beep.caf */; };
+		4E00A226ABC9B533EE06F6FA /* GroupPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1345172415EC77BD072FAA13 /* GroupPickerView.swift */; };
 		501FB7D25EB4D624FB7A9FBC /* AlarmApp_iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96DAB8321DC53ADE58270F8B /* AlarmApp_iOSApp.swift */; };
+		5141505EFC001A295FE13458 /* HybridAlarmScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = C045CC736E92676F28CD0571 /* HybridAlarmScheduler.swift */; };
 		53843DD66C2CB38BC1E3510C /* soft_chime.caf in Resources */ = {isa = PBXBuildFile; fileRef = B4A7E84740F7FCC46F9B79E8 /* soft_chime.caf */; };
+		5BA4F411C55DBB4F9F5DEFFD /* WakePromptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBB82DC0C2E7CAFA148336FD /* WakePromptView.swift */; };
 		60B61F8C00D31FC690D81B20 /* GroupListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34863A659FB0C203038E7FC /* GroupListView.swift */; };
+		640518D6CE2B3BE4606E497F /* WakeSensorAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90BDB961EB924D6268009D08 /* WakeSensorAdapter.swift */; };
+		64C35002B190B636F41BCF5F /* WatchSyncBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B441D3E2B95DAF5BE6B4EA9 /* WatchSyncBootstrap.swift */; };
+		6530B7BDB2E16FA990C29C16 /* RingingPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6844F5ACE4EEB26939642EB /* RingingPresenter.swift */; };
 		675F80E09EF32EF6E0B05C71 /* radar_pulse.caf in Resources */ = {isa = PBXBuildFile; fileRef = 5BCF85AF6E5FE600AB0CE65B /* radar_pulse.caf */; };
+		67712C3BD6323FB7088BFD96 /* rising_tone.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2F8379BD04BB5EEE98CAF4CC /* rising_tone.caf */; };
 		6AEFDF3804E8FDFE6C4147D6 /* classic_bell.caf in Resources */ = {isa = PBXBuildFile; fileRef = 61C715596C8847C5282FBAC8 /* classic_bell.caf */; };
+		6B417A55DFFE4DD493AAF398 /* AlarmListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C333A7362ED7226BB1351FC4 /* AlarmListView.swift */; };
 		7B1BA660344C97632C8E03DB /* AlarmAppCore in Frameworks */ = {isa = PBXBuildFile; productRef = F8E2BA89152CDD4B32104E72 /* AlarmAppCore */; };
+		802C5B41B89EBA64FCC0E6F4 /* old_clock.caf in Resources */ = {isa = PBXBuildFile; fileRef = ADEBA1904748A4C6266311BA /* old_clock.caf */; };
 		81B56C2D438FA28C8D58EF00 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = E7432BA65BD472576D7F03F6 /* Localizable.xcstrings */; };
 		8725EE0335C474016765318B /* AlarmApp-Watch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 056C882BA3A6385F21BBDA7A /* AlarmApp-Watch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		89DF1BAA848F7457FA8E4E3A /* siren_sweep.caf in Resources */ = {isa = PBXBuildFile; fileRef = 6B792E2455987BFB58D8B6D1 /* siren_sweep.caf */; };
+		8A46CAB70DB67862F24DBFED /* police_siren.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2E30401985D78556465E2335 /* police_siren.caf */; };
+		8BBE9E40D4901323BE90F229 /* WakeDetectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACDBD220B6D759A295FE3980 /* WakeDetectionCoordinator.swift */; };
 		925CDCD46546C7113F6F2C55 /* CreateAlarmView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C98D98DDF4439D69DD3235B /* CreateAlarmView.swift */; };
+		9890B8F008223407F5E3CB0A /* AlarmRingingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2882198732591181C5378C1A /* AlarmRingingView.swift */; };
 		9CC4615398FB38B80BE6042D /* Weekday+Labels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36368DC574794807D036BFA8 /* Weekday+Labels.swift */; };
 		A3BC47127A3C704417A7BD76 /* AlarmApp_WatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B42AADB285C1CD34F36D18F3 /* AlarmApp_WatchApp.swift */; };
+		A8AFA3FE30EA2E367F014B04 /* buzzer_long.caf in Resources */ = {isa = PBXBuildFile; fileRef = 350E0D4876858ED4F0C13AA7 /* buzzer_long.caf */; };
+		A95A6B92C387A78A33090951 /* CalendarBypassSuggestionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E129AD90EFAEEDC86BE9F92 /* CalendarBypassSuggestionService.swift */; };
 		ACC9FB28E32BB92BF86BE178 /* AlarmSoundPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = F48F3AA1CBFBCE806FD9E340 /* AlarmSoundPreview.swift */; };
+		B19A9FF86EA239A593873A5E /* AppPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 983A864B7B0B4510D7A4AD9E /* AppPreferences.swift */; };
 		B3F06917AC462F9B52C94642 /* AlarmDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85C88B31000C614E77E442EB /* AlarmDetailView.swift */; };
+		B9217F2C8E6B280BCA42577C /* WakeSchedulePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EC6F191607FE4054817B10C /* WakeSchedulePickerView.swift */; };
+		C08C3AA05B4C7EB9E60DA389 /* beep_slow_low.caf in Resources */ = {isa = PBXBuildFile; fileRef = 931423157ECAA75F87F17252 /* beep_slow_low.caf */; };
+		C405C4C85CCD8BE42CCD3B70 /* morse_like.caf in Resources */ = {isa = PBXBuildFile; fileRef = 81765CA8F547CF7A465E7C71 /* morse_like.caf */; };
+		CC9C35C6C7D2C39D7D3718B7 /* EndDatePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABE522DE4FE699653DCCF583 /* EndDatePickerView.swift */; };
+		D54D0E3A9C7118A67C0C4213 /* beep_fast_high.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3FDFC68BD874EB7CB9744F92 /* beep_fast_high.caf */; };
+		D8143265C13919D2C56147B7 /* SnoozePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55D97ED2680A24B5761E8B13 /* SnoozePickerView.swift */; };
+		D9291726482667EBABD43974 /* RootTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DB1237B5852FDE1A846E73 /* RootTabView.swift */; };
+		D9A680B31095453AA0AE7567 /* gentle_wake.caf in Resources */ = {isa = PBXBuildFile; fileRef = 93B0D9325145E8ABBCF78F4F /* gentle_wake.caf */; };
+		D9B4C2C10B8724693EDF8A18 /* AlarmRingingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE3CF58C89225A3F12DC2EE3 /* AlarmRingingView.swift */; };
+		DEE52A27467F08E2A1170495 /* soft_piano_like.caf in Resources */ = {isa = PBXBuildFile; fileRef = 751AB968794F67F1EB93E339 /* soft_piano_like.caf */; };
 		E44AB94D9A622761943F9C44 /* digital_beep.caf in Resources */ = {isa = PBXBuildFile; fileRef = 77D96061ECCB35C2C2741269 /* digital_beep.caf */; };
+		E78D3B6EFF693CD6CAD20117 /* WatchSyncBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AC4B540E65F6C1D7062E473 /* WatchSyncBootstrap.swift */; };
+		E829C51618F9F7A349642D60 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F69B7F6D4BB50D8E41B8C72F /* Assets.xcassets */; };
 		E9D232BAC017DFDFA40187C7 /* electronic_buzz.caf in Resources */ = {isa = PBXBuildFile; fileRef = 617F1D283754B63071E91CF9 /* electronic_buzz.caf */; };
+		EDF712EBD1229DB11DC00852 /* alarm_classic_urgent.caf in Resources */ = {isa = PBXBuildFile; fileRef = 07A65EE2A3D225630347AA09 /* alarm_classic_urgent.caf */; };
+		EFC9299DBD3DEB945BB85836 /* triple_pulse.caf in Resources */ = {isa = PBXBuildFile; fileRef = 31D2B8870342DD70F097BE7E /* triple_pulse.caf */; };
+		F7074E0E134FA906571D7A44 /* OnboardingPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 482018480003138B398525C4 /* OnboardingPageView.swift */; };
 		F7FBCD1532C4A38D89695044 /* mechanical_ring.caf in Resources */ = {isa = PBXBuildFile; fileRef = CB62990F3CCDE851C32415BE /* mechanical_ring.caf */; };
 /* End PBXBuildFile section */
 
@@ -53,23 +98,69 @@
 
 /* Begin PBXFileReference section */
 		056C882BA3A6385F21BBDA7A /* AlarmApp-Watch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "AlarmApp-Watch.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		07A65EE2A3D225630347AA09 /* alarm_classic_urgent.caf */ = {isa = PBXFileReference; path = alarm_classic_urgent.caf; sourceTree = "<group>"; };
 		090AAABA32ABF7E0C344A06B /* AlarmAppCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = AlarmAppCore; path = AlarmAppCore; sourceTree = SOURCE_ROOT; };
+		1345172415EC77BD072FAA13 /* GroupPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupPickerView.swift; sourceTree = "<group>"; };
+		1AC4B540E65F6C1D7062E473 /* WatchSyncBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSyncBootstrap.swift; sourceTree = "<group>"; };
+		1B441D3E2B95DAF5BE6B4EA9 /* WatchSyncBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSyncBootstrap.swift; sourceTree = "<group>"; };
+		1CB1614E9236A4FAA91D6450 /* double_beep.caf */ = {isa = PBXFileReference; path = double_beep.caf; sourceTree = "<group>"; };
+		1E129AD90EFAEEDC86BE9F92 /* CalendarBypassSuggestionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarBypassSuggestionService.swift; sourceTree = "<group>"; };
+		2882198732591181C5378C1A /* AlarmRingingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmRingingView.swift; sourceTree = "<group>"; };
+		2DF13E13BB1254D61EE3D4F0 /* digital_alarm.caf */ = {isa = PBXFileReference; path = digital_alarm.caf; sourceTree = "<group>"; };
+		2E30401985D78556465E2335 /* police_siren.caf */ = {isa = PBXFileReference; path = police_siren.caf; sourceTree = "<group>"; };
+		2F8379BD04BB5EEE98CAF4CC /* rising_tone.caf */ = {isa = PBXFileReference; path = rising_tone.caf; sourceTree = "<group>"; };
+		31D2B8870342DD70F097BE7E /* triple_pulse.caf */ = {isa = PBXFileReference; path = triple_pulse.caf; sourceTree = "<group>"; };
+		350E0D4876858ED4F0C13AA7 /* buzzer_long.caf */ = {isa = PBXFileReference; path = buzzer_long.caf; sourceTree = "<group>"; };
 		36368DC574794807D036BFA8 /* Weekday+Labels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Weekday+Labels.swift"; sourceTree = "<group>"; };
 		3C98D98DDF4439D69DD3235B /* CreateAlarmView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateAlarmView.swift; sourceTree = "<group>"; };
+		3FDFC68BD874EB7CB9744F92 /* beep_fast_high.caf */ = {isa = PBXFileReference; path = beep_fast_high.caf; sourceTree = "<group>"; };
+		482018480003138B398525C4 /* OnboardingPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPageView.swift; sourceTree = "<group>"; };
+		55D97ED2680A24B5761E8B13 /* SnoozePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnoozePickerView.swift; sourceTree = "<group>"; };
 		5BCF85AF6E5FE600AB0CE65B /* radar_pulse.caf */ = {isa = PBXFileReference; path = radar_pulse.caf; sourceTree = "<group>"; };
+		5EC6F191607FE4054817B10C /* WakeSchedulePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakeSchedulePickerView.swift; sourceTree = "<group>"; };
 		617F1D283754B63071E91CF9 /* electronic_buzz.caf */ = {isa = PBXFileReference; path = electronic_buzz.caf; sourceTree = "<group>"; };
 		61C715596C8847C5282FBAC8 /* classic_bell.caf */ = {isa = PBXFileReference; path = classic_bell.caf; sourceTree = "<group>"; };
+		672FEBBFC083DA99D4B966B6 /* AlarmApp-iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "AlarmApp-iOS.entitlements"; sourceTree = "<group>"; };
+		6B792E2455987BFB58D8B6D1 /* siren_sweep.caf */ = {isa = PBXFileReference; path = siren_sweep.caf; sourceTree = "<group>"; };
+		6F7135C483BEE1E593F12A62 /* buzzer_short.caf */ = {isa = PBXFileReference; path = buzzer_short.caf; sourceTree = "<group>"; };
+		751AB968794F67F1EB93E339 /* soft_piano_like.caf */ = {isa = PBXFileReference; path = soft_piano_like.caf; sourceTree = "<group>"; };
 		77D96061ECCB35C2C2741269 /* digital_beep.caf */ = {isa = PBXFileReference; path = digital_beep.caf; sourceTree = "<group>"; };
 		7D29428E22737B4C9B07BEEB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		81765CA8F547CF7A465E7C71 /* morse_like.caf */ = {isa = PBXFileReference; path = morse_like.caf; sourceTree = "<group>"; };
+		81DB1237B5852FDE1A846E73 /* RootTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTabView.swift; sourceTree = "<group>"; };
+		85C02A7B1D53B6400EB71DD1 /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
 		85C88B31000C614E77E442EB /* AlarmDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmDetailView.swift; sourceTree = "<group>"; };
+		90BDB961EB924D6268009D08 /* WakeSensorAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakeSensorAdapter.swift; sourceTree = "<group>"; };
+		931423157ECAA75F87F17252 /* beep_slow_low.caf */ = {isa = PBXFileReference; path = beep_slow_low.caf; sourceTree = "<group>"; };
+		93B0D9325145E8ABBCF78F4F /* gentle_wake.caf */ = {isa = PBXFileReference; path = gentle_wake.caf; sourceTree = "<group>"; };
+		9403E96035DC3A976390A5D2 /* RepeatsPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepeatsPickerView.swift; sourceTree = "<group>"; };
 		96DAB8321DC53ADE58270F8B /* AlarmApp_iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmApp_iOSApp.swift; sourceTree = "<group>"; };
+		983A864B7B0B4510D7A4AD9E /* AppPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPreferences.swift; sourceTree = "<group>"; };
+		9E8E7EDE57D66AA7DB0026BB /* space_alert.caf */ = {isa = PBXFileReference; path = space_alert.caf; sourceTree = "<group>"; };
+		A14325E36D6622C0FDD227D1 /* SoundPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundPickerView.swift; sourceTree = "<group>"; };
+		ABE522DE4FE699653DCCF583 /* EndDatePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EndDatePickerView.swift; sourceTree = "<group>"; };
+		ACDBD220B6D759A295FE3980 /* WakeDetectionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakeDetectionCoordinator.swift; sourceTree = "<group>"; };
+		ADEBA1904748A4C6266311BA /* old_clock.caf */ = {isa = PBXFileReference; path = old_clock.caf; sourceTree = "<group>"; };
 		B42AADB285C1CD34F36D18F3 /* AlarmApp_WatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmApp_WatchApp.swift; sourceTree = "<group>"; };
 		B4A7E84740F7FCC46F9B79E8 /* soft_chime.caf */ = {isa = PBXFileReference; path = soft_chime.caf; sourceTree = "<group>"; };
+		BE3CF58C89225A3F12DC2EE3 /* AlarmRingingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmRingingView.swift; sourceTree = "<group>"; };
+		C045CC736E92676F28CD0571 /* HybridAlarmScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HybridAlarmScheduler.swift; sourceTree = "<group>"; };
 		C2D22B60D033D36AC678640A /* AlarmApp-iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "AlarmApp-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C333A7362ED7226BB1351FC4 /* AlarmListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmListView.swift; sourceTree = "<group>"; };
 		CB62990F3CCDE851C32415BE /* mechanical_ring.caf */ = {isa = PBXFileReference; path = mechanical_ring.caf; sourceTree = "<group>"; };
+		CBB82DC0C2E7CAFA148336FD /* WakePromptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakePromptView.swift; sourceTree = "<group>"; };
+		CEF93774088258169B984247 /* ContinuousRingingPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContinuousRingingPlayer.swift; sourceTree = "<group>"; };
+		E4CB61DEE27BD003E48BE45E /* ambulance_siren.caf */ = {isa = PBXFileReference; path = ambulance_siren.caf; sourceTree = "<group>"; };
+		E6844F5ACE4EEB26939642EB /* RingingPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RingingPresenter.swift; sourceTree = "<group>"; };
 		E7432BA65BD472576D7F03F6 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		E8BED995A1145D550B306520 /* OnboardingContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingContainerView.swift; sourceTree = "<group>"; };
+		E8D0B43670B913DED75C7CF4 /* AlarmKitScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmKitScheduler.swift; sourceTree = "<group>"; };
+		EBC1B1AAE7C1D8DCD0C47CC8 /* AlarmApp-Watch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "AlarmApp-Watch.entitlements"; sourceTree = "<group>"; };
+		F321E4657CF0A13D438DB5A8 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		F34863A659FB0C203038E7FC /* GroupListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupListView.swift; sourceTree = "<group>"; };
 		F48F3AA1CBFBCE806FD9E340 /* AlarmSoundPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmSoundPreview.swift; sourceTree = "<group>"; };
+		F69B7F6D4BB50D8E41B8C72F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		FB02E4788639E3006A2B1A68 /* chime_bells.caf */ = {isa = PBXFileReference; path = chime_bells.caf; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -92,11 +183,39 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		10778A90CCC34122FE8A534A /* CreateAlarm */ = {
+			isa = PBXGroup;
+			children = (
+				ABE522DE4FE699653DCCF583 /* EndDatePickerView.swift */,
+				1345172415EC77BD072FAA13 /* GroupPickerView.swift */,
+				9403E96035DC3A976390A5D2 /* RepeatsPickerView.swift */,
+				55D97ED2680A24B5761E8B13 /* SnoozePickerView.swift */,
+				A14325E36D6622C0FDD227D1 /* SoundPickerView.swift */,
+				5EC6F191607FE4054817B10C /* WakeSchedulePickerView.swift */,
+			);
+			path = CreateAlarm;
+			sourceTree = "<group>";
+		};
+		237F09E2672B45B560C2F3F3 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				E8BED995A1145D550B306520 /* OnboardingContainerView.swift */,
+				482018480003138B398525C4 /* OnboardingPageView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
 		5AB86F21198BBA5725645AB4 /* AlarmApp-iOS */ = {
 			isa = PBXGroup;
 			children = (
 				96DAB8321DC53ADE58270F8B /* AlarmApp_iOSApp.swift */,
+				672FEBBFC083DA99D4B966B6 /* AlarmApp-iOS.entitlements */,
+				983A864B7B0B4510D7A4AD9E /* AppPreferences.swift */,
+				F69B7F6D4BB50D8E41B8C72F /* Assets.xcassets */,
+				1E129AD90EFAEEDC86BE9F92 /* CalendarBypassSuggestionService.swift */,
 				E7432BA65BD472576D7F03F6 /* Localizable.xcstrings */,
+				E6844F5ACE4EEB26939642EB /* RingingPresenter.swift */,
+				1AC4B540E65F6C1D7062E473 /* WatchSyncBootstrap.swift */,
 				AE1690334E23AB1282AB52EC /* Sound */,
 				FB070C0F559FC33D031F57C7 /* Sounds */,
 				CD62E3C1CC28522FAC997EC5 /* Views */,
@@ -104,11 +223,25 @@
 			path = "AlarmApp-iOS";
 			sourceTree = "<group>";
 		};
+		781A262BE0F2701F1E9A4281 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				2882198732591181C5378C1A /* AlarmRingingView.swift */,
+				CBB82DC0C2E7CAFA148336FD /* WakePromptView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
 		840BF42703EDFF10D3F2AEA1 /* AlarmApp-Watch */ = {
 			isa = PBXGroup;
 			children = (
 				B42AADB285C1CD34F36D18F3 /* AlarmApp_WatchApp.swift */,
+				EBC1B1AAE7C1D8DCD0C47CC8 /* AlarmApp-Watch.entitlements */,
 				7D29428E22737B4C9B07BEEB /* Assets.xcassets */,
+				ACDBD220B6D759A295FE3980 /* WakeDetectionCoordinator.swift */,
+				90BDB961EB924D6268009D08 /* WakeSensorAdapter.swift */,
+				1B441D3E2B95DAF5BE6B4EA9 /* WatchSyncBootstrap.swift */,
+				781A262BE0F2701F1E9A4281 /* Views */,
 			);
 			path = "AlarmApp-Watch";
 			sourceTree = "<group>";
@@ -116,7 +249,10 @@
 		AE1690334E23AB1282AB52EC /* Sound */ = {
 			isa = PBXGroup;
 			children = (
+				E8D0B43670B913DED75C7CF4 /* AlarmKitScheduler.swift */,
 				F48F3AA1CBFBCE806FD9E340 /* AlarmSoundPreview.swift */,
+				CEF93774088258169B984247 /* ContinuousRingingPlayer.swift */,
+				C045CC736E92676F28CD0571 /* HybridAlarmScheduler.swift */,
 			);
 			path = Sound;
 			sourceTree = "<group>";
@@ -133,9 +269,16 @@
 			isa = PBXGroup;
 			children = (
 				85C88B31000C614E77E442EB /* AlarmDetailView.swift */,
+				C333A7362ED7226BB1351FC4 /* AlarmListView.swift */,
+				BE3CF58C89225A3F12DC2EE3 /* AlarmRingingView.swift */,
+				85C02A7B1D53B6400EB71DD1 /* CalendarView.swift */,
 				3C98D98DDF4439D69DD3235B /* CreateAlarmView.swift */,
 				F34863A659FB0C203038E7FC /* GroupListView.swift */,
+				81DB1237B5852FDE1A846E73 /* RootTabView.swift */,
+				F321E4657CF0A13D438DB5A8 /* SettingsView.swift */,
 				36368DC574794807D036BFA8 /* Weekday+Labels.swift */,
+				10778A90CCC34122FE8A534A /* CreateAlarm */,
+				237F09E2672B45B560C2F3F3 /* Onboarding */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -162,12 +305,30 @@
 		FB070C0F559FC33D031F57C7 /* Sounds */ = {
 			isa = PBXGroup;
 			children = (
+				07A65EE2A3D225630347AA09 /* alarm_classic_urgent.caf */,
+				E4CB61DEE27BD003E48BE45E /* ambulance_siren.caf */,
+				3FDFC68BD874EB7CB9744F92 /* beep_fast_high.caf */,
+				931423157ECAA75F87F17252 /* beep_slow_low.caf */,
+				350E0D4876858ED4F0C13AA7 /* buzzer_long.caf */,
+				6F7135C483BEE1E593F12A62 /* buzzer_short.caf */,
+				FB02E4788639E3006A2B1A68 /* chime_bells.caf */,
 				61C715596C8847C5282FBAC8 /* classic_bell.caf */,
+				2DF13E13BB1254D61EE3D4F0 /* digital_alarm.caf */,
 				77D96061ECCB35C2C2741269 /* digital_beep.caf */,
+				1CB1614E9236A4FAA91D6450 /* double_beep.caf */,
 				617F1D283754B63071E91CF9 /* electronic_buzz.caf */,
+				93B0D9325145E8ABBCF78F4F /* gentle_wake.caf */,
 				CB62990F3CCDE851C32415BE /* mechanical_ring.caf */,
+				81765CA8F547CF7A465E7C71 /* morse_like.caf */,
+				ADEBA1904748A4C6266311BA /* old_clock.caf */,
+				2E30401985D78556465E2335 /* police_siren.caf */,
 				5BCF85AF6E5FE600AB0CE65B /* radar_pulse.caf */,
+				2F8379BD04BB5EEE98CAF4CC /* rising_tone.caf */,
+				6B792E2455987BFB58D8B6D1 /* siren_sweep.caf */,
 				B4A7E84740F7FCC46F9B79E8 /* soft_chime.caf */,
+				751AB968794F67F1EB93E339 /* soft_piano_like.caf */,
+				9E8E7EDE57D66AA7DB0026BB /* space_alert.caf */,
+				31D2B8870342DD70F097BE7E /* triple_pulse.caf */,
 			);
 			path = Sounds;
 			sourceTree = "<group>";
@@ -263,6 +424,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				46CE26DFDCE92712FE30F466 /* Assets.xcassets in Resources */,
+				00DF3A2CE03B18581D62E7A4 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -270,13 +432,32 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E829C51618F9F7A349642D60 /* Assets.xcassets in Resources */,
 				81B56C2D438FA28C8D58EF00 /* Localizable.xcstrings in Resources */,
+				EDF712EBD1229DB11DC00852 /* alarm_classic_urgent.caf in Resources */,
+				37B1A5B067723702DA88F09B /* ambulance_siren.caf in Resources */,
+				D54D0E3A9C7118A67C0C4213 /* beep_fast_high.caf in Resources */,
+				C08C3AA05B4C7EB9E60DA389 /* beep_slow_low.caf in Resources */,
+				A8AFA3FE30EA2E367F014B04 /* buzzer_long.caf in Resources */,
+				1583A1D375334287CBAEB46D /* buzzer_short.caf in Resources */,
+				06056A3FFCB5685CE19BBFED /* chime_bells.caf in Resources */,
 				6AEFDF3804E8FDFE6C4147D6 /* classic_bell.caf in Resources */,
+				19FA1DF81C8B893072C686C0 /* digital_alarm.caf in Resources */,
 				E44AB94D9A622761943F9C44 /* digital_beep.caf in Resources */,
+				4AC32760BA971887228ADEB3 /* double_beep.caf in Resources */,
 				E9D232BAC017DFDFA40187C7 /* electronic_buzz.caf in Resources */,
+				D9A680B31095453AA0AE7567 /* gentle_wake.caf in Resources */,
 				F7FBCD1532C4A38D89695044 /* mechanical_ring.caf in Resources */,
+				C405C4C85CCD8BE42CCD3B70 /* morse_like.caf in Resources */,
+				802C5B41B89EBA64FCC0E6F4 /* old_clock.caf in Resources */,
+				8A46CAB70DB67862F24DBFED /* police_siren.caf in Resources */,
 				675F80E09EF32EF6E0B05C71 /* radar_pulse.caf in Resources */,
+				67712C3BD6323FB7088BFD96 /* rising_tone.caf in Resources */,
+				89DF1BAA848F7457FA8E4E3A /* siren_sweep.caf in Resources */,
 				53843DD66C2CB38BC1E3510C /* soft_chime.caf in Resources */,
+				DEE52A27467F08E2A1170495 /* soft_piano_like.caf in Resources */,
+				0D3C9CA8AED304A92E443655 /* space_alert.caf in Resources */,
+				EFC9299DBD3DEB945BB85836 /* triple_pulse.caf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -289,9 +470,29 @@
 			files = (
 				501FB7D25EB4D624FB7A9FBC /* AlarmApp_iOSApp.swift in Sources */,
 				B3F06917AC462F9B52C94642 /* AlarmDetailView.swift in Sources */,
+				413FEA5AD43774CADB867E80 /* AlarmKitScheduler.swift in Sources */,
+				6B417A55DFFE4DD493AAF398 /* AlarmListView.swift in Sources */,
+				D9B4C2C10B8724693EDF8A18 /* AlarmRingingView.swift in Sources */,
 				ACC9FB28E32BB92BF86BE178 /* AlarmSoundPreview.swift in Sources */,
+				B19A9FF86EA239A593873A5E /* AppPreferences.swift in Sources */,
+				A95A6B92C387A78A33090951 /* CalendarBypassSuggestionService.swift in Sources */,
+				3E4B866E8AAE05B0AD1CBDB9 /* CalendarView.swift in Sources */,
+				44C55728CF18F7D588BD0AD3 /* ContinuousRingingPlayer.swift in Sources */,
 				925CDCD46546C7113F6F2C55 /* CreateAlarmView.swift in Sources */,
+				CC9C35C6C7D2C39D7D3718B7 /* EndDatePickerView.swift in Sources */,
 				60B61F8C00D31FC690D81B20 /* GroupListView.swift in Sources */,
+				4E00A226ABC9B533EE06F6FA /* GroupPickerView.swift in Sources */,
+				5141505EFC001A295FE13458 /* HybridAlarmScheduler.swift in Sources */,
+				346349ECB4764339DD424AD1 /* OnboardingContainerView.swift in Sources */,
+				F7074E0E134FA906571D7A44 /* OnboardingPageView.swift in Sources */,
+				42604FC922AC03BCBB807EF2 /* RepeatsPickerView.swift in Sources */,
+				6530B7BDB2E16FA990C29C16 /* RingingPresenter.swift in Sources */,
+				D9291726482667EBABD43974 /* RootTabView.swift in Sources */,
+				07248856F22996E441115D18 /* SettingsView.swift in Sources */,
+				D8143265C13919D2C56147B7 /* SnoozePickerView.swift in Sources */,
+				160BC94235455C9975F437AF /* SoundPickerView.swift in Sources */,
+				B9217F2C8E6B280BCA42577C /* WakeSchedulePickerView.swift in Sources */,
+				E78D3B6EFF693CD6CAD20117 /* WatchSyncBootstrap.swift in Sources */,
 				9CC4615398FB38B80BE6042D /* Weekday+Labels.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -301,6 +502,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				A3BC47127A3C704417A7BD76 /* AlarmApp_WatchApp.swift in Sources */,
+				9890B8F008223407F5E3CB0A /* AlarmRingingView.swift in Sources */,
+				8BBE9E40D4901323BE90F229 /* WakeDetectionCoordinator.swift in Sources */,
+				5BA4F411C55DBB4F9F5DEFFD /* WakePromptView.swift in Sources */,
+				640518D6CE2B3BE4606E497F /* WakeSensorAdapter.swift in Sources */,
+				64C35002B190B636F41BCF5F /* WatchSyncBootstrap.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -319,6 +525,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "AlarmApp-Watch/AlarmApp-Watch.entitlements";
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "AlarmApp-Watch/Info.plist";
@@ -401,6 +608,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "AlarmApp-Watch/AlarmApp-Watch.entitlements";
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "AlarmApp-Watch/Info.plist";
@@ -476,6 +684,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "AlarmApp-iOS/AlarmApp-iOS.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -498,6 +708,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "AlarmApp-iOS/AlarmApp-iOS.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = NO;

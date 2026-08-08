@@ -9,6 +9,7 @@ struct GroupListView: View {
     @State private var newName = ""
     @State private var errorMessage: String?
     @State private var toastMessage: String?
+    @State private var groupCreatedPulse = false
 
     var body: some View {
         NavigationStack {
@@ -41,7 +42,7 @@ struct GroupListView: View {
                                 Button("action.stop_today") {
                                     Task { await cancelToday(group: group) }
                                 }
-                                .tint(.orange)
+                                .tint(AlarmColors.warn)
                             }
                         }
                     }
@@ -58,16 +59,33 @@ struct GroupListView: View {
                     .accessibilityLabel(Text("groups.create"))
                 }
             }
-            .alert("groups.new_title", isPresented: $isCreating) {
-                TextField("create.name", text: $newName)
-                Button("action.cancel", role: .cancel) {
-                    newName = ""
+            .sheet(isPresented: $isCreating) {
+                NavigationStack {
+                    Form {
+                        Section {
+                            TextField("create.name", text: $newName)
+                        } footer: {
+                            Text("groups.new_message")
+                        }
+                    }
+                    .navigationTitle("groups.new_title")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("action.cancel") {
+                                newName = ""
+                                isCreating = false
+                            }
+                        }
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("action.save") {
+                                Task { await createGroup() }
+                            }
+                            .disabled(newName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        }
+                    }
                 }
-                Button("action.save") {
-                    Task { await createGroup() }
-                }
-            } message: {
-                Text("groups.new_message")
+                .presentationDetents([.medium])
             }
             .alert("error.generic_title", isPresented: Binding(
                 get: { errorMessage != nil },
@@ -77,16 +95,8 @@ struct GroupListView: View {
             } message: {
                 Text(errorMessage ?? "")
             }
-            .overlay(alignment: .bottom) {
-                if let toastMessage {
-                    Text(toastMessage)
-                        .font(.subheadline.weight(.medium))
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(.ultraThinMaterial, in: Capsule())
-                        .padding(.bottom, 24)
-                }
-            }
+            .toast($toastMessage, duration: 8)
+            .sensoryFeedback(.success, trigger: groupCreatedPulse)
         }
     }
 
@@ -94,7 +104,11 @@ struct GroupListView: View {
         do {
             let repo = SwiftDataAlarmRepository(modelContainer: modelContext.container)
             _ = try await repo.createGroup(name: newName)
-            await MainActor.run { newName = "" }
+            await MainActor.run {
+                newName = ""
+                isCreating = false
+                groupCreatedPulse.toggle()
+            }
         } catch {
             await MainActor.run {
                 errorMessage = String(localized: "groups.create_failed")
@@ -107,14 +121,10 @@ struct GroupListView: View {
         do {
             let repo = SwiftDataAlarmRepository(modelContainer: modelContext.container)
             let cancelled = try await repo.cancelToday(groupId: group.id)
-            await LocalNotificationScheduler().cancelPending(instanceIds: cancelled)
+            await HybridAlarmScheduler().cancelPending(instanceIds: cancelled)
             let name = group.name
             await MainActor.run {
                 toastMessage = String(format: String(localized: "toast.stopped_today"), name)
-                Task {
-                    try? await Task.sleep(for: .seconds(8))
-                    if toastMessage?.contains(name) == true { toastMessage = nil }
-                }
             }
         } catch {
             await MainActor.run { errorMessage = String(localized: "error.stop_today") }
@@ -225,9 +235,9 @@ struct GroupDetailView: View {
         }
         .sheet(isPresented: $isCreatingAlarm) {
             NavigationStack {
-                CreateAlarmView(onFinished: {
+                CreateAlarmView(preselectedGroupId: group.id) {
                     isCreatingAlarm = false
-                }, preselectedGroupId: group.id)
+                }
             }
         }
         .confirmationDialog("bypass.confirm_group", isPresented: $showBypassConfirm, titleVisibility: .visible) {
@@ -236,16 +246,7 @@ struct GroupDetailView: View {
             }
             Button("action.cancel", role: .cancel) {}
         }
-        .overlay(alignment: .bottom) {
-            if let toastMessage {
-                Text(toastMessage)
-                    .font(.subheadline.weight(.medium))
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .background(.ultraThinMaterial, in: Capsule())
-                    .padding(.bottom, 24)
-            }
-        }
+        .toast($toastMessage, duration: 3)
         .alert("error.generic_title", isPresented: Binding(
             get: { errorMessage != nil },
             set: { if !$0 { errorMessage = nil } }
@@ -264,13 +265,9 @@ struct GroupDetailView: View {
                 from: bypassStart,
                 to: bypassEnd
             )
-            await LocalNotificationScheduler().cancelPending(instanceIds: cancelled)
+            await HybridAlarmScheduler().cancelPending(instanceIds: cancelled)
             await MainActor.run {
                 toastMessage = String(localized: "bypass.done")
-                Task {
-                    try? await Task.sleep(for: .seconds(3))
-                    toastMessage = nil
-                }
             }
         } catch {
             await MainActor.run { errorMessage = String(localized: "bypass.failed") }
@@ -300,45 +297,37 @@ private struct AssignAlarmsToGroupView: View {
     @State private var errorMessage: String?
 
     var body: some View {
-        List {
+        List(selection: $selectedIds) {
             if candidates.isEmpty {
                 Text("groups.assign_empty")
                     .foregroundStyle(.secondary)
             } else {
                 Section {
                     ForEach(candidates, id: \.id) { alarm in
-                        Button {
-                            if selectedIds.contains(alarm.id) {
-                                selectedIds.remove(alarm.id)
-                            } else {
-                                selectedIds.insert(alarm.id)
-                            }
-                        } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(String(format: "%02d:%02d  %@", alarm.time.hour, alarm.time.minute, alarm.title))
-                                        .foregroundStyle(.primary)
-                                    if let other = alarm.group?.name {
-                                        Text(String(format: String(localized: "groups.currently"), other))
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                    } else {
-                                        Text("groups.ungrouped")
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                    }
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(String(format: "%02d:%02d  %@", alarm.time.hour, alarm.time.minute, alarm.title))
+                                    .foregroundStyle(.primary)
+                                if let other = alarm.group?.name {
+                                    Text(String(format: String(localized: "groups.currently"), other))
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                } else {
+                                    Text("groups.ungrouped")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
                                 }
-                                Spacer()
-                                Image(systemName: selectedIds.contains(alarm.id) ? "checkmark.circle.fill" : "circle")
-                                    .foregroundStyle(selectedIds.contains(alarm.id) ? Color.accentColor : .secondary)
                             }
+                            Spacer()
                         }
+                        .tag(alarm.id)
                     }
                 } footer: {
                     Text("groups.assign_footer")
                 }
             }
         }
+        .environment(\.editMode, .constant(.active))
         .listStyle(.insetGrouped)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {

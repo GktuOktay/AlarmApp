@@ -16,7 +16,7 @@
 - `AlarmAppCore` **SwiftUI import etmez** (yalnızca Foundation / SwiftData / WatchConnectivity / HealthKit / CoreMotion).
 - Bağımlılık yönü: UI → Core; tersi yok.
 - Fail-safe: belirsizlikte alarm çalmaya devam eder; sessiz iptal yok.
-- Minimum hedef: iOS 17+ / watchOS 10+ (SwiftData varsayımı, ADR-4).
+- Minimum cihaz: iPhone 11+ · Minimum OS: iOS 17+ / watchOS 10+ (SwiftData varsayımı, ADR-4).
 - Lisans: MIT. Commit: Conventional Commits. Branch: `main` / `develop` / `feature/*`.
 - PRD Açık Sorular 1–3, F1 domain kodundan önce kilitlenmeli (`docs/superpowers/specs/2026-08-06-urun-kararlari.md`).
 

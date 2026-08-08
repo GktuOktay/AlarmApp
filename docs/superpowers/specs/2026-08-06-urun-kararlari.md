@@ -12,13 +12,14 @@
 
 ---
 
-## K1 — Alarm aralığı: bitiş saati dahil
+## K1 — Alarm aralığı: bitiş saati dahil — **GEÇERSİZ (arşiv)**
 
-**Karar: Bitiş dahil (inclusive–inclusive).**  
-06:00–07:00, 5 dk → **13** alarm (06:00 … 07:00).  
-Algoritma: `t = start; while t <= end; t += interval` (`Calendar` / dakika aritmetiği).
+**Eski karar:** Bitiş dahil; 06:00–07:00 / 5 dk → 13 alarm.
 
-- [x] Onaylandı
+**Üstür (2026-08-06):** Alarm-first model — her alarm tek başına kurulur; grup aralık üreteci yoktur.  
+Bkz. `docs/superpowers/specs/2026-08-06-alarm-first-model-design.md`.
+
+- [x] Arşivlendi
 
 ---
 

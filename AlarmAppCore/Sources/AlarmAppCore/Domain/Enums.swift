@@ -49,6 +49,10 @@ public enum CancelReason: String, Codable, Sendable {
     case manualToday
     case manualWeek
     case exception
+    case userDismiss
+    case snoozed
+    case wakePrompt
+    case nextHoursWindow
 }
 
 public enum ExceptionType: String, Codable, Sendable {

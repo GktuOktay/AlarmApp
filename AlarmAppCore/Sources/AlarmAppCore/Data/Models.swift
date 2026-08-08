@@ -41,6 +41,9 @@ public final class Alarm {
     public var soundId: String
     public var soundVolume: Double
     public var isActive: Bool
+    public var snoozeEnabled: Bool
+    public var snoozeMinutes: Int
+    public var isWakeSchedule: Bool
     /// Optional inclusive end date; nil = açık uçlu (horizon ile üretilir).
     public var endsOn: Date?
     public var createdAt: Date
@@ -68,6 +71,9 @@ public final class Alarm {
         soundId: String = "default",
         soundVolume: Double = 1.0,
         isActive: Bool = true,
+        snoozeEnabled: Bool = true,
+        snoozeMinutes: Int = SnoozePolicy.defaultMinutes,
+        isWakeSchedule: Bool = false,
         endsOn: Date? = nil,
         group: AlarmGroup? = nil,
         createdAt: Date = Date(),
@@ -80,6 +86,9 @@ public final class Alarm {
         self.soundId = soundId
         self.soundVolume = soundVolume
         self.isActive = isActive
+        self.snoozeEnabled = snoozeEnabled
+        self.snoozeMinutes = SnoozePolicy.clampMinutes(snoozeMinutes)
+        self.isWakeSchedule = isWakeSchedule
         self.endsOn = endsOn
         self.group = group
         self.createdAt = createdAt

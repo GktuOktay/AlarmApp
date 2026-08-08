@@ -9,7 +9,8 @@ final class AlarmSoundPreview {
     func play(soundId: String, volume: Double) {
         player?.stop()
         let sound = AlarmSoundCatalog.resolve(soundId)
-        guard let fileName = sound.fileName,
+        let fileName = sound.fileName ?? AlarmSoundCatalog.resolve(AlarmSoundCatalog.randomAssignableId()).fileName
+        guard let fileName,
               let url = Bundle.main.url(forResource: fileName, withExtension: "caf")
         else {
             player = nil
@@ -24,6 +25,10 @@ final class AlarmSoundPreview {
         } catch {
             player = nil
         }
+    }
+
+    func setVolume(_ volume: Double) {
+        player?.volume = Float(AlarmSoundCatalog.clampVolume(volume))
     }
 
     func stop() {

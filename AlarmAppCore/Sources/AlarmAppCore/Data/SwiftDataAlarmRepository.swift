@@ -1,9 +1,11 @@
 import Foundation
 import SwiftData
 
-public enum SwiftDataAlarmRepositoryError: Error, Sendable {
+public enum SwiftDataAlarmRepositoryError: Error, Sendable, Equatable {
     case groupNotFound
     case alarmNotFound
+    case instanceNotFound
+    case snoozeDisabled
 }
 
 @ModelActor
@@ -23,6 +25,9 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
             daysOfWeek: prepared.daysOfWeek,
             soundId: prepared.soundId,
             soundVolume: prepared.soundVolume,
+            snoozeEnabled: prepared.snoozeEnabled,
+            snoozeMinutes: prepared.snoozeMinutes,
+            isWakeSchedule: prepared.isWakeSchedule,
             endsOn: prepared.endsOn,
             group: group,
             createdAt: prepared.createdAt,
@@ -44,6 +49,7 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
             if let fire = AlarmFireDate.make(day: spec.scheduledDate, time: spec.scheduledTime, calendar: calendar) {
                 schedules.append(AlarmSchedule(
                     instanceId: instance.id,
+                    alarmId: alarm.id,
                     fireDate: fire,
                     soundId: alarm.soundId,
                     soundVolume: alarm.soundVolume
@@ -80,6 +86,60 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
         return group.id
     }
 
+    /// Updates the core editable fields of an existing alarm (used by the edit screen) and
+    /// re-materializes upcoming pending instances to match the new pattern. Historical
+    /// (already fired/dismissed/snoozed) instances are left untouched.
+    public func updateAlarmPattern(
+        alarmId: UUID,
+        title: String,
+        time: ClockTime,
+        daysOfWeek: [Weekday],
+        endsOn: Date?,
+        soundId: String,
+        soundVolume: Double,
+        groupId: UUID?
+    ) async throws -> CreateAlarmResult {
+        let alarm = try requireAlarm(id: alarmId)
+        let group: AlarmGroup?
+        if let groupId {
+            group = try requireGroup(id: groupId)
+        } else {
+            group = nil
+        }
+
+        let now = Date()
+        let staleInstances = alarm.instances.filter { $0.status == .pending }
+        for instance in staleInstances {
+            modelContext.delete(instance)
+        }
+
+        alarm.title = title
+        alarm.time = time
+        alarm.daysOfWeek = daysOfWeek
+        alarm.endsOn = endsOn
+        alarm.soundId = soundId
+        alarm.soundVolume = AlarmSoundCatalog.clampVolume(soundVolume)
+        alarm.group = group
+        alarm.updatedAt = now
+        try modelContext.save()
+
+        let calendar = Calendar.autoupdatingCurrent
+        let schedules = try materializeUpcoming(
+            for: [alarm],
+            horizonDays: AlarmHorizon.notificationDays,
+            calendar: calendar,
+            now: now
+        )
+
+        return CreateAlarmResult(
+            alarmId: alarm.id,
+            groupId: group?.id,
+            instanceCount: schedules.count,
+            schedules: schedules,
+            title: alarm.title
+        )
+    }
+
     public func assignAlarm(alarmId: UUID, to groupId: UUID?) async throws {
         let alarm = try requireAlarm(id: alarmId)
         if let groupId {
@@ -93,64 +153,12 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
 
     @discardableResult
     public func cancelToday(groupId: UUID) async throws -> [UUID] {
-        let group = try requireGroup(id: groupId)
-        let cal = Calendar.autoupdatingCurrent
-        let start = cal.startOfDay(for: Date())
-        guard let end = cal.date(byAdding: .day, value: 1, to: start) else { return [] }
-
-        modelContext.insert(
-            AlarmException(
-                group: group,
-                alarmId: nil,
-                type: .singleDay,
-                startDate: start,
-                action: .skip
-            )
-        )
-
-        let all = try modelContext.fetch(FetchDescriptor<AlarmInstance>())
-        let matching = all.filter { instance in
-            instance.alarm?.group?.id == groupId
-                && instance.status == .pending
-                && instance.scheduledDate >= start
-                && instance.scheduledDate < end
-        }
-        if matching.isEmpty {
-            try modelContext.save()
-            return []
-        }
-        return try cancel(instances: matching, reason: .manualToday)
+        try cancelGroupToday(groupId: groupId, reason: .manualToday, now: Date())
     }
 
     @discardableResult
     public func cancelToday(alarmId: UUID) async throws -> [UUID] {
-        _ = try requireAlarm(id: alarmId)
-        let cal = Calendar.autoupdatingCurrent
-        let start = cal.startOfDay(for: Date())
-        guard let end = cal.date(byAdding: .day, value: 1, to: start) else { return [] }
-
-        modelContext.insert(
-            AlarmException(
-                group: nil,
-                alarmId: alarmId,
-                type: .singleDay,
-                startDate: start,
-                action: .skip
-            )
-        )
-
-        let all = try modelContext.fetch(FetchDescriptor<AlarmInstance>())
-        let matching = all.filter { instance in
-            instance.alarm?.id == alarmId
-                && instance.status == .pending
-                && instance.scheduledDate >= start
-                && instance.scheduledDate < end
-        }
-        if matching.isEmpty {
-            try modelContext.save()
-            return []
-        }
-        return try cancel(instances: matching, reason: .manualToday)
+        try cancelAlarmToday(alarmId: alarmId, reason: .manualToday, now: Date())
     }
 
     @discardableResult
@@ -327,13 +335,14 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
         )
     }
 
-    public func handleWakeEvent(groupId: UUID, source: WakeSource, timestamp: Date) async throws {
+    @discardableResult
+    public func handleWakeEvent(groupId: UUID, source: WakeSource, timestamp: Date) async throws -> [UUID] {
         let cal = Calendar.autoupdatingCurrent
         let dayStart = cal.startOfDay(for: timestamp)
-        guard let dayEnd = cal.date(byAdding: .day, value: 1, to: dayStart) else { return }
+        guard let dayEnd = cal.date(byAdding: .day, value: 1, to: dayStart) else { return [] }
 
         let groupExists = try fetchGroup(id: groupId) != nil
-        guard groupExists else { return }
+        guard groupExists else { return [] }
 
         let all = try modelContext.fetch(FetchDescriptor<AlarmInstance>())
         let pending = all.filter {
@@ -358,11 +367,168 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
             )
         )
         try modelContext.save()
+        return pending.map(\.id)
+    }
+
+    @discardableResult
+    public func dismissAlarm(alarmId: UUID, instanceId: UUID, now: Date) async throws -> [UUID] {
+        guard let instance = try fetchInstance(id: instanceId), instance.alarm?.id == alarmId else {
+            // Missing locally (peer sync / already purged) — still report id for notification cancel.
+            return [instanceId]
+        }
+        if instance.status == .cancelled || instance.status == .snoozed {
+            return [instance.id]
+        }
+        instance.status = .cancelled
+        instance.cancelledReason = .userDismiss
+        instance.updatedAt = now
+        try modelContext.save()
+        return [instance.id]
+    }
+
+    public func snoozeAlarm(alarmId: UUID, instanceId: UUID, now: Date) async throws -> AlarmSchedule {
+        let instance = try requireInstance(alarmId: alarmId, instanceId: instanceId)
+        guard let alarm = instance.alarm else {
+            throw SwiftDataAlarmRepositoryError.alarmNotFound
+        }
+        guard alarm.snoozeEnabled else {
+            throw SwiftDataAlarmRepositoryError.snoozeDisabled
+        }
+
+        let fireDate = SnoozePolicy.fireDate(from: now, minutes: alarm.snoozeMinutes)
+        return try materializeSnooze(
+            instance: instance,
+            alarm: alarm,
+            fireDate: fireDate,
+            now: now
+        )
+    }
+
+    @discardableResult
+    public func applyRemoteSnooze(
+        alarmId: UUID,
+        instanceId: UUID,
+        fireDate: Date,
+        now: Date
+    ) async throws -> AlarmSchedule? {
+        guard let instance = try fetchInstance(id: instanceId), instance.alarm?.id == alarmId else {
+            return nil
+        }
+        if instance.status == .snoozed || instance.status == .cancelled {
+            return nil
+        }
+        guard let alarm = instance.alarm else {
+            throw SwiftDataAlarmRepositoryError.alarmNotFound
+        }
+        // Peer may snooze even if local snoozeEnabled was toggled off — honor the peer action.
+        return try materializeSnooze(
+            instance: instance,
+            alarm: alarm,
+            fireDate: fireDate,
+            now: now
+        )
+    }
+
+    private func materializeSnooze(
+        instance: AlarmInstance,
+        alarm: Alarm,
+        fireDate: Date,
+        now: Date
+    ) throws -> AlarmSchedule {
+        let calendar = Calendar.autoupdatingCurrent
+        let day = calendar.startOfDay(for: fireDate)
+        let comps = calendar.dateComponents([.hour, .minute], from: fireDate)
+        let time = ClockTime(hour: comps.hour ?? 0, minute: comps.minute ?? 0)
+
+        instance.status = .snoozed
+        instance.cancelledReason = .snoozed
+        instance.updatedAt = now
+
+        let snoozed = AlarmInstance(
+            scheduledDate: day,
+            scheduledTime: time,
+            status: .pending,
+            updatedAt: now
+        )
+        snoozed.alarm = alarm
+        modelContext.insert(snoozed)
+        try modelContext.save()
+
+        return AlarmSchedule(
+            instanceId: snoozed.id,
+            alarmId: alarm.id,
+            fireDate: fireDate,
+            soundId: alarm.soundId,
+            soundVolume: alarm.soundVolume
+        )
+    }
+
+    @discardableResult
+    public func cancel(scope: BulkCancelScope, reason: CancelReason, now: Date) async throws -> [UUID] {
+        switch scope {
+        case .groupToday(let groupId):
+            return try cancelGroupToday(groupId: groupId, reason: reason, now: now)
+        case .allToday:
+            return try cancelAllToday(reason: reason, now: now)
+        case .allNextHours:
+            let calendar = Calendar.autoupdatingCurrent
+            let all = try modelContext.fetch(FetchDescriptor<AlarmInstance>())
+            let matching = all.filter { instance in
+                guard instance.status == .pending else { return false }
+                guard let fire = AlarmFireDate.make(
+                    day: instance.scheduledDate,
+                    time: instance.scheduledTime,
+                    calendar: calendar
+                ) else { return false }
+                return scope.includesFireDate(fire, now: now)
+            }
+            if matching.isEmpty { return [] }
+            return try cancel(instances: matching, reason: reason, at: now)
+        }
+    }
+
+    public func countPendingInGroupToday(groupId: UUID, now: Date) async throws -> Int {
+        _ = try requireGroup(id: groupId)
+        let cal = Calendar.autoupdatingCurrent
+        let start = cal.startOfDay(for: now)
+        guard let end = cal.date(byAdding: .day, value: 1, to: start) else { return 0 }
+        let all = try modelContext.fetch(FetchDescriptor<AlarmInstance>())
+        return all.filter { instance in
+            instance.alarm?.group?.id == groupId
+                && instance.status == .pending
+                && instance.scheduledDate >= start
+                && instance.scheduledDate < end
+        }.count
+    }
+
+    public func setWakeScheduleAlarm(alarmId: UUID?) async throws {
+        let alarms = try modelContext.fetch(FetchDescriptor<Alarm>())
+        let currentWakeId = alarms.first(where: \.isWakeSchedule)?.id
+        let stamp = Date()
+
+        if let alarmId {
+            _ = try requireAlarm(id: alarmId)
+            let selected = WakeSchedulePolicy.applying(selectedId: alarmId, currentWakeId: currentWakeId)
+            for alarm in alarms {
+                let shouldWake = alarm.id == selected
+                if alarm.isWakeSchedule != shouldWake {
+                    alarm.isWakeSchedule = shouldWake
+                    alarm.updatedAt = stamp
+                }
+            }
+        } else {
+            for alarm in alarms where alarm.isWakeSchedule {
+                alarm.isWakeSchedule = false
+                alarm.updatedAt = stamp
+            }
+        }
+        try modelContext.save()
     }
 
     public func todayContext() async throws -> TodayContext {
         let cal = Calendar.autoupdatingCurrent
-        let today = cal.startOfDay(for: Date())
+        let now = Date()
+        let today = cal.startOfDay(for: now)
         guard let tomorrow = cal.date(byAdding: .day, value: 1, to: today) else {
             return TodayContext(date: today, activeGroups: [])
         }
@@ -378,14 +544,34 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
                         && $0.scheduledDate < tomorrow
                 }
                 .sorted { $0.scheduledTime < $1.scheduledTime }
-                .map { InstanceSummary(id: $0.id, time: $0.scheduledTime, status: $0.status) }
+                .compactMap { instance -> InstanceSummary? in
+                    guard let alarmId = instance.alarm?.id else { return nil }
+                    return InstanceSummary(
+                        id: instance.id,
+                        alarmId: alarmId,
+                        time: instance.scheduledTime,
+                        status: instance.status
+                    )
+                }
             if !remaining.isEmpty {
                 summaries.append(
                     ActiveGroupSummary(id: group.id, name: group.name, remainingInstances: remaining)
                 )
             }
         }
-        return TodayContext(date: today, activeGroups: summaries)
+
+        let alarms = try modelContext.fetch(FetchDescriptor<Alarm>())
+        let wake = alarms.first(where: { $0.isActive && $0.isWakeSchedule })
+        let nextWake = wake.flatMap {
+            WakeScheduleFireDate.next(time: $0.time, now: now, calendar: cal)
+        }
+        return TodayContext(
+            date: today,
+            activeGroups: summaries,
+            wakeAlarmId: wake?.id,
+            wakeGroupId: wake?.group?.id,
+            nextWakeFireDate: nextWake
+        )
     }
 
     public func fetchActiveAlarms() async throws -> [AlarmSummary] {
@@ -399,6 +585,9 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
                 soundId: alarm.soundId,
                 soundVolume: alarm.soundVolume,
                 isActive: alarm.isActive,
+                snoozeEnabled: alarm.snoozeEnabled,
+                snoozeMinutes: alarm.snoozeMinutes,
+                isWakeSchedule: alarm.isWakeSchedule,
                 groupId: alarm.group?.id,
                 groupName: alarm.group?.name
             )
@@ -501,6 +690,7 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
                 if let fire = AlarmFireDate.make(day: occ.dayStart, time: alarm.time, calendar: cal), fire > now {
                     newSchedules.append(AlarmSchedule(
                         instanceId: instance.id,
+                        alarmId: alarm.id,
                         fireDate: fire,
                         soundId: alarm.soundId,
                         soundVolume: alarm.soundVolume
@@ -563,8 +753,121 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
         )
     }
 
-    private func cancel(instances: [AlarmInstance], reason: CancelReason = .manualToday) throws -> [UUID] {
-        let now = Date()
+    /// Matches `cancelToday(groupId:)`: inserts a group skip exception for `now`'s day, then cancels pending.
+    private func cancelGroupToday(groupId: UUID, reason: CancelReason, now: Date) throws -> [UUID] {
+        let group = try requireGroup(id: groupId)
+        let cal = Calendar.autoupdatingCurrent
+        let start = cal.startOfDay(for: now)
+        guard let end = cal.date(byAdding: .day, value: 1, to: start) else { return [] }
+
+        modelContext.insert(
+            AlarmException(
+                group: group,
+                alarmId: nil,
+                type: .singleDay,
+                startDate: start,
+                action: .skip
+            )
+        )
+
+        let all = try modelContext.fetch(FetchDescriptor<AlarmInstance>())
+        let matching = all.filter { instance in
+            instance.alarm?.group?.id == groupId
+                && instance.status == .pending
+                && instance.scheduledDate >= start
+                && instance.scheduledDate < end
+        }
+        if matching.isEmpty {
+            try modelContext.save()
+            return []
+        }
+        return try cancel(instances: matching, reason: reason, at: now)
+    }
+
+    /// Matches `cancelToday(alarmId:)`: inserts an alarm skip exception for `now`'s day, then cancels pending.
+    private func cancelAlarmToday(alarmId: UUID, reason: CancelReason, now: Date) throws -> [UUID] {
+        _ = try requireAlarm(id: alarmId)
+        let cal = Calendar.autoupdatingCurrent
+        let start = cal.startOfDay(for: now)
+        guard let end = cal.date(byAdding: .day, value: 1, to: start) else { return [] }
+
+        modelContext.insert(
+            AlarmException(
+                group: nil,
+                alarmId: alarmId,
+                type: .singleDay,
+                startDate: start,
+                action: .skip
+            )
+        )
+
+        let all = try modelContext.fetch(FetchDescriptor<AlarmInstance>())
+        let matching = all.filter { instance in
+            instance.alarm?.id == alarmId
+                && instance.status == .pending
+                && instance.scheduledDate >= start
+                && instance.scheduledDate < end
+        }
+        if matching.isEmpty {
+            try modelContext.save()
+            return []
+        }
+        return try cancel(instances: matching, reason: reason, at: now)
+    }
+
+    /// Cancels all pending instances on `now`'s calendar day and inserts skip exceptions
+    /// (group-level for grouped alarms, alarm-level for ungrouped) so rematerialization stays bypassed.
+    private func cancelAllToday(reason: CancelReason, now: Date) throws -> [UUID] {
+        let cal = Calendar.autoupdatingCurrent
+        let start = cal.startOfDay(for: now)
+        guard let end = cal.date(byAdding: .day, value: 1, to: start) else { return [] }
+
+        let all = try modelContext.fetch(FetchDescriptor<AlarmInstance>())
+        let matching = all.filter { instance in
+            instance.status == .pending
+                && instance.scheduledDate >= start
+                && instance.scheduledDate < end
+        }
+
+        var seenGroupIds = Set<UUID>()
+        var seenUngroupedAlarmIds = Set<UUID>()
+        for instance in matching {
+            if let group = instance.alarm?.group {
+                guard seenGroupIds.insert(group.id).inserted else { continue }
+                modelContext.insert(
+                    AlarmException(
+                        group: group,
+                        alarmId: nil,
+                        type: .singleDay,
+                        startDate: start,
+                        action: .skip
+                    )
+                )
+            } else if let alarmId = instance.alarm?.id {
+                guard seenUngroupedAlarmIds.insert(alarmId).inserted else { continue }
+                modelContext.insert(
+                    AlarmException(
+                        group: nil,
+                        alarmId: alarmId,
+                        type: .singleDay,
+                        startDate: start,
+                        action: .skip
+                    )
+                )
+            }
+        }
+
+        if matching.isEmpty {
+            return []
+        }
+        return try cancel(instances: matching, reason: reason, at: now)
+    }
+
+    private func cancel(
+        instances: [AlarmInstance],
+        reason: CancelReason = .manualToday,
+        at now: Date = Date()
+    ) throws -> [UUID] {
         var cancelledIds: [UUID] = []
         for instance in instances {
             instance.status = .cancelled
@@ -584,6 +887,10 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
         try modelContext.fetch(FetchDescriptor<Alarm>()).first { $0.id == id }
     }
 
+    private func fetchInstance(id: UUID) throws -> AlarmInstance? {
+        try modelContext.fetch(FetchDescriptor<AlarmInstance>()).first { $0.id == id }
+    }
+
     private func requireGroup(id: UUID) throws -> AlarmGroup {
         guard let group = try fetchGroup(id: id) else {
             throw SwiftDataAlarmRepositoryError.groupNotFound
@@ -596,5 +903,12 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
             throw SwiftDataAlarmRepositoryError.alarmNotFound
         }
         return alarm
+    }
+
+    private func requireInstance(alarmId: UUID, instanceId: UUID) throws -> AlarmInstance {
+        guard let instance = try fetchInstance(id: instanceId), instance.alarm?.id == alarmId else {
+            throw SwiftDataAlarmRepositoryError.instanceNotFound
+        }
+        return instance
     }
 }

@@ -27,6 +27,7 @@ public enum ModelContainerFactory {
         do {
             return try ModelContainer(for: schema(), configurations: [configuration])
         } catch {
+            AppLog.error(.swiftdata, "makeOnDisk open failed; wiping incompatible store", error: error)
             // 0.0.x: wipe incompatible store after schema breaks (e.g. new AlarmException.alarmId).
             let storeURL = configuration.url
             let fm = FileManager.default
@@ -45,7 +46,12 @@ public enum ModelContainerFactory {
                     }
                 }
             }
-            return try ModelContainer(for: schema(), configurations: [configuration])
+            do {
+                return try ModelContainer(for: schema(), configurations: [configuration])
+            } catch {
+                AppLog.error(.swiftdata, "makeOnDisk recovery open failed", error: error)
+                throw error
+            }
         }
     }
 }
