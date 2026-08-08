@@ -13,6 +13,7 @@ struct AlarmRingingView: View {
     @State private var isBusy = false
     @State private var errorMessage: String?
     @State private var confirmPulse = false
+    @State private var ringingPlayer = ContinuousRingingPlayer()
 
     var body: some View {
         NavigationStack {
@@ -48,6 +49,7 @@ struct AlarmRingingView: View {
                     }
 
                     Button("action.cancel") {
+                        ringingPlayer.stop()
                         onFinished()
                     }
                     .font(.body.weight(.medium))
@@ -82,6 +84,12 @@ struct AlarmRingingView: View {
             }
             .sensoryFeedback(.success, trigger: confirmPulse)
             .interactiveDismissDisabled(isBusy)
+        }
+        .onAppear {
+            ringingPlayer.start(soundId: session.soundId, volume: session.soundVolume)
+        }
+        .onDisappear {
+            ringingPlayer.stop()
         }
     }
 
@@ -186,7 +194,7 @@ struct AlarmRingingView: View {
                     instanceId: session.instanceId,
                     now: Date()
                 )
-                await LocalNotificationScheduler().cancelPending(instanceIds: cancelled)
+                await HybridAlarmScheduler().cancelPending(instanceIds: cancelled)
                 WatchSyncBootstrap.shared.send(
                     .dismissApplied(alarmId: session.alarmId, instanceId: session.instanceId)
                 )
@@ -200,7 +208,7 @@ struct AlarmRingingView: View {
                     instanceId: session.instanceId,
                     now: Date()
                 )
-                let scheduler = LocalNotificationScheduler()
+                let scheduler = HybridAlarmScheduler()
                 await scheduler.cancelPending(instanceIds: [session.instanceId])
                 let timeText = String(
                     format: "%02d:%02d",
@@ -247,7 +255,7 @@ struct AlarmRingingView: View {
                 reason = .manualToday
             }
             let cancelled = try await repo.cancel(scope: scope, reason: reason, now: now)
-            await LocalNotificationScheduler().cancelPending(instanceIds: cancelled)
+            await HybridAlarmScheduler().cancelPending(instanceIds: cancelled)
             WatchSyncBootstrap.shared.send(
                 .bulkCancelApplied(scope: scope, timestamp: now)
             )
@@ -261,6 +269,7 @@ struct AlarmRingingView: View {
         defer { isBusy = false }
         do {
             try await work()
+            ringingPlayer.stop()
             confirmPulse.toggle()
             onFinished()
         } catch {
@@ -277,7 +286,9 @@ struct AlarmRingingView: View {
             groupId: UUID(),
             title: "Sabah",
             timeText: "06:30",
-            snoozeEnabled: true
+            snoozeEnabled: true,
+            soundId: "default",
+            soundVolume: 1.0
         ),
         onFinished: {}
     )
