@@ -23,6 +23,8 @@ struct RingingSession: Identifiable, Equatable, Sendable {
     let title: String
     let timeText: String
     let snoozeEnabled: Bool
+    let soundId: String
+    let soundVolume: Double
 }
 
 @MainActor
@@ -59,7 +61,9 @@ final class RingingPresenter: ObservableObject {
             groupId: alarm?.group?.id,
             title: alarm?.title ?? fallbackTitle,
             timeText: timeText,
-            snoozeEnabled: alarm?.snoozeEnabled ?? true
+            snoozeEnabled: alarm?.snoozeEnabled ?? true,
+            soundId: alarm?.soundId ?? "default",
+            soundVolume: alarm?.soundVolume ?? 1.0
         )
     }
 }
