@@ -33,7 +33,7 @@ struct CreateAlarmView: View {
     @State private var isWakeSchedule = false
     @FocusState private var isNameFieldFocused: Bool
 
-    private enum GroupSelection: Hashable {
+    enum GroupSelection: Hashable {
         case none
         case existing(UUID)
         case createNew
