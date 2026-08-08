@@ -86,6 +86,60 @@ public actor SwiftDataAlarmRepository: AlarmRepository {
         return group.id
     }
 
+    /// Updates the core editable fields of an existing alarm (used by the edit screen) and
+    /// re-materializes upcoming pending instances to match the new pattern. Historical
+    /// (already fired/dismissed/snoozed) instances are left untouched.
+    public func updateAlarmPattern(
+        alarmId: UUID,
+        title: String,
+        time: ClockTime,
+        daysOfWeek: [Weekday],
+        endsOn: Date?,
+        soundId: String,
+        soundVolume: Double,
+        groupId: UUID?
+    ) async throws -> CreateAlarmResult {
+        let alarm = try requireAlarm(id: alarmId)
+        let group: AlarmGroup?
+        if let groupId {
+            group = try requireGroup(id: groupId)
+        } else {
+            group = nil
+        }
+
+        let now = Date()
+        let staleInstances = alarm.instances.filter { $0.status == .pending }
+        for instance in staleInstances {
+            modelContext.delete(instance)
+        }
+
+        alarm.title = title
+        alarm.time = time
+        alarm.daysOfWeek = daysOfWeek
+        alarm.endsOn = endsOn
+        alarm.soundId = soundId
+        alarm.soundVolume = AlarmSoundCatalog.clampVolume(soundVolume)
+        alarm.group = group
+        alarm.updatedAt = now
+        try modelContext.save()
+
+        let calendar = Calendar.autoupdatingCurrent
+        let schedules = try materializeUpcoming(
+            for: [alarm],
+            horizonDays: AlarmHorizon.notificationDays,
+            calendar: calendar,
+            now: now
+        )
+
+        return CreateAlarmResult(
+            alarmId: alarm.id,
+            groupId: group?.id,
+            instanceCount: schedules.count,
+            schedules: schedules,
+            title: alarm.title
+        )
+    }
+
     public func assignAlarm(alarmId: UUID, to groupId: UUID?) async throws {
         let alarm = try requireAlarm(id: alarmId)
         if let groupId {
