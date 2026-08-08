@@ -181,7 +181,10 @@ public struct CreateAlarm {
         let startOfFrom = calendar.startOfDay(for: request.fromDate)
         let now = request.now
 
-        let soundId = AlarmSoundCatalog.resolve(request.soundId).id
+        let resolvedRequestedSound = AlarmSoundCatalog.resolve(request.soundId)
+        let soundId = resolvedRequestedSound.fileName == nil
+            ? AlarmSoundCatalog.randomAssignableId()
+            : resolvedRequestedSound.id
         let soundVolume = AlarmSoundCatalog.clampVolume(request.soundVolume)
 
         if !request.repeats {
